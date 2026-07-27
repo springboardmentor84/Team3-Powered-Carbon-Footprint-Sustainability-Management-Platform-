@@ -1,0 +1,130 @@
+<div class="fade-in-section">
+  <div class="carbon-header">
+    <h1>Carbon Footprint Calculator</h1>
+    <p class="subtitle text-secondary">Calculate emissions from your daily activities and log them to track your impact.</p>
+  </div>
+
+  <div class="calculator-layout-grid">
+    <!-- Calculator Card -->
+    <div class="eco-card calc-card">
+      <div class="calc-tabs">
+        <button [class.active]="selectedCategory === 'transport'" (click)="setCategory('transport')">
+          <i class="bi bi-car-front"></i> Transport
+        </button>
+        <button [class.active]="selectedCategory === 'energy'" (click)="setCategory('energy')">
+          <i class="bi bi-lightning-charge"></i> Energy
+        </button>
+        <button [class.active]="selectedCategory === 'food'" (click)="setCategory('food')">
+          <i class="bi bi-egg-fried"></i> Food
+        </button>
+        <button [class.active]="selectedCategory === 'waste'" (click)="setCategory('waste')">
+          <i class="bi bi-trash3"></i> Waste
+        </button>
+      </div>
+
+      <div class="calc-form">
+        <!-- 1. Transport Form -->
+        <div *ngIf="selectedCategory === 'transport'" class="form-group-wrapper">
+          <div class="form-item">
+            <label for="transport-type">Type of Transport</label>
+            <select id="transport-type" [(ngModel)]="transportType" (change)="calculateCurrent()">
+              <option value="car-petrol">Petrol Sedan / SUV</option>
+              <option value="car-ev">Electric Vehicle (EV)</option>
+              <option value="public-bus">Public Transit (Bus)</option>
+              <option value="public-train">Train / Metro</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label for="distance">Distance Traveled (miles)</label>
+            <input type="number" id="distance" [(ngModel)]="distance" (ngModelChange)="calculateCurrent()" placeholder="e.g. 15" min="0">
+          </div>
+        </div>
+
+        <!-- 2. Energy Form -->
+        <div *ngIf="selectedCategory === 'energy'" class="form-group-wrapper">
+          <div class="form-item">
+            <label for="electricity">Electricity Usage (kWh)</label>
+            <input type="number" id="electricity" [(ngModel)]="electricityKwh" (ngModelChange)="calculateCurrent()" placeholder="e.g. 150" min="0">
+          </div>
+          <div class="form-item">
+            <label for="heating">Heating Gas / Fuel (Units)</label>
+            <input type="number" id="heating" [(ngModel)]="heatingGas" (ngModelChange)="calculateCurrent()" placeholder="e.g. 20" min="0">
+          </div>
+        </div>
+
+        <!-- 3. Food Form -->
+        <div *ngIf="selectedCategory === 'food'" class="form-group-wrapper">
+          <div class="form-item">
+            <label for="diet-type">Diet Type</label>
+            <select id="diet-type" [(ngModel)]="dietType" (change)="calculateCurrent()">
+              <option value="meat">Meat / High-carbon Diet</option>
+              <option value="vegetarian">Vegetarian Diet</option>
+              <option value="vegan">Vegan / Plant-based Diet</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label for="meals">Number of Meals</label>
+            <input type="number" id="meals" [(ngModel)]="dietMeals" (ngModelChange)="calculateCurrent()" placeholder="e.g. 3" min="1">
+          </div>
+        </div>
+
+        <!-- 4. Waste Form -->
+        <div *ngIf="selectedCategory === 'waste'" class="form-group-wrapper">
+          <div class="form-item">
+            <label for="waste-bags">Garbage Generated (Bags)</label>
+            <input type="number" id="waste-bags" [(ngModel)]="wasteBags" (ngModelChange)="calculateCurrent()" placeholder="e.g. 2" min="0">
+          </div>
+          <div class="form-item">
+            <label for="recycle-rate">Recycling Rate (%)</label>
+            <input type="range" id="recycle-rate" [(ngModel)]="wasteRecycleRate" (ngModelChange)="calculateCurrent()" min="0" max="100">
+            <span class="range-display">{{ wasteRecycleRate }}% recycled</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Panel -->
+      <div class="calc-result-panel">
+        <div class="result-details">
+          <span class="result-label">Calculated Impact</span>
+          <h2 class="result-number">{{ calculatedEmissions }} <span class="result-unit">kg CO₂e</span></h2>
+        </div>
+        <button 
+          [disabled]="calculatedEmissions <= 0" 
+          (click)="onLogActivity()" 
+          class="btn btn-primary log-activity-btn">
+          <i class="bi bi-clipboard-plus"></i> Log Activity
+        </button>
+      </div>
+    </div>
+
+    <!-- Log History Card -->
+    <div class="eco-card history-card">
+      <div class="history-header">
+        <h3>Logged Activities</h3>
+        <span class="badge-count">{{ activityLogs.length }} Entries</span>
+      </div>
+      
+      <div class="history-list" *ngIf="activityLogs.length > 0">
+        <div class="history-item" *ngFor="let log of activityLogs">
+          <div class="history-left">
+            <div class="history-icon" [ngClass]="log.category + '-icon'">
+              <i class="bi" [ngClass]="getCategoryIcon(log.category)"></i>
+            </div>
+            <div class="history-details">
+              <p class="history-desc-text">{{ log.detail }}</p>
+              <p class="history-date">{{ log.date }} &bull; {{ log.amount }} {{ log.unit }}</p>
+            </div>
+          </div>
+          <div class="history-right">
+            <span class="history-emissions">+{{ log.emissions }} kg</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-history" *ngIf="activityLogs.length === 0">
+        <i class="bi bi-calendar-x"></i>
+        <p>No logged activities yet. Calculate and log your first entry above!</p>
+      </div>
+    </div>
+  </div>
+</div>

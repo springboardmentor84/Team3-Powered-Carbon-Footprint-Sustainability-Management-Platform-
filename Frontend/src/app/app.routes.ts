@@ -2,6 +2,17 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 
 export const routes: Routes = [
+  // Public Routes (No Layout)
+  {
+    path: '',
+    loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'about',
+    loadComponent: () => import('./features/about/about.component').then(m => m.AboutComponent)
+  },
+  
   // Auth Routes
   {
     path: 'auth',
@@ -13,11 +24,6 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
-      },
       {
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
@@ -52,6 +58,7 @@ export const routes: Routes = [
   // Fallback Route
   {
     path: '**',
-    redirectTo: 'dashboard'
+    redirectTo: ''
   }
 ];
+

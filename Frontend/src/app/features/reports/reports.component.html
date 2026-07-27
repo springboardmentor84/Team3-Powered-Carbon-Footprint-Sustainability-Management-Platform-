@@ -1,0 +1,95 @@
+<div class="fade-in-section">
+  <div class="reports-header">
+    <h1>Reports & Export System</h1>
+    <p class="subtitle text-secondary">Export structured ESG audits, carbon footprints, and activity summaries for reporting.</p>
+  </div>
+
+  <div class="reports-layout-grid">
+    <!-- Configuration Form -->
+    <div class="eco-card config-card">
+      <h3>Report Options</h3>
+      <form (submit)="onGenerateReport(); $event.preventDefault();" class="report-form">
+        <div class="form-item">
+          <label for="rep-type">Report Category</label>
+          <select id="rep-type" [(ngModel)]="reportType" name="reportType">
+            <option value="carbon">Carbon Footprint Analysis</option>
+            <option value="goals">Goal Achievement Tracker</option>
+            <option value="sustainability">Sustainability Scorecard</option>
+            <option value="challenges">Community Challenges Summary</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="date-range">Date Range</label>
+          <select id="date-range" [(ngModel)]="dateRange" name="dateRange">
+            <option value="last-7">Last 7 Days</option>
+            <option value="last-30">Last 30 Days</option>
+            <option value="last-12m">Last 12 Months</option>
+            <option value="ytd">Year-to-date (YTD)</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label>File Format</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" value="pdf" [(ngModel)]="format" name="format">
+              <span>PDF Document (.pdf)</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" value="excel" [(ngModel)]="format" name="format">
+              <span>Excel Spreadsheet (.xlsx)</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary generate-btn" [disabled]="isGenerating">
+          <i class="bi" [ngClass]="isGenerating ? 'bi-arrow-repeat animate-spin' : 'bi-file-earmark-arrow-down'"></i>
+          {{ isGenerating ? 'Preparing File...' : 'Generate & Export' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Preview & Status Card -->
+    <div class="eco-card status-card">
+      <h3>File Preparation Status</h3>
+      
+      <div class="status-panel-content">
+        <!-- Initial / Default State -->
+        <div class="state-default" *ngIf="!isGenerating && !downloadLink && !message">
+          <i class="bi bi-file-earmark-check"></i>
+          <p>Select your configuration parameters on the left and click **Generate** to prepare your file.</p>
+        </div>
+
+        <!-- Generating / Loading State -->
+        <div class="state-loading" *ngIf="isGenerating">
+          <div class="loader-spinner">
+            <i class="bi bi-arrow-repeat animate-spin"></i>
+          </div>
+          <h4>Generating Data Models</h4>
+          <p>Preparing the summary templates and executing ESG audit checks...</p>
+        </div>
+
+        <!-- Prepared State -->
+        <div class="state-prepared" *ngIf="downloadLink">
+          <div class="success-icon-wrapper">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <h4>Report Ready for Download</h4>
+          <p class="prepared-desc">{{ message }}</p>
+          <button (click)="triggerDownload()" class="btn btn-primary btn-download-prepared">
+            <i class="bi bi-download"></i> Download Report
+          </button>
+        </div>
+
+        <!-- Download Finished message -->
+        <div class="state-success-message" *ngIf="message && !downloadLink && !isGenerating">
+          <div class="success-icon-wrapper">
+            <i class="bi bi-cloud-arrow-down"></i>
+          </div>
+          <p>{{ message }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

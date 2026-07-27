@@ -1,0 +1,95 @@
+<div class="fade-in-section">
+  <div class="goals-header">
+    <h1>Sustainability Goal Management</h1>
+    <p class="subtitle text-secondary">Set target indicators, track real-time goal progress, and optimize your environmental habits.</p>
+  </div>
+
+  <div class="goals-layout-grid">
+    <!-- Goals Form -->
+    <div class="eco-card form-card">
+      <h3>Create a New Goal</h3>
+      <form (submit)="onCreateGoal(); $event.preventDefault();" class="goal-form">
+        <div class="form-item">
+          <label for="goal-type">Goal Category</label>
+          <select id="goal-type" [(ngModel)]="goalType" name="goalType">
+            <option value="emissions">Reduce Carbon Emissions (kg)</option>
+            <option value="electricity">Reduce Electricity Consumption (kWh)</option>
+            <option value="trees">Plant Trees (count)</option>
+            <option value="transit">Use Public Transport (trips)</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="goal-target">Target Value</label>
+          <input type="number" id="goal-target" [(ngModel)]="goalTarget" name="goalTarget" min="1" placeholder="e.g. 50">
+        </div>
+
+        <div class="form-item">
+          <label for="goal-timeframe">Timeframe</label>
+          <select id="goal-timeframe" [(ngModel)]="goalTimeframe" name="goalTimeframe">
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary create-goal-btn">
+          <i class="bi bi-bullseye"></i> Set Goal
+        </button>
+      </form>
+    </div>
+
+    <!-- Goals Progress Showcase -->
+    <div class="goals-list-panel">
+      <div class="panel-header">
+        <h3>Active Goals</h3>
+        <span class="badge-active">{{ goals.length }} Active</span>
+      </div>
+
+      <div class="goals-grid">
+        <div class="eco-card goal-card" *ngFor="let goal of goals" [class.completed-goal-card]="goal.progress === 100">
+          <div class="goal-card-header">
+            <div class="goal-icon-wrapper" [ngClass]="goal.type + '-icon'">
+              <i class="bi" [ngClass]="getGoalTypeIcon(goal.type)"></i>
+            </div>
+            <span class="timeframe-tag">{{ goal.timeframe }}</span>
+          </div>
+
+          <div class="goal-info">
+            <h4>{{ goal.title }}</h4>
+            <p class="goal-details">
+              {{ goal.current }} / {{ goal.target }} {{ goal.unit }}
+            </p>
+          </div>
+
+          <!-- Circular SVG Progress Ring -->
+          <div class="goal-progress-wrapper">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path class="circle"
+                [attr.stroke-dasharray]="goal.progress + ', 100'"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.35" class="percentage">{{ goal.progress }}%</text>
+            </svg>
+          </div>
+
+          <!-- Increment progress trigger -->
+          <button 
+            [disabled]="goal.progress === 100" 
+            (click)="incrementProgress(goal.id)" 
+            class="btn btn-outline-light action-progress-btn">
+            <i class="bi" [ngClass]="goal.progress === 100 ? 'bi-check-all' : 'bi-plus-lg'"></i>
+            {{ goal.progress === 100 ? 'Goal Met!' : 'Add Progress' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

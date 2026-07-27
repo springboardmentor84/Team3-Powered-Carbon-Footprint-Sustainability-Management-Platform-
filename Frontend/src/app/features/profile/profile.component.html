@@ -1,0 +1,100 @@
+<div class="fade-in-section">
+  <div class="profile-header">
+    <h1>User Profile Management</h1>
+    <p class="subtitle text-secondary">Manage your corporate credentials, sustainability preferences, and view achieved badges.</p>
+  </div>
+
+  <div class="profile-layout-grid">
+    <!-- Left Column: User details forms -->
+    <div class="profile-main-area">
+      <div class="eco-card form-card">
+        <h3>Account Information</h3>
+        <form (submit)="onSaveSettings(); $event.preventDefault();" class="profile-form">
+          <div class="avatar-edit-widget">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" class="avatar-lg" alt="Avatar" />
+            <button type="button" class="btn btn-outline-light btn-change-avatar">Change Picture</button>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-item">
+              <label for="fullname">Full Name</label>
+              <input type="text" id="fullname" [(ngModel)]="fullname" name="fullname" />
+            </div>
+            <div class="form-item">
+              <label for="email">Corporate Email</label>
+              <input type="email" id="email" [(ngModel)]="email" name="email" />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-item">
+              <label for="role">Corporate Role</label>
+              <input type="text" id="role" [(ngModel)]="role" name="role" />
+            </div>
+            <div class="form-item">
+              <label for="location">Location Office</label>
+              <input type="text" id="location" [(ngModel)]="location" name="location" />
+            </div>
+          </div>
+
+          <h3>Lifestyle Configuration</h3>
+          <div class="form-row-2">
+            <div class="form-item">
+              <label for="commute">Primary Commute Mode</label>
+              <select id="commute" [(ngModel)]="commuteMode" name="commuteMode">
+                <option value="sedan">Petrol Sedan / SUV</option>
+                <option value="ev">Electric Vehicle (EV)</option>
+                <option value="transit">Public Transit</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label for="diet">Diet Preference</label>
+              <select id="diet" [(ngModel)]="dietPreference" name="dietPreference">
+                <option value="meat">Meat / High-carbon</option>
+                <option value="vegetarian">Vegetarian</option>
+                <option value="vegan">Vegan / Plant-based</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <span class="success-message-text" *ngIf="message">{{ message }}</span>
+            <button type="submit" class="btn btn-primary save-btn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Preferences Checklist & Badges -->
+    <div class="profile-side-area">
+      <!-- Preferences Interests Card -->
+      <div class="eco-card side-widget-card">
+        <h3>Environmental Interests</h3>
+        <p class="font-sm text-secondary" style="margin-bottom: 16px;">Select interest categories to filter challenges and dashboard logs.</p>
+        <div class="interests-list">
+          <label class="checkbox-label" *ngFor="let item of interests">
+            <input type="checkbox" [(ngModel)]="item.selected" />
+            <span>{{ item.name }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Badges Card -->
+      <div class="eco-card side-widget-card">
+        <h3>Sustainability Badges</h3>
+        <p class="font-sm text-secondary" style="margin-bottom: 20px;">Review your gamified milestones and achievements.</p>
+        <div class="badges-list">
+          <div class="badge-row" *ngFor="let b of badges" [class.locked-badge-row]="!b.unlocked">
+            <div class="badge-icon-circle">
+              <i class="bi" [ngClass]="b.icon"></i>
+            </div>
+            <div class="badge-info-details">
+              <h4>{{ b.name }}</h4>
+              <p>{{ b.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -47,18 +47,52 @@
     </ul>
   </nav>
 
-  <!-- Sidebar Footer: Stats Quick Card -->
-  <div class="sidebar-footer" *ngIf="!layoutService.sidebarCollapsed()">
-    <div class="eco-stat-card">
-      <div class="stat-header">
-        <i class="bi bi-shield-check"></i>
-        <span>CO₂ Status</span>
+  <!-- Sidebar Footer: Calculate Impact & User Profile (as seen in mockup) -->
+  <div class="sidebar-footer" [class.collapsed-footer]="layoutService.sidebarCollapsed()">
+    <!-- Calculate Impact Button -->
+    <a 
+      [routerLink]="['/carbon']" 
+      class="btn btn-primary calculate-impact-btn focusable" 
+      *ngIf="!layoutService.sidebarCollapsed()">
+      <i class="bi bi-calculator"></i> Calculate Impact
+    </a>
+    <a 
+      [routerLink]="['/carbon']" 
+      class="calculate-impact-icon-btn focusable" 
+      *ngIf="layoutService.sidebarCollapsed()" 
+      title="Calculate Impact">
+      <i class="bi bi-calculator"></i>
+    </a>
+
+    <!-- XP / Level Indicator (Matching Screenshot 4 sidebar) -->
+    <div class="level-indicator" *ngIf="!layoutService.sidebarCollapsed()">
+      <div class="level-header">
+        <span class="level-badge">LEVEL 12 EXPLORER</span>
       </div>
-      <p class="stat-value">-12% this week</p>
       <div class="progress-bar-container">
-        <div class="progress-bar" style="width: 82%"></div>
+        <div class="progress-bar success-bar" style="width: 58%"></div>
       </div>
-      <p class="stat-desc">82% of weekly goal achieved</p>
+      <p class="level-desc">1,240 XP to next rank</p>
+    </div>
+
+    <!-- User Profile Widget -->
+    <div class="sidebar-user-widget">
+      <div class="user-avatar-wrapper">
+        <img 
+          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" 
+          alt="Alex Rivers Avatar" 
+          class="user-avatar" />
+      </div>
+      <div class="user-meta" *ngIf="!layoutService.sidebarCollapsed()">
+        <span class="user-fullname">Alex Rivers</span>
+        <span class="user-title">Sustainability Lead</span>
+      </div>
+    </div>
+
+    <!-- Quick Links (Settings / Support) -->
+    <div class="sidebar-quick-links" *ngIf="!layoutService.sidebarCollapsed()">
+      <a [routerLink]="['/profile']" class="quick-link-item"><i class="bi bi-gear"></i> Settings</a>
+      <a href="#" class="quick-link-item"><i class="bi bi-question-circle"></i> Support</a>
     </div>
   </div>
 </aside>
