@@ -11,13 +11,15 @@
 .login-page{
     display:flex;
     min-height:100vh;
+    height:100vh;
+    overflow:hidden;
     background:var(--color-background);
 }
 
 /* LEFT PANEL */
 
 .left-panel{
-    width:60%;
+    flex:1.2;
     position:relative;
     overflow:hidden;
     display:flex;
@@ -103,17 +105,19 @@
 /* RIGHT PANEL */
 
 .right-panel{
-    flex:1;
+    flex:0.8;
     display:flex;
     justify-content:center;
-    align-items:center;
-    padding:50px;
+    align-items:flex-start;
+    overflow-y:auto;
+    padding:30px 40px;
     background:var(--color-background);
 }
 
 .login-box{
     width:100%;
-    max-width:430px;
+    max-width:450px;
+    padding:10px 0 30px;
 }
 
 /* LOGO */
@@ -148,7 +152,7 @@
 /* WELCOME */
 
 .welcome{
-    margin-bottom:35px;
+    margin-bottom:22px;
 }
 
 .welcome h2{
@@ -177,7 +181,7 @@
     border-radius:14px;
     cursor:pointer;
     transition:.3s;
-    margin-bottom:35px;
+    margin-bottom:22px;
 }
 
 .google-btn img{
@@ -192,7 +196,7 @@
 .divider{
     position:relative;
     text-align:center;
-    margin:40px 0;
+    margin:24px 0;
 }
 
 .divider .line{
@@ -241,7 +245,7 @@ font-size:36px;
 .login-form{
     display:flex;
     flex-direction:column;
-    gap:25px;
+    gap:18px;
 }
 
 .form-group{
@@ -395,8 +399,8 @@ font-size:36px;
 ========================= */
 
 .login-footer{
-    margin-top:45px;
-    padding-top:25px;
+    margin-top:24px;
+    padding-top:18px;
     border-top:1px solid var(--color-border);
     text-align:center;
 }

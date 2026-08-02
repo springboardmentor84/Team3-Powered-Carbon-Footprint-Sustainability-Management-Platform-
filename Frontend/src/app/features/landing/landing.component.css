@@ -55,11 +55,18 @@
 }
 
 .brand-logo {
-  height: 36px;
-  width: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
   padding: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  object-fit: cover;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.35);
 }
 
 .brand-name {
@@ -351,7 +358,7 @@
 
 .stats-grid {
   display: grid;
-  grid-template-cols: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 40px;
 }
 
@@ -406,7 +413,7 @@
     font-size: 2.8rem;
   }
   .stats-grid {
-    grid-template-cols: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 24px;
   }
   .stats-section {
@@ -433,4 +440,37 @@
     width: 320px;
     height: 320px;
   }
+}
+/* Footer */
+.footer {
+  background: #0f172a;
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 50px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 15px;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #22c55e;
+}
+
+.footer-copy {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
 }
