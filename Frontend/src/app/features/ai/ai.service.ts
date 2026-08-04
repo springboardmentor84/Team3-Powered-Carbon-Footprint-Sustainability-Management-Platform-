@@ -17,7 +17,7 @@ export interface AIRecommendation {
 })
 export class AIService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/ai';
+  private apiUrl = 'http://localhost:8081/api/ai';
 
   private fallbackRecommendations: AIRecommendation[] = [
     {

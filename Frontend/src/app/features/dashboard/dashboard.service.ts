@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class DashboardService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/dashboard';
+  private apiUrl = 'http://localhost:8081/api/dashboard';
 
   public async getDashboardData(): Promise<any> {
     try {

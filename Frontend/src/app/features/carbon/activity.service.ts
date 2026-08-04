@@ -43,7 +43,7 @@ export interface CarbonSummary {
 })
 export class ActivityService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/activities';
+  private apiUrl = 'http://localhost:8081/api/activities';
 
   private fallbackCategories: ActivityCategory[] = [
     { id: 1, code: 'TRANSPORTATION', name: 'Transportation', description: 'Commute, trips, and vehicle usage', icon: 'bi-car-front', defaultUnit: 'miles', isOffset: false },

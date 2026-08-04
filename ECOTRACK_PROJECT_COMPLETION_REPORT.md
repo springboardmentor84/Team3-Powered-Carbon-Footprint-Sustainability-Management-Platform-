@@ -102,7 +102,7 @@ When Spring Boot starts, if these users do not already exist in PostgreSQL, they
    ```powershell
    .\mvnw.cmd spring-boot:run
    ```
-3. The server will start on `http://localhost:8080`.
+3. The server will start on `http://localhost:8081`.
    * On startup, Hibernate connects to PostgreSQL (`ecotrack`), updates all tables, and automatically seeds all 11 Carbon Activity categories and emission factors.
 
 ### Step 2: Start the Angular 19 Frontend

@@ -9,7 +9,7 @@ import { firstValueFrom } from 'rxjs';
 export class AuthService {
   private router = inject(Router);
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/users';
+  private apiUrl = 'http://localhost:8081/api/users';
 
   // Signals for tracking auth state reactively
   public isAuthenticated = signal(false);

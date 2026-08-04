@@ -18,7 +18,7 @@ export interface ChallengeItem {
 })
 export class ChallengesService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/challenges';
+  private apiUrl = 'http://localhost:8081/api/challenges';
 
   private fallbackChallenges: ChallengeItem[] = [
     {
