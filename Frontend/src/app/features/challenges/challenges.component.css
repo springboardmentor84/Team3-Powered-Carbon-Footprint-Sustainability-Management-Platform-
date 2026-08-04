@@ -75,7 +75,7 @@
 /* Grid Layout */
 .challenges-layout-grid {
   display: grid;
-  grid-template-cols: 2fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 24px;
 }
 
@@ -198,7 +198,7 @@
 /* Recommended Grid */
 .recommended-grid {
   display: grid;
-  grid-template-cols: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
@@ -401,7 +401,7 @@
 /* Badges Grid */
 .badges-grid {
   display: grid;
-  grid-template-cols: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
@@ -469,18 +469,18 @@
 /* Responsive Overrides */
 @media (max-width: 1200px) {
   .recommended-grid {
-    grid-template-cols: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 992px) {
   .challenges-layout-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 576px) {
   .recommended-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
   }
 }

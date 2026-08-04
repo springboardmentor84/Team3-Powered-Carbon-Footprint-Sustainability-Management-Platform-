@@ -59,7 +59,11 @@ public class UserServiceImpl implements UserService {
         return new LoginResponse(
                 token,
                 "Login Successful",
-                user.getEmail()
+                user.getEmail(),
+                user.getId(),
+                user.getFullName(),
+                user.getRewardPoints(),
+                user.getBadgeName()
         );
     }
 }

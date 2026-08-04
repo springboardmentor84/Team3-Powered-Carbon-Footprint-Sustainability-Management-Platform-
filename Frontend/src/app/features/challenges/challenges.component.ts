@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChallengesService } from './challenges.service';
 
 interface Challenge {
   id: number;
@@ -25,7 +26,9 @@ interface Leader {
   templateUrl: './challenges.component.html',
   styleUrls: ['./challenges.component.css']
 })
-export class ChallengesComponent {
+export class ChallengesComponent implements OnInit {
+  private challengesService = inject(ChallengesService);
+
   public leaderboard: Leader[] = [
     { rank: 1, name: 'Sarah J.', points: '2.4k' },
     { rank: 2, name: 'Alex R.', points: '2.1k' },
@@ -72,15 +75,25 @@ export class ChallengesComponent {
     }
   ];
 
-  public onJoinChallenge(id: number) {
+  ngOnInit() {
+    this.loadDailyChallenges();
+  }
+
+  public async loadDailyChallenges() {
+    await this.challengesService.getDailyChallenges();
+  }
+
+  public async onJoinChallenge(id: number) {
     const ch = this.recommendedChallenges.find(c => c.id === id);
     if (ch) {
       ch.joined = !ch.joined;
       if (ch.joined) {
         ch.joinedCount = (parseFloat(ch.joinedCount) + 0.1).toFixed(1) + 'k joined';
+        await this.challengesService.completeChallenge(id);
       } else {
         ch.joinedCount = (parseFloat(ch.joinedCount) - 0.1).toFixed(1) + 'k joined';
       }
     }
   }
 }
+

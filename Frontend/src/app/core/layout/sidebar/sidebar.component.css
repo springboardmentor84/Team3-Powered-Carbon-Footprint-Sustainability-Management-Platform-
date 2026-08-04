@@ -136,25 +136,16 @@
   white-space: nowrap;
 }
 
-/* Active Link Highlight styles */
+/* Active Link Highlight styles (Screenshot-inspired Emerald Pill) */
 .nav-link.active {
-  background-color: rgba(var(--color-primary-rgb), 0.08);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, #48F374, #10B981);
+  color: #0F172A !important;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
 .nav-link.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 15%;
-  bottom: 15%;
-  width: 4px;
-  background-color: var(--color-primary);
-  border-radius: 0 4px 4px 0;
-}
-
-.sidebar-container.collapsed .nav-link.active::before {
-  left: 2px;
+  display: none;
 }
 
 /* Sidebar Footer (Calculate Impact, Level, User profile, Quick links) */

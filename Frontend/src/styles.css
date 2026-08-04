@@ -52,52 +52,8 @@ body, body.light-theme {
   --color-active-overlay: rgba(46, 125, 50, 0.1);
 }
 
-/* Dark Theme Variables */
-@media (prefers-color-scheme: dark) {
-  body {
-    --color-background: #0F172A;   /* Slate 900 */
-    --color-background-rgb: 15, 23, 42;
-    --color-card: #1E293B;         /* Slate 800 */
-    --color-card-rgb: 30, 41, 59;
-    --color-text-primary: #F8FAFC; /* Slate 50 */
-    --color-text-secondary: #94A3B8;/* Slate 400 */
-    --color-text-muted: #64748B;   /* Slate 500 */
-    --color-border: #334155;       /* Slate 700 */
-    --color-border-hover: #475569; /* Slate 600 */
-    
-    /* Shadows & Glass */
-    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.1);
-    --card-shadow-hover: 0 20px 45px -12px rgba(0, 0, 0, 0.5), 0 1px 5px rgba(0, 0, 0, 0.2);
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.06);
-    --sidebar-bg: #111827;         /* Gray 900 */
-    
-    /* Interactive Overlays */
-    --color-hover-overlay: rgba(129, 199, 132, 0.08);
-    --color-active-overlay: rgba(129, 199, 132, 0.15);
-  }
-}
+/* Always enforce White/Light Background Design Aesthetic (Screenshot-inspired) */
 
-body.dark-theme {
-  --color-background: #0F172A;
-  --color-background-rgb: 15, 23, 42;
-  --color-card: #1E293B;
-  --color-card-rgb: 30, 41, 59;
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
-  --color-border: #334155;
-  --color-border-hover: #475569;
-  
-  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.1);
-  --card-shadow-hover: 0 20px 45px -12px rgba(0, 0, 0, 0.5), 0 1px 5px rgba(0, 0, 0, 0.2);
-  --glass-bg: rgba(30, 41, 59, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --sidebar-bg: #111827;
-  
-  --color-hover-overlay: rgba(129, 199, 132, 0.08);
-  --color-active-overlay: rgba(129, 199, 132, 0.15);
-}
 
 /* --- 2. BASE STYLES & RESET --- */
 * {
@@ -284,11 +240,11 @@ button, input, select, textarea {
 }
 
 @media (min-width: 640px) {
-  .eco-grid-cols-2 { grid-template-cols: repeat(2, minmax(0, 1fr)); }
+  .eco-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 1024px) {
-  .eco-grid-cols-3 { grid-template-cols: repeat(3, minmax(0, 1fr)); }
-  .eco-grid-cols-4 { grid-template-cols: repeat(4, minmax(0, 1fr)); }
+  .eco-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .eco-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .flex-center {

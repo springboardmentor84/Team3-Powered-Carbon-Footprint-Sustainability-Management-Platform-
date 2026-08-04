@@ -1,130 +1,404 @@
-<div class="fade-in-section">
-  <div class="carbon-header">
-    <h1>Carbon Footprint Calculator</h1>
-    <p class="subtitle text-secondary">Calculate emissions from your daily activities and log them to track your impact.</p>
+<!-- TOAST NOTIFICATION -->
+<div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+  <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+  <span>{{ toastMessage }}</span>
+</div>
+
+<div class="activity-module-container">
+  <!-- PAGE HEADER -->
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">Carbon Activity Management</h1>
+      <p class="page-subtitle">Track emissions and carbon offsets across all 11 sustainability categories.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline-secondary" (click)="loadDashboardData()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <button type="button" class="btn btn-primary primary-btn" (click)="openQuickModal()">
+        <i class="bi bi-plus-lg"></i> Add Activity
+      </button>
+    </div>
   </div>
 
-  <div class="calculator-layout-grid">
-    <!-- Calculator Card -->
-    <div class="eco-card calc-card">
-      <div class="calc-tabs">
-        <button [class.active]="selectedCategory === 'transport'" (click)="setCategory('transport')">
-          <i class="bi bi-car-front"></i> Transport
-        </button>
-        <button [class.active]="selectedCategory === 'energy'" (click)="setCategory('energy')">
-          <i class="bi bi-lightning-charge"></i> Energy
-        </button>
-        <button [class.active]="selectedCategory === 'food'" (click)="setCategory('food')">
-          <i class="bi bi-egg-fried"></i> Food
-        </button>
-        <button [class.active]="selectedCategory === 'waste'" (click)="setCategory('waste')">
-          <i class="bi bi-trash3"></i> Waste
-        </button>
+  <!-- SUMMARY ANALYTICS ROW -->
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <div class="card-icon green-bg">
+        <i class="bi bi-lightning-charge-fill"></i>
       </div>
+      <div class="card-info">
+        <span class="card-label">TODAY'S EMISSION</span>
+        <div class="card-value">{{ summary.todayEmission }} <small>kg CO₂e</small></div>
+        <span class="trend-badge negative">-12% vs avg</span>
+      </div>
+    </div>
 
-      <div class="calc-form">
-        <!-- 1. Transport Form -->
-        <div *ngIf="selectedCategory === 'transport'" class="form-group-wrapper">
-          <div class="form-item">
-            <label for="transport-type">Type of Transport</label>
-            <select id="transport-type" [(ngModel)]="transportType" (change)="calculateCurrent()">
-              <option value="car-petrol">Petrol Sedan / SUV</option>
-              <option value="car-ev">Electric Vehicle (EV)</option>
-              <option value="public-bus">Public Transit (Bus)</option>
-              <option value="public-train">Train / Metro</option>
-            </select>
-          </div>
-          <div class="form-item">
-            <label for="distance">Distance Traveled (miles)</label>
-            <input type="number" id="distance" [(ngModel)]="distance" (ngModelChange)="calculateCurrent()" placeholder="e.g. 15" min="0">
-          </div>
+    <div class="analytics-card">
+      <div class="card-icon blue-bg">
+        <i class="bi bi-calendar3"></i>
+      </div>
+      <div class="card-info">
+        <span class="card-label">MONTHLY EMISSION</span>
+        <div class="card-value">{{ summary.monthlyEmission }} <small>kg CO₂e</small></div>
+        <span class="trend-badge positive">+5% vs last month</span>
+      </div>
+    </div>
+
+    <div class="analytics-card">
+      <div class="card-icon purple-bg">
+        <i class="bi bi-calendar2-year-fill"></i>
+      </div>
+      <div class="card-info">
+        <span class="card-label">YEARLY EMISSION</span>
+        <div class="card-value">{{ summary.yearlyEmission }} <small>kg CO₂e</small></div>
+        <span class="trend-sub">YTD calculation</span>
+      </div>
+    </div>
+
+    <div class="analytics-card offset-card">
+      <div class="card-icon emerald-bg">
+        <i class="bi bi-tree-fill"></i>
+      </div>
+      <div class="card-info">
+        <span class="card-label">TOTAL OFFSETS & SAVINGS</span>
+        <div class="card-value text-emerald">{{ summary.totalOffsets }} <small>kg CO₂e</small></div>
+        <span class="trend-badge emerald-pill">Score: {{ summary.netCarbonScore }}/100</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 CATEGORIES SELECTOR GRID -->
+  <div class="section-container" id="log-section">
+    <div class="section-title-bar">
+      <h3>Select Sustainability Category</h3>
+      <span class="badge count-badge">11 Categories Available</span>
+    </div>
+
+    <div class="categories-grid">
+      <div *ngFor="let cat of categories"
+           class="category-card"
+           [class.active]="selectedCategoryCode === cat.code"
+           (click)="selectCategory(cat.code)">
+        <div class="cat-icon-wrapper" [class.offset-icon]="cat.isOffset">
+          <i class="bi" [ngClass]="cat.icon"></i>
         </div>
-
-        <!-- 2. Energy Form -->
-        <div *ngIf="selectedCategory === 'energy'" class="form-group-wrapper">
-          <div class="form-item">
-            <label for="electricity">Electricity Usage (kWh)</label>
-            <input type="number" id="electricity" [(ngModel)]="electricityKwh" (ngModelChange)="calculateCurrent()" placeholder="e.g. 150" min="0">
+        <div class="cat-content">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+            <h4>{{ cat.name }}</h4>
+            <button type="button" class="btn-mini-add" (click)="$event.stopPropagation(); openQuickModal(cat.code)" title="Quick log in {{ cat.name }}">
+              <i class="bi bi-plus-lg"></i> Add
+            </button>
           </div>
-          <div class="form-item">
-            <label for="heating">Heating Gas / Fuel (Units)</label>
-            <input type="number" id="heating" [(ngModel)]="heatingGas" (ngModelChange)="calculateCurrent()" placeholder="e.g. 20" min="0">
-          </div>
-        </div>
-
-        <!-- 3. Food Form -->
-        <div *ngIf="selectedCategory === 'food'" class="form-group-wrapper">
-          <div class="form-item">
-            <label for="diet-type">Diet Type</label>
-            <select id="diet-type" [(ngModel)]="dietType" (change)="calculateCurrent()">
-              <option value="meat">Meat / High-carbon Diet</option>
-              <option value="vegetarian">Vegetarian Diet</option>
-              <option value="vegan">Vegan / Plant-based Diet</option>
-            </select>
-          </div>
-          <div class="form-item">
-            <label for="meals">Number of Meals</label>
-            <input type="number" id="meals" [(ngModel)]="dietMeals" (ngModelChange)="calculateCurrent()" placeholder="e.g. 3" min="1">
-          </div>
-        </div>
-
-        <!-- 4. Waste Form -->
-        <div *ngIf="selectedCategory === 'waste'" class="form-group-wrapper">
-          <div class="form-item">
-            <label for="waste-bags">Garbage Generated (Bags)</label>
-            <input type="number" id="waste-bags" [(ngModel)]="wasteBags" (ngModelChange)="calculateCurrent()" placeholder="e.g. 2" min="0">
-          </div>
-          <div class="form-item">
-            <label for="recycle-rate">Recycling Rate (%)</label>
-            <input type="range" id="recycle-rate" [(ngModel)]="wasteRecycleRate" (ngModelChange)="calculateCurrent()" min="0" max="100">
-            <span class="range-display">{{ wasteRecycleRate }}% recycled</span>
-          </div>
+          <p>{{ cat.description }}</p>
+          <span *ngIf="cat.isOffset" class="offset-tag"><i class="bi bi-shield-check"></i> Carbon Offset</span>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Result Panel -->
-      <div class="calc-result-panel">
-        <div class="result-details">
-          <span class="result-label">Calculated Impact</span>
-          <h2 class="result-number">{{ calculatedEmissions }} <span class="result-unit">kg CO₂e</span></h2>
+  <!-- ACTIVITY CALCULATOR & LOG FORM -->
+  <div class="form-container-card">
+    <div class="form-header">
+      <div class="form-title-group">
+        <h2>Log {{ selectedCategoryCode.replace('_', ' ') }} Activity</h2>
+        <p>Dynamic emission formula: <strong>Carbon = Quantity × Database Emission Factor</strong></p>
+      </div>
+      <div class="live-preview-badge" [class.offset-badge]="categories.length > 0 && selectedCategoryCode === 'TREE_PLANTATION' || selectedCategoryCode === 'RECYCLING' || selectedCategoryCode === 'RENEWABLE_ENERGY'">
+        <span class="preview-label">ESTIMATED IMPACT</span>
+        <div class="preview-number">
+          {{ calculatedCo2 }} 
+          <small>kg CO₂e {{ (selectedCategoryCode === 'TREE_PLANTATION' || selectedCategoryCode === 'RECYCLING' || selectedCategoryCode === 'RENEWABLE_ENERGY') ? 'Saved' : '' }}</small>
         </div>
-        <button 
-          [disabled]="calculatedEmissions <= 0" 
-          (click)="onLogActivity()" 
-          class="btn btn-primary log-activity-btn">
-          <i class="bi bi-clipboard-plus"></i> Log Activity
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- Common Fields -->
+      <div class="form-group">
+        <label>Activity Name *</label>
+        <input type="text" [(ngModel)]="activityName" (ngModelChange)="recalculatePreview()" class="form-control" placeholder="e.g. Daily work commute">
+      </div>
+
+      <div class="form-group">
+        <label>Activity Date *</label>
+        <input type="date" [(ngModel)]="activityDate" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Sub-Category / Type *</label>
+        <select [(ngModel)]="subCategory" (ngModelChange)="recalculatePreview()" class="form-select">
+          <ng-container *ngIf="selectedCategoryCode === 'TRANSPORTATION'">
+            <option value="CAR_PETROL">Car (Petrol/Diesel)</option>
+            <option value="CAR_EV">Electric Vehicle (EV)</option>
+            <option value="BUS">Bus / Transit</option>
+            <option value="METRO">Metro Train</option>
+            <option value="TRAIN">Railway Train</option>
+            <option value="FLIGHT">Flight</option>
+            <option value="BIKE">Motorcycle / Scooter</option>
+            <option value="WALKING">Walking / Bicycle</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'ELECTRICITY'">
+            <option value="GRID_POWER">Standard Grid Power</option>
+            <option value="RENEWABLE">Renewable Green Electricity</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'COOKING_FUEL'">
+            <option value="LPG">LPG Cylinder</option>
+            <option value="PNG">PNG Piped Gas</option>
+            <option value="ELECTRIC_STOVE">Electric Induction Stove</option>
+            <option value="BIOGAS">Biogas</option>
+            <option value="WOOD">Wood / Biomass</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'FOOD_CONSUMPTION'">
+            <option value="MEAT">Meat / Poultry Meal</option>
+            <option value="BEEF">Beef Meal</option>
+            <option value="CHICKEN">Chicken / Poultry Meal</option>
+            <option value="VEGETARIAN">Vegetarian Meal</option>
+            <option value="VEGAN">Vegan Meal</option>
+            <option value="FAST_FOOD">Fast Food Meal</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'WATER_USAGE'">
+            <option value="TAP_WATER">Municipal Tap Water</option>
+            <option value="HOT_WATER">Heated Hot Water</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'WASTE_MANAGEMENT'">
+            <option value="PLASTIC">Plastic Waste</option>
+            <option value="PAPER">Paper / Cardboard Waste</option>
+            <option value="FOOD_WASTE">Organic Food Waste</option>
+            <option value="ELECTRONIC_WASTE">Electronic Waste (E-Waste)</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'SHOPPING'">
+            <option value="CLOTHING">Clothing & Apparel</option>
+            <option value="ELECTRONICS">Electronics & Gadgets</option>
+            <option value="GROCERIES">Household Groceries</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'TRAVEL'">
+            <option value="HOTEL">Hotel Stay (per night)</option>
+            <option value="FLIGHT_INTL">International Air Travel</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'TREE_PLANTATION'">
+            <option value="TREE_PLANTED">Tree Planted (Sapling)</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'RECYCLING'">
+            <option value="RECYCLED_MATERIAL">Recycled Material Diverted</option>
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryCode === 'RENEWABLE_ENERGY'">
+            <option value="SOLAR_KWH">Rooftop Solar Generated</option>
+          </ng-container>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Quantity * ({{ unit }})</label>
+        <input type="number" [(ngModel)]="quantity" (ngModelChange)="recalculatePreview()" class="form-control" min="0.1" step="0.5">
+      </div>
+
+      <!-- Category Specific Dynamic Fields -->
+      <ng-container *ngIf="selectedCategoryCode === 'TRANSPORTATION'">
+        <div class="form-group">
+          <label>Passengers</label>
+          <input type="number" [(ngModel)]="transportPassengers" class="form-control" min="1">
+        </div>
+        <div class="form-group">
+          <label>Trip Purpose</label>
+          <input type="text" [(ngModel)]="transportPurpose" class="form-control">
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedCategoryCode === 'ELECTRICITY'">
+        <div class="form-group">
+          <label>Provider</label>
+          <input type="text" [(ngModel)]="electricityProvider" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Renewable %</label>
+          <input type="number" [(ngModel)]="electricityRenewablePct" class="form-control" min="0" max="100">
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedCategoryCode === 'TREE_PLANTATION'">
+        <div class="form-group">
+          <label>Tree Species</label>
+          <input type="text" [(ngModel)]="treeSpecies" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Plantation Location</label>
+          <input type="text" [(ngModel)]="treeLocation" class="form-control">
+        </div>
+      </ng-container>
+
+      <div class="form-group full-width">
+        <label>Optional Notes</label>
+        <input type="text" [(ngModel)]="notes" class="form-control" placeholder="Add any details or reference notes...">
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn btn-primary submit-activity-btn" (click)="onLogActivity()" [disabled]="isLogging">
+        <span *ngIf="!isLogging"><i class="bi bi-check2-circle"></i> Save & Log Activity</span>
+        <span *ngIf="isLogging"><i class="bi bi-hourglass-split"></i> Saving...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ACTIVITY MANAGEMENT TABLE & FILTERS -->
+  <div class="table-card-container">
+    <div class="table-toolbar">
+      <div class="toolbar-title">
+        <h3>Logged Activities History</h3>
+        <span>Total: {{ filteredActivities.length }} records</span>
+      </div>
+
+      <div class="toolbar-filters">
+        <!-- Search Input -->
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFiltersAndSort()" placeholder="Search activities or notes...">
+        </div>
+
+        <!-- Filter Dropdown -->
+        <select [(ngModel)]="filterCategoryCode" (ngModelChange)="applyFiltersAndSort()" class="form-select filter-select">
+          <option value="ALL">All Categories (11)</option>
+          <option *ngFor="let cat of categories" [value]="cat.code">{{ cat.name }}</option>
+        </select>
+
+        <!-- Sort Direction -->
+        <button class="btn btn-outline-secondary sort-btn" (click)="sortOrder = (sortOrder === 'DESC' ? 'ASC' : 'DESC'); applyFiltersAndSort()">
+          <i class="bi" [ngClass]="sortOrder === 'DESC' ? 'bi-sort-down' : 'bi-sort-up'"></i> Date
         </button>
       </div>
     </div>
 
-    <!-- Log History Card -->
-    <div class="eco-card history-card">
-      <div class="history-header">
-        <h3>Logged Activities</h3>
-        <span class="badge-count">{{ activityLogs.length }} Entries</span>
-      </div>
-      
-      <div class="history-list" *ngIf="activityLogs.length > 0">
-        <div class="history-item" *ngFor="let log of activityLogs">
-          <div class="history-left">
-            <div class="history-icon" [ngClass]="log.category + '-icon'">
-              <i class="bi" [ngClass]="getCategoryIcon(log.category)"></i>
-            </div>
-            <div class="history-details">
-              <p class="history-desc-text">{{ log.detail }}</p>
-              <p class="history-date">{{ log.date }} &bull; {{ log.amount }} {{ log.unit }}</p>
-            </div>
-          </div>
-          <div class="history-right">
-            <span class="history-emissions">+{{ log.emissions }} kg</span>
-          </div>
-        </div>
-      </div>
+    <div class="table-responsive">
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Activity Name</th>
+            <th>Quantity</th>
+            <th>CO₂ Impact</th>
+            <th>Notes</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let act of paginatedActivities">
+            <td class="date-col">{{ act.activityDate }}</td>
+            <td>
+              <span class="category-badge" [class.offset-badge]="act.isOffset">
+                {{ act.categoryCode }}
+              </span>
+            </td>
+            <td class="name-col">
+              <strong>{{ act.activityName }}</strong>
+              <small *ngIf="act.subCategory">{{ act.subCategory }}</small>
+            </td>
+            <td>{{ act.quantity }} <small>{{ act.unit }}</small></td>
+            <td>
+              <span class="co2-tag" [class.offset-co2]="act.isOffset">
+                {{ act.calculatedCo2 }} kg CO₂e
+              </span>
+            </td>
+            <td class="notes-col">{{ act.notes || '—' }}</td>
+            <td class="text-end actions-col">
+              <button class="btn-icon edit-btn" (click)="openEditModal(act)" title="Edit">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button class="btn-icon delete-btn" (click)="onDeleteActivity(act.id)" title="Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedActivities.length === 0">
+            <td colspan="7" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p>No activity records found matching your filter criteria.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-      <div class="empty-history" *ngIf="activityLogs.length === 0">
-        <i class="bi bi-calendar-x"></i>
-        <p>No logged activities yet. Calculate and log your first entry above!</p>
+    <!-- PAGINATION FOOTER -->
+    <div class="pagination-footer" *ngIf="totalPages > 1">
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <div class="page-buttons">
+        <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === 1" (click)="prevPage()">
+          <i class="bi bi-chevron-left"></i> Previous
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === totalPages" (click)="nextPage()">
+          Next <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ACTIVITY MODAL -->
+<div class="modal-backdrop" *ngIf="editingActivity">
+  <div class="edit-modal-card">
+    <div class="modal-header">
+      <h3>Edit Activity</h3>
+      <button class="close-btn" (click)="closeEditModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Activity Name *</label>
+        <input type="text" [(ngModel)]="editingActivity.activityName" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Quantity ({{ editingActivity.unit }})</label>
+        <input type="number" [(ngModel)]="editingActivity.quantity" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" [(ngModel)]="editingActivity.notes" class="form-control">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-secondary" (click)="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="onSaveEdit()">Update Activity</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ADD ACTIVITY MODAL -->
+<div *ngIf="showQuickModal" class="modal-backdrop">
+  <div class="quick-modal-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-plus-circle-fill" style="color: #059669; margin-right: 0.5rem;"></i> Quick Log Activity</h3>
+      <button type="button" class="close-btn" (click)="closeQuickModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Select Category</label>
+        <select class="form-control" [ngModel]="quickCategoryCode" (ngModelChange)="selectQuickCategory($event)">
+          <option *ngFor="let c of categories" [value]="c.code">{{ c.name }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Activity Name</label>
+        <input type="text" class="form-control" [(ngModel)]="quickActivityName" (ngModelChange)="recalculateQuickPreview()" placeholder="e.g. Commute, Electricity, Lunch">
+      </div>
+      <div class="form-group">
+        <label>Quantity ({{ quickUnit }})</label>
+        <input type="number" class="form-control" [(ngModel)]="quickQuantity" (ngModelChange)="recalculateQuickPreview()" min="0">
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <input type="text" class="form-control" [(ngModel)]="quickNotes" placeholder="e.g. Daily office trip">
+      </div>
+      <div class="preview-box" style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 1rem; border-radius: 12px; margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #64748B; font-size: 0.85rem; font-weight: 600;">Estimated Impact:</span>
+        <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">{{ quickCalculatedCo2 }} <small style="font-size: 0.75rem;">kg CO₂e</small></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="closeQuickModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="isLogging" (click)="onQuickLogActivity()">
+        <i class="bi bi-check2"></i> {{ isLogging ? 'Saving...' : 'Save & Log Activity' }}
+      </button>
     </div>
   </div>
 </div>

@@ -1,3 +1,9 @@
+<!-- TOAST ALERT NOTIFICATION -->
+<div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+  <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+  <span>{{ toastMessage }}</span>
+</div>
+
 <div class="fade-in-section">
   <!-- Mode Selector Bar -->
   <div class="dashboard-toggle-bar glass-panel">
@@ -26,8 +32,9 @@
         <p class="subtitle text-secondary">Engineering for a Greener Planet, Alex.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-outline-light"><i class="bi bi-download"></i> Export Report</button>
-        <button class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Activity</button>
+        <button class="btn btn-outline-secondary" (click)="loadDashboardData()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        <button class="btn btn-primary" (click)="openQuickModal()"><i class="bi bi-plus-lg"></i> Add Activity</button>
+        <button class="btn btn-outline-primary" (click)="navigateToCarbon()"><i class="bi bi-compass"></i> Full 11-Category Tracker</button>
       </div>
     </div>
 
@@ -42,7 +49,7 @@
           <span class="stat-badge success-badge">-12% vs avg</span>
         </div>
         <p class="stat-title">Today's Carbon</p>
-        <h2 class="stat-number">4.2 <span class="stat-unit">kg CO₂e</span></h2>
+        <h2 class="stat-number">{{ todayCarbon }} <span class="stat-unit">kg CO₂e</span></h2>
       </div>
 
       <!-- Monthly Carbon Card -->
@@ -54,7 +61,7 @@
           <span class="stat-badge danger-badge">+5% vs last month</span>
         </div>
         <p class="stat-title">Monthly Carbon</p>
-        <h2 class="stat-number">128.5 <span class="stat-unit">kg CO₂e</span></h2>
+        <h2 class="stat-number">{{ monthlyCarbon }} <span class="stat-unit">kg CO₂e</span></h2>
       </div>
 
       <!-- Eco Score Card -->
@@ -66,114 +73,80 @@
           <span class="stat-badge info-badge">Top 15%</span>
         </div>
         <p class="stat-title">Eco Score</p>
-        <h2 class="stat-number">84 <span class="stat-total">/ 100</span></h2>
+        <h2 class="stat-number">{{ ecoScore }} <span class="stat-total">/ 100</span></h2>
         <div class="progress-bar-container">
-          <div class="progress-bar info-bar" style="width: 84%"></div>
+          <div class="progress-bar info-bar" [style.width.%]="ecoScore"></div>
         </div>
       </div>
     </div>
 
-    <!-- Charts & Analytics Grid -->
-    <div class="eco-grid eco-grid-cols-3 chart-analytics-grid">
-      <!-- Carbon Trends Line Chart -->
-      <div class="eco-card chart-card col-span-2">
+    <!-- Charts Row: Line Chart + Donut Chart -->
+    <div class="eco-grid eco-grid-cols-3 charts-row">
+      <!-- Line Chart -->
+      <div class="eco-card chart-card span-2">
         <div class="chart-header">
-          <h3>Carbon Trends</h3>
-          <span class="text-secondary font-sm">Daily emission tracking over the last 30 days</span>
+          <div>
+            <h3>Emissions Trend (July)</h3>
+            <p class="subtitle">Daily CO₂ output over the past 30 days</p>
+          </div>
+          <div class="chart-actions">
+            <span class="badge badge-light">July 2026</span>
+          </div>
         </div>
-        
-        <!-- SVG Line Chart representation -->
-        <div class="svg-chart-container">
-          <svg viewBox="0 0 300 120" class="svg-line-chart">
+        <div class="svg-chart-container" (mouseleave)="hideIndivTooltip()">
+          <svg viewBox="0 0 300 120" class="line-svg">
+            <defs>
+              <linearGradient id="indivGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            
             <!-- Grid Lines -->
-            <line x1="0" y1="20" x2="300" y2="20" stroke="var(--color-border)" stroke-dasharray="2,2" />
-            <line x1="0" y1="50" x2="300" y2="50" stroke="var(--color-border)" stroke-dasharray="2,2" />
-            <line x1="0" y1="80" x2="300" y2="80" stroke="var(--color-border)" stroke-dasharray="2,2" />
-            <line x1="0" y1="110" x2="300" y2="110" stroke="var(--color-border)" />
+            <line x1="0" y1="20" x2="300" y2="20" class="grid-line" />
+            <line x1="0" y1="50" x2="300" y2="50" class="grid-line" />
+            <line x1="0" y1="80" x2="300" y2="80" class="grid-line" />
+            <line x1="0" y1="110" x2="300" y2="110" class="grid-line" />
 
-            <!-- Curve Background Gradient Area -->
-            <path [attr.d]="getAreaPathString(indivChartPoints, 110)" fill="url(#indivGrad)" opacity="0.15" />
+            <!-- Area & Line -->
+            <path [attr.d]="getAreaPathString(indivChartPoints, 110)" fill="url(#indivGradient)" />
+            <path [attr.d]="getPathString(indivChartPoints)" fill="none" stroke="var(--color-primary)" stroke-width="2.5" />
 
-            <!-- Smooth Line Path -->
-            <path [attr.d]="getPathString(indivChartPoints)" fill="none" stroke="var(--color-success)" stroke-width="2.5" />
-
-            <!-- Data Points & Interaction Circle -->
+            <!-- Interactive Points -->
             <g *ngFor="let pt of indivChartPoints; let i = index">
-              <!-- Point overlay for hover area -->
               <circle 
                 [attr.cx]="pt.x" 
                 [attr.cy]="pt.y" 
-                r="6" 
-                fill="var(--color-success)" 
-                stroke="#fff" 
-                stroke-width="1.5" 
+                r="4" 
                 class="chart-point"
-                (mouseenter)="showIndivTooltip(pt, i)"
-                (mouseleave)="hideIndivTooltip()">
-              </circle>
+                (mouseenter)="showIndivTooltip(pt, i)" />
+              <text [attr.x]="pt.x" y="118" class="chart-x-label" text-anchor="middle">{{ pt.label }}</text>
             </g>
 
-            <!-- Definitions -->
-            <defs>
-              <linearGradient id="indivGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="var(--color-success)" />
-                <stop offset="100%" stop-color="var(--color-success)" stop-opacity="0" />
-              </linearGradient>
-            </defs>
+            <!-- Active Tooltip -->
+            <g *ngIf="activeIndivPoint" [attr.transform]="'translate(' + activeIndivPoint.x + ',' + activeIndivPoint.y + ')'">
+              <rect x="-35" y="-22" width="70" height="20" rx="4" class="svg-tooltip-bg" />
+              <text x="0" y="-8" text-anchor="middle" class="svg-tooltip-text">{{ activeIndivPoint.value }}</text>
+            </g>
           </svg>
-
-          <!-- Interactive Tooltip Overlay -->
-          <div 
-            *ngIf="activeIndivPoint" 
-            class="chart-tooltip" 
-            [style.left.%]="(activeIndivPoint.x / 300) * 100" 
-            [style.top.%]="(activeIndivPoint.y / 120) * 100">
-            <span class="tooltip-label">{{ activeIndivPoint.label }}</span>
-            <span class="tooltip-value">{{ activeIndivPoint.value }}</span>
-          </div>
-        </div>
-
-        <div class="chart-footer">
-          <span class="chart-label">01 Jul</span>
-          <span class="chart-label">12 Jul (3.4 kg)</span>
-          <span class="chart-label">Today</span>
         </div>
       </div>
 
-      <!-- Impact Breakdown Donut Chart -->
+      <!-- Donut Chart -->
       <div class="eco-card chart-card">
         <h3>Impact Breakdown</h3>
         <div class="donut-chart-container">
           <svg viewBox="0 0 100 100" class="donut-svg">
-            <!-- Transport Segment (45%) -->
-            <circle cx="50" cy="50" r="35" fill="transparent" stroke="var(--color-primary)" stroke-width="12" stroke-dasharray="99 121" stroke-dashoffset="0" />
-            <!-- Energy Segment (30%) -->
-            <circle cx="50" cy="50" r="35" fill="transparent" stroke="var(--color-secondary)" stroke-width="12" stroke-dasharray="66 154" stroke-dashoffset="-99" />
-            <!-- Food Segment (25%) -->
-            <circle cx="50" cy="50" r="35" fill="transparent" stroke="var(--color-warning)" stroke-width="12" stroke-dasharray="55 165" stroke-dashoffset="-165" />
-            
-            <!-- Donut Text -->
+            <circle cx="50" cy="50" r="35" fill="transparent" stroke="#10B981" stroke-width="12" stroke-dasharray="99 121" stroke-dashoffset="0" />
+            <circle cx="50" cy="50" r="35" fill="transparent" stroke="#3B82F6" stroke-width="12" stroke-dasharray="66 154" stroke-dashoffset="-99" />
+            <circle cx="50" cy="50" r="35" fill="transparent" stroke="#F59E0B" stroke-width="12" stroke-dasharray="55 165" stroke-dashoffset="-165" />
             <text x="50" y="53" class="donut-text" text-anchor="middle">100%</text>
           </svg>
         </div>
-        
-        <!-- Legend List -->
         <ul class="donut-legend">
-          <li>
-            <span class="legend-dot transport-dot"></span>
-            <span class="legend-name">Transport</span>
-            <span class="legend-val">45%</span>
-          </li>
-          <li>
-            <span class="legend-dot energy-dot"></span>
-            <span class="legend-name">Energy Usage</span>
-            <span class="legend-val">30%</span>
-          </li>
-          <li>
-            <span class="legend-dot food-dot"></span>
-            <span class="legend-name">Food & Diet</span>
-            <span class="legend-val">25%</span>
-          </li>
+          <li><span class="legend-dot transport-dot" style="background:#10B981"></span><span class="legend-name">Transport</span><span class="legend-val">45%</span></li>
+          <li><span class="legend-dot energy-dot" style="background:#3B82F6"></span><span class="legend-name">Energy Usage</span><span class="legend-val">30%</span></li>
+          <li><span class="legend-dot food-dot" style="background:#F59E0B"></span><span class="legend-name">Food & Diet</span><span class="legend-val">25%</span></li>
         </ul>
       </div>
     </div>
@@ -191,33 +164,40 @@
             <p>Your transport emissions peaked on Tuesday. Switching to public transit could save you <strong>4.5kg CO₂</strong> next week.</p>
           </div>
         </div>
-        <button class="btn btn-text btn-view-plan">VIEW PLAN <i class="bi bi-chevron-right"></i></button>
+        <button class="btn btn-text btn-view-plan" (click)="navigateToCarbon()">OPEN TRACKER <i class="bi bi-chevron-right"></i></button>
       </div>
 
       <!-- Recent Activities Log -->
       <div class="eco-card activities-card">
         <div class="activities-header">
           <h3>Recent Activities</h3>
-          <button class="btn btn-text-link">View All Records</button>
+          <button class="btn btn-text-link" (click)="navigateToCarbon()">View All Records</button>
         </div>
         <div class="activity-list">
           <div class="activity-item" *ngFor="let act of indivActivities">
             <div class="activity-left">
-              <div class="activity-icon"><i class="bi" [ngClass]="act.icon"></i></div>
+              <div class="activity-icon"><i class="bi bi-calendar-check"></i></div>
               <div class="activity-details">
-                <p class="act-name">{{ act.detail }}</p>
-                <p class="act-time-category">{{ act.category }} &bull; {{ act.time }}</p>
+                <p class="act-name">{{ act.activityName }}</p>
+                <p class="act-time-category">{{ act.categoryCode }} &bull; {{ act.activityDate }}</p>
               </div>
             </div>
             <div class="activity-right">
-              <span class="act-emissions">+{{ act.emissions }} kg</span>
+              <span class="act-emissions" [style.color]="act.isOffset ? '#059669' : '#0F172A'">
+                {{ act.isOffset ? '-' : '+' }}{{ act.calculatedCo2 }} kg CO₂e
+              </span>
+              <button class="btn-icon delete-btn" (click)="onDeleteIndivActivity(act.id)" title="Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
             </div>
+          </div>
+          <div *ngIf="indivActivities.length === 0" class="empty-state" style="padding: 1.5rem; text-align: center; color: #64748B;">
+            <p>No recent activities found. Click <strong>Add Activity</strong> to log your first record!</p>
           </div>
         </div>
       </div>
     </div>
   </div>
-
 
   <!-- ==================== 2. ORGANIZATION DASHBOARD VIEW ==================== -->
   <div *ngIf="currentMode === 'organization'" class="dashboard-view-wrapper">
@@ -228,182 +208,68 @@
       </div>
       <div class="header-actions">
         <button class="btn btn-outline-light"><i class="bi bi-file-pdf"></i> Export PDF</button>
-        <button class="btn btn-primary"><i class="bi bi-plus-lg"></i> Manage CSR</button>
+        <button class="btn btn-primary" (click)="openQuickModal()"><i class="bi bi-plus-lg"></i> Log Dept Activity</button>
       </div>
     </div>
 
-    <!-- Quick Stats Grid -->
-    <div class="eco-grid eco-grid-cols-3">
-      <!-- YTD Emissions -->
+    <!-- Organization Stats -->
+    <div class="eco-grid eco-grid-cols-4">
       <div class="eco-card card-stat">
-        <div class="card-stat-header">
-          <div class="stat-icon-wrapper danger-bg">
-            <i class="bi bi-activity"></i>
-          </div>
-          <span class="stat-badge danger-badge">+4.2% YTD</span>
-        </div>
-        <p class="stat-title">Total Emissions (YTD)</p>
-        <h2 class="stat-number">14,280 <span class="stat-unit">tCO₂e</span></h2>
+        <p class="stat-title">Total Corporate Emissions</p>
+        <h2 class="stat-number">12,450 <span class="stat-unit">tCO₂e</span></h2>
       </div>
-
-      <!-- Sustainability Score -->
       <div class="eco-card card-stat">
-        <div class="card-stat-header">
-          <div class="stat-icon-wrapper success-bg">
-            <i class="bi bi-award"></i>
-          </div>
-          <span class="stat-badge success-badge">Gold Tier Status</span>
-        </div>
-        <p class="stat-title">Sustainability Score</p>
-        <div class="score-circle-wrapper">
-          <h2 class="stat-number">82 <span class="stat-total">/ 100</span></h2>
-          <div class="progress-bar-container">
-            <div class="progress-bar success-bar" style="width: 82%"></div>
-          </div>
-        </div>
+        <p class="stat-title">Carbon Offset Goal</p>
+        <h2 class="stat-number">65 <span class="stat-total">%</span></h2>
       </div>
-
-      <!-- Offset Progress -->
       <div class="eco-card card-stat">
-        <div class="card-stat-header">
-          <div class="stat-icon-wrapper info-bg">
-            <i class="bi bi-graph-up-arrow"></i>
-          </div>
-          <span class="stat-badge info-badge">Target: 15,000t</span>
-        </div>
-        <p class="stat-title">Offset Progress</p>
-        <h2 class="stat-number">64%</h2>
-        <div class="progress-bar-container">
-          <div class="progress-bar info-bar" style="width: 64%"></div>
-        </div>
-        <p class="stat-subtext">9,140 tons offset via reforestation projects.</p>
+        <p class="stat-title">Active Green Projects</p>
+        <h2 class="stat-number">14</h2>
+      </div>
+      <div class="eco-card card-stat">
+        <p class="stat-title">Renewable Ratio</p>
+        <h2 class="stat-number">42 <span class="stat-total">%</span></h2>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Charts & Analytics Grid -->
-    <div class="eco-grid eco-grid-cols-3 chart-analytics-grid">
-      <!-- Emission Trends line chart -->
-      <div class="eco-card chart-card col-span-2">
-        <div class="chart-header">
-          <h3>Emission Trends</h3>
-          <span class="text-secondary font-sm">Monthly breakdown of carbon output</span>
-        </div>
-
-        <div class="svg-chart-container">
-          <svg viewBox="0 0 350 120" class="svg-line-chart">
-            <!-- Grid Lines -->
-            <line x1="0" y1="20" x2="350" y2="20" stroke="var(--color-border)" stroke-dasharray="2,2" />
-            <line x1="0" y1="50" x2="350" y2="50" stroke="var(--color-border)" stroke-dasharray="2,2" />
-            <line x1="0" y1="80" x2="350" y2="80" stroke="var(--color-border)" stroke-dasharray="2,2" />
-            <line x1="0" y1="110" x2="350" y2="110" stroke="var(--color-border)" />
-
-            <!-- Curve Background Gradient Area -->
-            <path [attr.d]="getAreaPathString(orgChartPoints, 110)" fill="url(#orgGrad)" opacity="0.15" />
-
-            <!-- Smooth Line Path -->
-            <path [attr.d]="getPathString(orgChartPoints)" fill="none" stroke="var(--color-success)" stroke-width="2.5" />
-
-            <!-- Data Points -->
-            <g *ngFor="let pt of orgChartPoints; let i = index">
-              <circle 
-                [attr.cx]="pt.x" 
-                [attr.cy]="pt.y" 
-                r="6" 
-                fill="var(--color-success)" 
-                stroke="#fff" 
-                stroke-width="1.5" 
-                class="chart-point"
-                (mouseenter)="showOrgTooltip(pt, i)"
-                (mouseleave)="hideOrgTooltip()">
-              </circle>
-            </g>
-
-            <!-- Definitions -->
-            <defs>
-              <linearGradient id="orgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="var(--color-success)" />
-                <stop offset="100%" stop-color="var(--color-success)" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          <!-- Interactive Tooltip Overlay -->
-          <div 
-            *ngIf="activeOrgPoint" 
-            class="chart-tooltip" 
-            [style.left.%]="(activeOrgPoint.x / 350) * 100" 
-            [style.top.%]="(activeOrgPoint.y / 120) * 100">
-            <span class="tooltip-label">{{ activeOrgPoint.label }}</span>
-            <span class="tooltip-value">{{ activeOrgPoint.value }}</span>
-          </div>
-        </div>
-
-        <div class="chart-footer">
-          <span class="chart-label">Jan</span>
-          <span class="chart-label">Mar</span>
-          <span class="chart-label">May</span>
-          <span class="chart-label">Jul (11.9k)</span>
-          <span class="chart-label">Sep</span>
-          <span class="chart-label">Nov</span>
-        </div>
+<!-- QUICK ADD ACTIVITY MODAL (OPENED FROM DASHBOARD) -->
+<div *ngIf="showQuickModal" class="modal-backdrop">
+  <div class="quick-modal-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-plus-circle-fill" style="color: #059669; margin-right: 0.5rem;"></i> Quick Log Activity</h3>
+      <button class="close-btn" (click)="closeQuickModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Select Category</label>
+        <select class="form-control" [ngModel]="quickCategoryCode" (ngModelChange)="selectQuickCategory($event)">
+          <option *ngFor="let c of categories" [value]="c.code">{{ c.name }}</option>
+        </select>
       </div>
-
-      <!-- Department Breakdown Progress List -->
-      <div class="eco-card chart-card">
-        <h3>Department Breakdown</h3>
-        <p class="font-sm text-secondary" style="margin-bottom: 20px;">Highest emitters vs Goal</p>
-        <div class="dept-list">
-          <div class="dept-item" *ngFor="let dept of departmentBreakdown">
-            <div class="dept-meta">
-              <span class="dept-name">{{ dept.name }}</span>
-              <span class="dept-pct">{{ dept.percentage }}%</span>
-            </div>
-            <div class="progress-bar-container">
-              <div class="progress-bar" [style.width.%]="dept.percentage" [style.background-color]="dept.color"></div>
-            </div>
-          </div>
-        </div>
-        <button class="btn btn-text btn-block-link" style="margin-top: 24px;">View Detailed Report &rarr;</button>
+      <div class="form-group">
+        <label>Activity Name</label>
+        <input type="text" class="form-control" [(ngModel)]="quickActivityName" (ngModelChange)="recalculateQuickPreview()" placeholder="e.g. Commute, Electricity, Lunch">
+      </div>
+      <div class="form-group">
+        <label>Quantity ({{ quickUnit }})</label>
+        <input type="number" class="form-control" [(ngModel)]="quickQuantity" (ngModelChange)="recalculateQuickPreview()" min="0">
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <input type="text" class="form-control" [(ngModel)]="quickNotes" placeholder="e.g. Daily office trip">
+      </div>
+      <div class="preview-box" style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 1rem; border-radius: 12px; margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #64748B; font-size: 0.85rem; font-weight: 600;">Estimated Impact:</span>
+        <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">{{ quickCalculatedCo2 }} <small style="font-size: 0.75rem;">kg CO₂e</small></span>
       </div>
     </div>
-
-    <!-- CSR Progress & Champions Grid -->
-    <div class="dashboard-bottom-grid">
-      <!-- CSR Progress Card -->
-      <div class="eco-card csr-card">
-        <h3><i class="bi bi-shield-check text-success"></i> CSR Progress</h3>
-        <div class="csr-stats-grid">
-          <div class="csr-item">
-            <span class="csr-label">Trees Planted</span>
-            <h4 class="csr-value text-success">12,400</h4>
-          </div>
-          <div class="csr-item">
-            <span class="csr-label">Plastic Diverted</span>
-            <h4 class="csr-value text-primary">2.4t</h4>
-          </div>
-        </div>
-      </div>
-
-      <!-- Top Sustainability Champions Card -->
-      <div class="eco-card champions-card">
-        <h3>Top Sustainability Champions</h3>
-        <div class="champions-list">
-          <div class="champ-item" *ngFor="let ch of orgChampions">
-            <div class="champ-left">
-              <span class="champ-rank">{{ '0' + ch.rank }}</span>
-              <img [src]="ch.avatar" alt="Avatar" class="avatar-sm champ-avatar" />
-              <div class="champ-info">
-                <p class="champ-name">{{ ch.name }}</p>
-                <p class="champ-dept">{{ ch.dept }}</p>
-              </div>
-            </div>
-            <div class="champ-right">
-              <span class="champ-pts text-success">{{ ch.points | number }} pts</span>
-              <span class="champ-badge">Top Offsetter</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-secondary" (click)="closeQuickModal()">Cancel</button>
+      <button class="btn btn-primary" [disabled]="isLogging" (click)="onQuickLogActivity()">
+        <i class="bi bi-check2"></i> {{ isLogging ? 'Saving...' : 'Save & Log Activity' }}
+      </button>
     </div>
   </div>
 </div>

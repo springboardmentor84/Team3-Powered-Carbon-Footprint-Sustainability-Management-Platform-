@@ -2,8 +2,8 @@
 
 .about-container {
   min-height: 100vh;
-  background-color: #0c1017;
-  color: #f8fafc;
+  background-color: #F8FAFC;
+  color: #0F172A;
   font-family: 'Inter', sans-serif;
   position: relative;
   overflow: hidden;
@@ -155,19 +155,20 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   margin-bottom: 24px;
-  color: #ffffff;
+  color: #0F172A;
 }
 
 .text-gradient {
   background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-desc {
   font-size: 1.25rem;
   line-height: 1.6;
-  color: #94a3b8;
+  color: #475569;
 }
 
 /* Mission Section with Values Grid */
@@ -179,18 +180,19 @@
 
 .mission-grid {
   display: grid;
-  grid-template-cols: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
 
 .value-card {
-  background: rgba(18, 24, 38, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 20px;
   padding: 32px 24px;
-  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.3s ease, border-color 0.3s ease;
   text-align: center;
 }
 
@@ -281,7 +283,7 @@
 /* Responsive Utilities */
 @media (max-width: 1024px) {
   .mission-grid {
-    grid-template-cols: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
   .hero-title {
     font-size: 2.8rem;
@@ -296,7 +298,7 @@
     font-size: 2.2rem;
   }
   .mission-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
   }
   .tech-title {
     font-size: 1.8rem;

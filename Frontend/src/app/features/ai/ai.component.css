@@ -6,7 +6,7 @@
 
 .ai-chat-layout-grid {
   display: grid;
-  grid-template-cols: 2.2fr 1fr;
+  grid-template-columns: 2.2fr 1fr;
   gap: 24px;
 }
 
@@ -247,6 +247,6 @@
 /* Responsive overrides */
 @media (max-width: 992px) {
   .ai-chat-layout-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
   }
 }

@@ -18,9 +18,9 @@ export class LoginComponent {
 
   // Simple state variables using standard JS structures
   public loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    remember: [false]
+    email: ['demo@ecotrack.com', [Validators.required, Validators.email]],
+    password: ['password123', [Validators.required, Validators.minLength(6)]],
+    remember: [true]
   });
 
   // Getters for form controls for clean HTML template validations
