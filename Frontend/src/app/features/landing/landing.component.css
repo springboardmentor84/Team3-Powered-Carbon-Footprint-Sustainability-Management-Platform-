@@ -241,8 +241,9 @@
 }
 
 .floating-globe {
-  width: 90%;
-  height: 90%;
+  width: 110%;
+  height: 110%;
+  border-radius: 50%;
   object-fit: contain;
   animation: float 6s ease-in-out infinite;
   z-index: 2;
@@ -307,8 +308,8 @@
 }
 
 .card-saved {
-  bottom: 12%;
-  right: -5%;
+  bottom: 13%;
+    right: 5%;
   animation: float 7s ease-in-out infinite;
 }
 
@@ -350,7 +351,7 @@
 /* Stats Section */
 .stats-section {
   padding: 40px 0 60px;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid #0c1017;
   position: relative;
   z-index: 5;
 }
@@ -442,11 +443,10 @@
 }
 /* Footer */
 .footer {
-  background: #FFFFFF;
+  background:#0c1017;
   padding: 24px;
   text-align: center;
   border-top: 1px solid #E2E8F0;
-  margin-top: 50px;
   color: #64748B;
 }
 
@@ -473,4 +473,7 @@
   color: #94a3b8;
   font-size: 14px;
   margin: 0;
+}
+.hero-title{
+   color: #94a3b8;
 }
