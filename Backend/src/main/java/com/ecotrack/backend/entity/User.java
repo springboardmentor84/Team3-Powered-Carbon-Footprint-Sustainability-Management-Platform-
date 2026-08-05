@@ -32,4 +32,17 @@ public class User {
     @Builder.Default
     @Column(nullable = false)
     private String badgeName = "Bronze";
+
+    @Builder.Default
+    @Column(columnDefinition = "varchar(255) default 'ROLE_USER'")
+    private String role = "ROLE_USER";
+
+    @Column
+    private String location;
+
+    @Column(length = 1000)
+    private String environmentalInterests;
+
+    @Column(length = 1000)
+    private String lifestyleConfig;
 }

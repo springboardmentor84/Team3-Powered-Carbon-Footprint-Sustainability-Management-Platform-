@@ -16,4 +16,12 @@ public class UserRegistrationRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    private String role;
+
+    private String location;
+
+    private String environmentalInterests;
+
+    private String lifestyleConfig;
 }

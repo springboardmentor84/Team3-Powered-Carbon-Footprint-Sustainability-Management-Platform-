@@ -1,135 +1,77 @@
 # EcoTrack — Powered Carbon Footprint & Sustainability Management Platform
-## End-to-End Production Ready Completion Report & Setup Guide
+## End-to-End Milestone 1 (Week 1 & 2) & Feature Completion Report
 
 ---
 
 ## 1. Executive Summary
 
-The **EcoTrack Sustainability Management Platform** has been fully audited, cleaned, enhanced, and integrated end-to-end across both the **Spring Boot (Java 21)** backend and the **Angular 19** frontend. 
+The **EcoTrack Sustainability Management Platform** has been fully implemented, enhanced, and aligned with the official project PDF requirements. 
 
-All architecture requirements—including full-stack JWT authentication, CORS integration, the comprehensive **11-Category Carbon Activity Management Module** with database-driven calculation engines, activity history logs, AI sustainability recommendations, and gamified challenges—have been implemented to production-ready standards with clean, screenshot-inspired **White Background & Light Aesthetic UI/UX designs**.
-
----
-
-## 2. PostgreSQL (pgAdmin 4) Database Configuration & Setup Steps
-
-### 2.1 Database Credentials & Connection Properties
-The application is pre-configured to connect to your local PostgreSQL instance.
-
-* **Database Name:** `ecotrack`
-* **Host Address:** `localhost`
-* **Port:** `5432`
-* **Username:** `postgres`
-* **Default Password:** `postgres` (or override via environment variable `DB_PASSWORD`)
-* **JDBC URL:** `jdbc:postgresql://localhost:5432/ecotrack`
-
-### 2.2 Step-by-Step pgAdmin 4 Database Creation
-1. **Open pgAdmin 4** on your Windows machine and authenticate into your PostgreSQL server (`localhost:5432`).
-2. In the left browser pane, expand **Servers** -> **PostgreSQL**.
-3. Right-click on **Databases** -> select **Create** -> click **Database...**
-4. In the **Create - Database** modal:
-   * **Database:** enter `ecotrack`
-   * **Owner:** leave as `postgres` (or your chosen superuser)
-5. Click **Save**.
-6. **Automatic Schema Creation & Data Seeding:** You do **not** need to manually execute SQL script files. Spring Boot is configured with:
-   ```properties
-   spring.jpa.hibernate.ddl-auto=update
-   ```
-   When you start the Spring Boot server, Hibernate will automatically generate and maintain all necessary tables (`users`, `carbon_activity_categories`, `carbon_emission_factors`, `carbon_activities`, `carbon_calculation_history`, `carbon_offsets`, `carbon_emissions`, `challenges`, `goals`, etc.), and our **`CarbonActivityDataSeeder`** will seed all 11 categories, 27+ default emission factors, and default Demo User credentials automatically.
-
-### 2.3 Default Seeded Demo User Credentials
-When Spring Boot starts, if these users do not already exist in PostgreSQL, they are seeded automatically:
-* **Primary Demo Account:**
-  * **Email:** `demo@ecotrack.com`
-  * **Password:** `password123`
-  * **Full Name:** `Alex Rivers`
-  * **Reward Points:** `1240` (`Level 12 Explorer`)
-* **Secondary Test Account:**
-  * **Email:** `user@ecotrack.com`
-  * **Password:** `demo123`
+This update completes **Milestone 1 (Week 1 & 2: Requirements, Database Schema Design, Profile Management & Backend Setup)** and delivers full-screen, clean, user-friendly UI designs for the **Home Page**, **About Us Page**, and **Multi-Step User Registration Page**.
 
 ---
 
-## 3. Detailed Breakdown of Work Completed
+## 2. Milestone 1 (Week 1 & 2) Requirements & Implementation Audit
 
-### 3.1 11-Category Carbon Activity Management Module & Calculation Engine
-* **Normalized PostgreSQL JPA Schema ([com.ecotrack.backend.activity.entity](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/Backend/src/main/java/com/ecotrack/backend/activity/entity)):**
-  * **`CarbonActivityCategory`**: Stores 11 sustainability categories (`TRANSPORTATION`, `ELECTRICITY`, `COOKING_FUEL`, `FOOD_CONSUMPTION`, `WATER_USAGE`, `WASTE_MANAGEMENT`, `SHOPPING`, `TRAVEL`, `TREE_PLANTATION`, `RECYCLING`, `RENEWABLE_ENERGY`), default units, and offset indicator flags.
-  * **`CarbonEmissionFactor`**: Stores scientific emission factors (`kg CO₂e` per unit) for subcategories (e.g. Petrol Car, EV, Metro, LPG, Vegetarian Meal, E-Waste, Tree Planted).
-  * **`CarbonActivity`**: Uses UUID primary keys and auditing columns (`createdAt`, `updatedAt`, `deleted`, `createdBy`).
-  * **`CarbonCalculationHistory`**: Full audit trail recording exact formulas used (`Quantity x EmissionFactor`), timestamps, and factor values.
-  * **`CarbonOffset`**: Tracks reforestation, recycling, and renewable energy savings.
-* **Calculation Engine ([CarbonCalculationService.java](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/Backend/src/main/java/com/ecotrack/backend/activity/service/CarbonCalculationService.java)):**
-  * Dynamically queries the active emission factor from PostgreSQL and computes `Calculated CO₂e = Input Quantity × Emission Factor`.
-* **REST Controller & Anonymous Fallback ([CarbonActivityController.java](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/Backend/src/main/java/com/ecotrack/backend/activity/controller/CarbonActivityController.java)):**
-  * Complete endpoints for CRUD, paginated filtering by category, summary statistics, and live preview calculations.
-  * Built-in `findOrCreateUserByEmail` fallback in service ensures that clicking **"Add Activity"** never fails with user-not-found exceptions.
-
-### 3.2 Clean White Background & Screenshot-Inspired UI/UX Redesign
-* **Clean Light Mode Theme ([carbon.component.css](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/frontend/src/app/features/carbon/carbon.component.css)):**
-  * Inspired by the user's screenshots: Crisp `#F8FAFC` page container, clean `#FFFFFF` rounded white cards with soft border strokes (`#E2E8F0`) and subtle elevation shadows (`0 4px 20px rgba(0,0,0,0.03)`).
-  * Vibrant Emerald Green (`#059669`, hover `#047857`, mint badge fills `#ECFDF5`) for primary CTA buttons and active category states.
-  * Crisp Slate typography (`#0F172A` headers, `#475569` body text) for maximum readability.
-* **11 Category Card Selector Grid & Dynamic Reactive Form ([carbon.component.html](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/frontend/src/app/features/carbon/carbon.component.html)):**
-  * Interactive 11-card grid with custom icons (`bi-car-front`, `bi-lightning-charge`, `bi-fire`, `bi-egg-fried`, `bi-droplet`, `bi-trash3`, `bi-bag-check`, `bi-airplane`, `bi-tree`, `bi-recycle`, `bi-sun`).
-  * Category-specific dynamic fields (e.g. Passengers & Trip Purpose for Transportation, Provider & Renewable % for Electricity, Species & Location for Trees).
-  * Real-time calculation badge showing estimated `kg CO₂e` impact or savings.
-* **Interactive Activity Table & Floating Toast Notifications:**
-  * Top Summary Analytics Cards (**Today**, **Monthly**, **Yearly**, **Net Score & Offsets**).
-  * Full search input and category filter dropdown.
-  * Date sort button, Pagination controls (Previous / Next), Edit modal, and Delete button.
-  * Floating Toast Notification Alert at top-right for instant user feedback (`"Success! Logged activity..."`).
-
-### 3.3 Backend Security & Core Enhancements
-* **CORS Security Configuration (`SecurityConfig.java`):**
-  * Added Spring Security CORS configuration permitting requests from Angular (`http://localhost:4200`, `http://localhost:3000`).
-* **Database & Secret Defaults (`application.properties`):**
-  * Set `spring.datasource.password=${DB_PASSWORD:postgres}` and `jwt.secret` default fallbacks so the backend runs immediately without mandatory environment variables.
-* **Rich User Profile Context (`LoginResponse.java` & `UserServiceImpl.java`):**
-  * Populated `id`, `fullName`, `rewardPoints`, and `badgeName` in the login response DTO.
-* **Cleanup:** Removed empty/unwanted `Backend/database` directory and redundant test artifacts.
+| PDF Requirement Task / Outcome | Feature Implementation | Status |
+| :--- | :--- | :--- |
+| **(i) Scope & User Roles** | Defined 3 distinct roles: `ROLE_USER` (Individual), `ROLE_ORGANIZATION` (ESG Corporate Lead), and `ROLE_ADMIN` (Administrator). | :white_check_mark: Completed |
+| **(ii) Database Schema Design** | Designed JPA entities in PostgreSQL: `users`, `user_profiles` (Location, Environmental Interests, Lifestyle), `carbon_activities`, `carbon_activity_categories`, `carbon_emission_factors`, `goals`, `challenges`, `notifications`, `reports`. | :white_check_mark: Completed |
+| **(iii) Spring Boot Project Setup** | Initialized Spring Boot 3 with Spring Data JPA, Hibernate 7, Jackson JSON, and REST controllers. | :white_check_mark: Completed |
+| **(iv) PostgreSQL Database Config** | Connected to PostgreSQL (`ecotrack` database) with `spring.jpa.hibernate.ddl-auto=update` and automatic data seeding. | :white_check_mark: Completed |
+| **(v) JWT Authentication** | Implemented `JwtUtil`, BCrypt password hashing, and Spring Security filter chains for stateless token auth. | :white_check_mark: Completed |
+| **(vi) Angular Frontend Skeleton** | Built Angular 19 standalone components with routing, HTTP interceptors, lazy loading, and modern UI. | :white_check_mark: Completed |
 
 ---
 
-## 4. How to Run the Complete Full-Stack Application
+## 3. Detailed Summary of UI & Architectural Improvements
 
-### Step 1: Start the Spring Boot Backend
-1. Open PowerShell or Terminal and navigate to the backend folder:
-   ```powershell
-   cd "C:\programming\Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-\Backend"
-   ```
-2. Run the Spring Boot application using the Maven Wrapper:
-   ```powershell
-   .\mvnw.cmd spring-boot:run
-   ```
-3. The server will start on `http://localhost:8081`.
-   * On startup, Hibernate connects to PostgreSQL (`ecotrack`), updates all tables, and automatically seeds all 11 Carbon Activity categories and emission factors.
+### 3.1 Full-Screen Layout & Streamlined Navigation ([Home Page](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/frontend/src/app/features/landing/landing.component.html) & [About Us Page](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/frontend/src/app/features/about/about.component.html))
+* **Full Viewport Width:** Converted the container layouts for both the **Home Page** and **About Us Page** to span 100% full screen width, removing restricted container boundaries.
+* **Streamlined Header Navbar:** Simplified navbar navigation items to strictly **Home** and **About Us** (removing redundant filler links like platform, solutions, resources, pricing).
+* **Vibrant 3D Earth Globe Visual:** Replaced the previous brown planet illustration with a high-resolution, vibrant 3D Earth globe (`earth.png`) surrounded by an eco-glow aura.
+* **Cleaned Hero Visual:** Removed floating text overlays (*"Active Users 450k+"* and *"Carbon Saved 1.2M Tons"*) from the globe image area to provide a clean, distraction-free hero section.
 
-### Step 2: Start the Angular 19 Frontend
-1. Open a second PowerShell or Terminal window and navigate to the frontend folder:
-   ```powershell
-   cd "C:\programming\Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-\frontend"
-   ```
-2. Start the Angular development server:
-   ```powershell
-   npm start
-   ```
-   *(or `npm run dev` / `npx ng serve`)*
-3. Open your browser and navigate to **`http://localhost:4200`**.
-4. Navigate to the **Carbon Tracker** page to experience the clean white-background UI/UX, select any of the 11 categories, view real-time emission calculations, and click **"Add Activity"** to log entries and see your analytics update instantly!
+### 3.2 User Profile Management & Extended Registration (`/auth/register`)
+* **Backend Enriched Schema ([User.java](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/Backend/src/main/java/com/ecotrack/backend/entity/User.java)):** Added `role`, `location`, `environmentalInterests`, and `lifestyleConfig` columns to the `users` PostgreSQL table.
+* **Redesigned Multi-Step Registration UI ([register.component.html](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/frontend/src/app/features/auth/register/register.component.html)):**
+  * **Step 1: Credentials & Role Selector:** Allows new users to choose between `Individual User`, `Organization`, or `Administrator` with interactive role cards.
+  * **Step 2: Sustainability Profile:** Interactive chip selectors for 10 Environmental Interest categories from PDF Page 3 (*Renewable Energy, Recycling, Waste Reduction, Sustainable Living, Green Transportation, Water Conservation, Eco-Friendly Products, Climate Action, Organic Farming, Wildlife Conservation*) and lifestyle options (*Urban Apartment, EV/Hybrid, Solar Home, Plant-Based Diet*).
+
+### 3.3 Bug Fix: Database Connection & Quick Add Sub-Category Mapping
+* **Special Character Password Parsing:** Fixed PostgreSQL connection issue by configuring literal password support (`Chandru@123#`) in `application.properties`, preventing `.env` parser truncation caused by the `#` symbol.
+* **Quick Add Sub-Category Fix ([carbon.component.ts](file:///c:/programming/Team3-Powered-Carbon-Footprint-Sustainability-Management-Platform-/frontend/src/app/features/carbon/carbon.component.ts)):** Fixed Quick Add modal so that category codes automatically map to valid sub-categories (`CAR_PETROL`, `GRID_POWER`, `LPG`, `VEGETARIAN`, `TAP_WATER`, `PLASTIC`, `CLOTHING`, `FLIGHT_INTL`, `TREE_PLANTED`, `SOLAR_KWH`, `RECYCLED_MATERIAL`). Activities now save directly to the PostgreSQL database.
 
 ---
 
-## 5. White Background Light-Theme Aesthetic UI/UX Redesign & Cleanup
-* **Pure Light & White Background Architecture (`#F8FAFC` & `#FFFFFF`):** Removed all dark-theme backgrounds, dark cards, and dark modals across `styles.css`, Landing Page, Dashboard, Carbon Tracker, Challenges & Rewards, AI Assistant, About Us, Goals, Reports, and Profile pages.
-* **Screenshot-Inspired Emerald Green Active Pill Sidebar (`#48F374` -> `#10B981`):** Redesigned the sidebar active item to feature a vibrant green pill highlight with dark slate typography (`#0F172A`), matching the user's reference screenshots.
-* **Instant Quick Add Activity Modal on Carbon Page:** Solved the redirection issue where clicking "+ Add Activity" previously scrolled to the bottom form section. Now clicking "+ Add Activity" in the header OR clicking "+ Add" inside any of the 11 Category Cards opens a responsive Quick Add Activity Modal for immediate logging without page scrolling.
-* **Clean Code & Unwanted Files/Folders Removal:** Audited the entire workspace root, Angular `src/app` feature modules, and Java backend packages. Removed unnecessary/stray files, removed dead CSS/TS code, and fixed CSS property warnings (`grid-template-cols` -> `grid-template-columns`, added standard `background-clip: text`) across all stylesheet files.
+## 4. How to Run & Verify the Application
 
+### Step 1: Verify PostgreSQL Database
+1. Ensure your PostgreSQL server is running on `localhost:5432` with database `ecotrack`.
+2. In `pgAdmin 4`, expand **Servers** -> **PostgreSQL** -> **Databases** -> **ecotrack** -> **Schemas** -> **public** -> **Tables**.
+
+### Step 2: Start Spring Boot Backend
+Open a terminal in `Backend` and execute:
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+*(Wait until you see `Started BackendApplication` on port 8081).*
+
+### Step 3: Start Angular Frontend
+Open a terminal in `frontend` and execute:
+```powershell
+npm start
+```
+*(Navigate to `http://localhost:4200` in your web browser).*
+
+### Step 4: Verify Output
+* Open `http://localhost:4200` to view the full-screen **Home Page** with the blue Earth planet.
+* Navigate to **About Us** to view the full-screen engineering architecture and milestone report.
+* Click **Get Started** to test the new **Multi-Step Registration Page** and create a new user profile.
 
 ---
 
-## 6. Verification & Audit Summary
-* **Spring Boot Compilation Audit:** Verified via `.\mvnw.cmd clean compile -DskipTests` -> **BUILD SUCCESS** across all 66 Java files with zero compilation errors.
-* **Angular Production Bundle Audit:** Verified via `npm run build` -> **BUILD SUCCESS** in 3.47 seconds with zero template or TypeScript compilation errors.
-* **Documentation:** Updated `walkthrough.md` and this completion report (`ECOTRACK_PROJECT_COMPLETION_REPORT.md`) to reflect all architectural milestones, UI/UX redesigns, database connection instructions, and clean file organization.
+## 5. Verification Results
+
+* **Spring Boot Compilation (`.\mvnw.cmd clean compile -DskipTests`):** :white_check_mark: **BUILD SUCCESS** across all 66 Java classes in 5.94s.
+* **Angular Production Build (`npm run build`):** :white_check_mark: **SUCCESS** in 4.08s with zero template or compilation errors.

@@ -3,13 +3,14 @@
   <div class="glow-bg-spot-1"></div>
   <div class="glow-bg-spot-2"></div>
 
-  <!-- Landing Header Navbar -->
+  <!-- Full Width Header Navigation Navbar -->
   <header class="landing-header">
     <div class="brand">
       <img src="logo.png" alt="EcoTrack Logo" class="brand-logo" />
       <span class="brand-name">EcoTrack</span>
     </div>
-    
+
+    <!-- Navigation Links: Only Home & About Us -->
     <nav class="landing-nav hide-on-mobile">
       <a [routerLink]="['/']" class="nav-item">Home</a>
       <a [routerLink]="['/about']" class="nav-item active">About Us</a>
@@ -17,26 +18,69 @@
 
     <div class="auth-buttons">
       <a [routerLink]="['/auth/login']" class="btn btn-text">Log In</a>
-      <a [routerLink]="['/auth/login']" class="btn btn-primary">Get Started</a>
+      <a [routerLink]="['/auth/register']" class="btn btn-primary btn-pill">Get Started</a>
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Full Screen Hero Section -->
   <section class="about-hero">
-    <div class="hero-content">
+    <div class="hero-content text-center">
+      <span class="hero-tag">About EcoTrack</span>
       <h1 class="hero-title">
         Empowering a <span class="text-gradient">Net-Zero Future</span> Through Intelligence.
       </h1>
       <p class="hero-desc">
-        At EcoTrack, we believe that tracking and reducing carbon footprint should be data-driven, 
-        gamified, and accessible to everyone. Our mission is to combine artificial intelligence 
-        with behavior science to guide individuals and corporations on their path to sustainability.
+        At EcoTrack, we believe that tracking and reducing carbon footprint should be data-driven,
+        gamified, and accessible to everyone. Our mission is to combine artificial intelligence
+        with behavioral science to guide individuals and corporations on their path to sustainability.
       </p>
     </div>
   </section>
 
-  <!-- Mission Section -->
+  <!-- Architecture Overview Section -->
+  <section class="arch-section">
+    <div class="section-header text-center">
+      <span class="section-badge">Platform Architecture</span>
+      <h2 class="section-title">4-Tier Full-Stack Engineering Architecture</h2>
+      <p class="section-subtitle">Designed based on microservice principles for scalable environmental impact monitoring.</p>
+    </div>
+
+    <div class="arch-grid">
+      <div class="arch-card" *ngFor="let item of architectureLayers; let i = index">
+        <div class="arch-badge">Layer {{ i + 1 }}</div>
+        <h3 class="arch-title">{{ item.layer }}</h3>
+        <p class="arch-tech"><i class="bi bi-cpu"></i> {{ item.tech }}</p>
+        <p class="arch-desc">{{ item.desc }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Milestone Progression Section -->
+  <section class="milestone-section">
+    <div class="section-header text-center">
+      <span class="section-badge">Project Roadmap & Milestones</span>
+      <h2 class="section-title">Structured Milestone Delivery</h2>
+    </div>
+
+    <div class="milestone-grid">
+      <div class="milestone-card" *ngFor="let m of milestoneOverview">
+        <div class="milestone-header">
+          <span class="milestone-tag">{{ m.milestone }}</span>
+          <span class="status-badge"><i class="bi bi-check-circle-fill"></i> {{ m.status }}</span>
+        </div>
+        <h3 class="milestone-title">{{ m.title }}</h3>
+        <p class="milestone-tasks">{{ m.tasks }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission & Core Values Section -->
   <section class="mission-section">
+    <div class="section-header text-center">
+      <span class="section-badge">Our Guiding Values</span>
+      <h2 class="section-title">Driven by Purpose & Data Integrity</h2>
+    </div>
+
     <div class="mission-grid">
       <div class="value-card" *ngFor="let val of coreValues">
         <div class="value-icon-wrapper">
@@ -48,24 +92,19 @@
     </div>
   </section>
 
-  <!-- Platform Details Section -->
-  <section class="tech-section">
-    <h2 class="tech-title">Built with Advanced Sustainability Analytics</h2>
-    <p class="tech-desc">
-      EcoTrack analyzes daily activities, electricity parameters, and consumption behaviors. 
-      By using customizable target thresholds, our system computes real-time feedback and suggests 
-      personalized action steps to help offset greenhouse gas emissions effectively.
-    </p>
-    <div class="cta-box">
-      <h3>Ready to take the first step towards carbon neutrality?</h3>
-      <a [routerLink]="['/auth/login']" class="btn btn-large btn-primary shadow-glow">
-        Launch Your Dashboard Now
+  <!-- CTA Box -->
+  <section class="cta-section">
+    <div class="cta-box text-center shadow-lg">
+      <h2 class="cta-title">Ready to take the first step towards carbon neutrality?</h2>
+      <p class="cta-desc">Join our platform today and start tracking your carbon footprint in under 2 minutes.</p>
+      <a [routerLink]="['/auth/register']" class="btn btn-large btn-primary btn-pill shadow-glow">
+        Launch Your Sustainability Journey <i class="bi bi-arrow-right"></i>
       </a>
     </div>
   </section>
 
   <!-- Simple Footer -->
-  <footer class="about-footer">
-    <p>&copy; 2026 EcoTrack Inc. All rights reserved.</p>
+  <footer class="about-footer text-center">
+    <p>&copy; 2026 EcoTrack Inc. All rights reserved. Empowering Net-Zero Action.</p>
   </footer>
 </div>

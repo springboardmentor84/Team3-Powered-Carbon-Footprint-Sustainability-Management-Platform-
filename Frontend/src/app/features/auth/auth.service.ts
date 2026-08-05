@@ -23,6 +23,16 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('ecotrack_token');
       const user = localStorage.getItem('ecotrack_user');
+
+      // Purge old mock token if present
+      if (token && token.includes('mockToken')) {
+        localStorage.removeItem('ecotrack_token');
+        localStorage.removeItem('ecotrack_user');
+        this.isAuthenticated.set(false);
+        this.currentUser.set(null);
+        return;
+      }
+
       if (token && user) {
         this.isAuthenticated.set(true);
         this.currentUser.set(JSON.parse(user));
@@ -79,14 +89,23 @@ export class AuthService {
     }
   }
 
-  public async register(fullName: string, email: string, password: string): Promise<any> {
+  public async register(registerData: {
+    fullName: string;
+    email: string;
+    password: string;
+    role?: string;
+    location?: string;
+    environmentalInterests?: string;
+    lifestyleConfig?: string;
+  }): Promise<any> {
+    const { fullName, email, password } = registerData;
     if (!fullName || !email || !password) {
       return Promise.reject('Please fill in all required fields.');
     }
 
     try {
       const res: any = await firstValueFrom(
-        this.http.post(`${this.apiUrl}/register`, { fullName, email, password })
+        this.http.post(`${this.apiUrl}/register`, registerData)
       );
       return res?.data || res;
     } catch (err: any) {

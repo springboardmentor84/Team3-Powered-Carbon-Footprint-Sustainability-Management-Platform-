@@ -1,52 +1,237 @@
-<div class="register-container">
-  <div class="register-card">
+<div class="register-page">
+  <!-- Glowing Ambient Spots -->
+  <div class="glow-bg-spot-1"></div>
+  <div class="glow-bg-spot-2"></div>
 
-    <div class="logo">
-      <img src="logo.png" alt="EcoTrack" width="70">
-      <h2>Create Account</h2>
-      <p>Create your EcoTrack account</p>
+  <div class="register-card shadow-lg">
+    <!-- Header Brand -->
+    <div class="register-header">
+      <div class="brand">
+        <img src="logo.png" alt="EcoTrack Logo" class="brand-logo" />
+        <span class="brand-name">EcoTrack</span>
+      </div>
+      <h2 class="register-title">Create Your EcoTrack Account</h2>
+      <p class="register-subtitle">Join thousands of climate leaders building a net-zero future.</p>
     </div>
 
-    <div *ngIf="errorMessage" class="alert alert-danger" style="color: #dc3545; font-size: 0.9rem; margin-bottom: 1rem;">
-      {{ errorMessage }}
+    <!-- Step Progress Indicator -->
+    <div class="step-indicator">
+      <div class="step-item" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1" (click)="goToStep(1)">
+        <div class="step-badge">1</div>
+        <span class="step-label">Credentials & Role</span>
+      </div>
+      <div class="step-line" [class.active]="currentStep >= 2"></div>
+      <div class="step-item" [class.active]="currentStep >= 2">
+        <div class="step-badge">2</div>
+        <span class="step-label">Sustainability Profile</span>
+      </div>
     </div>
-    <div *ngIf="isSuccess" class="alert alert-success" style="color: #198754; font-size: 0.9rem; margin-bottom: 1rem;">
-      Account created successfully! Redirecting to login...
+
+    <!-- Alert Notifications -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ errorMessage }}</span>
     </div>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div *ngIf="isSuccess" class="alert alert-success">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>Account created successfully! Redirecting to login...</span>
+    </div>
 
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" formControlName="fullName" placeholder="Enter your full name">
+    <!-- Main Registration Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+
+      <!-- STEP 1: Credentials & Role -->
+      <div *ngIf="currentStep === 1" class="step-content">
+
+        <!-- Account Role Selection -->
+        <div class="form-group">
+          <label class="form-label">Select Your Account Type</label>
+          <div class="role-selector-grid">
+            <label class="role-card" [class.selected]="registerForm.value.role === 'ROLE_USER'">
+              <input type="radio" formControlName="role" value="ROLE_USER" class="visually-hidden" />
+              <i class="bi bi-person-fill role-icon"></i>
+              <div class="role-info">
+                <span class="role-title">Individual User</span>
+                <span class="role-desc">Track personal daily carbon impact</span>
+              </div>
+            </label>
+
+            <label class="role-card" [class.selected]="registerForm.value.role === 'ROLE_ORGANIZATION'">
+              <input type="radio" formControlName="role" value="ROLE_ORGANIZATION" class="visually-hidden" />
+              <i class="bi bi-building role-icon"></i>
+              <div class="role-info">
+                <span class="role-title">Organization</span>
+                <span class="role-desc">Manage ESG & corporate emissions</span>
+              </div>
+            </label>
+
+            <label class="role-card" [class.selected]="registerForm.value.role === 'ROLE_ADMIN'">
+              <input type="radio" formControlName="role" value="ROLE_ADMIN" class="visually-hidden" />
+              <i class="bi bi-shield-check role-icon"></i>
+              <div class="role-info">
+                <span class="role-title">Administrator</span>
+                <span class="role-desc">System moderation & global analytics</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Full Name Input -->
+        <div class="form-group">
+          <label for="fullName" class="form-label">Full Name *</label>
+          <div class="input-icon-wrapper">
+            <i class="bi bi-person input-icon"></i>
+            <input
+              id="fullName"
+              type="text"
+              formControlName="fullName"
+              placeholder="e.g. Alex Rivers"
+              class="form-control"
+              [class.is-invalid]="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid"
+            />
+          </div>
+          <span *ngIf="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid" class="field-error">
+            Full name is required.
+          </span>
+        </div>
+
+        <!-- Email Input -->
+        <div class="form-group">
+          <label for="email" class="form-label">Work or Personal Email *</label>
+          <div class="input-icon-wrapper">
+            <i class="bi bi-envelope input-icon"></i>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="alex.rivers@ecotrack.com"
+              class="form-control"
+              [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+            />
+          </div>
+          <span *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="field-error">
+            Valid email address is required.
+          </span>
+        </div>
+
+        <!-- Password Inputs Grid -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="password" class="form-label">Password *</label>
+            <div class="input-icon-wrapper">
+              <i class="bi bi-lock input-icon"></i>
+              <input
+                id="password"
+                type="password"
+                formControlName="password"
+                placeholder="At least 6 characters"
+                class="form-control"
+                [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword" class="form-label">Confirm Password *</label>
+            <div class="input-icon-wrapper">
+              <i class="bi bi-lock-fill input-icon"></i>
+              <input
+                id="confirmPassword"
+                type="password"
+                formControlName="confirmPassword"
+                placeholder="Re-enter password"
+                class="form-control"
+                [class.is-invalid]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Step Button -->
+        <button type="button" class="btn btn-primary btn-block btn-lg" (click)="goToStep(2)">
+          Continue to Sustainability Profile <i class="bi bi-arrow-right"></i>
+        </button>
+
       </div>
 
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" formControlName="email" placeholder="name@company.com">
-      </div>
+      <!-- STEP 2: Sustainability Profile & Interests -->
+      <div *ngIf="currentStep === 2" class="step-content">
 
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" formControlName="password" placeholder="Create password">
-      </div>
+        <!-- Location Input -->
+        <div class="form-group">
+          <label for="location" class="form-label">Location / Region</label>
+          <div class="input-icon-wrapper">
+            <i class="bi bi-geo-alt input-icon"></i>
+            <input
+              id="location"
+              type="text"
+              formControlName="location"
+              placeholder="e.g. San Francisco, USA or London, UK"
+              class="form-control"
+            />
+          </div>
+          <small class="form-hint">Used to localize grid emission factors and regional Eco-challenges.</small>
+        </div>
 
-      <div class="form-group">
-        <label>Confirm Password</label>
-        <input type="password" formControlName="confirmPassword" placeholder="Confirm password">
-      </div>
+        <!-- Environmental Interests Chips -->
+        <div class="form-group">
+          <label class="form-label">Select Environmental Interests</label>
+          <div class="chips-container">
+            <button
+              type="button"
+              *ngFor="let item of interestOptions"
+              class="chip-btn"
+              [class.selected]="item.selected"
+              (click)="toggleInterest(item)"
+            >
+              <i class="bi" [ngClass]="item.icon"></i>
+              <span>{{ item.name }}</span>
+              <i class="bi" [ngClass]="item.selected ? 'bi-check-lg' : 'bi-plus'"></i>
+            </button>
+          </div>
+        </div>
 
-      <button type="submit" class="register-btn" [disabled]="isLoading || isSuccess">
-        {{ isLoading ? 'Creating Account...' : 'Create Account' }}
-      </button>
+        <!-- Lifestyle Configuration Chips -->
+        <div class="form-group">
+          <label class="form-label">Lifestyle Setup</label>
+          <div class="chips-container">
+            <button
+              type="button"
+              *ngFor="let opt of lifestyleOptions"
+              class="chip-btn chip-outline"
+              [class.selected]="selectedLifestyle.includes(opt)"
+              (click)="toggleLifestyle(opt)"
+            >
+              <span>{{ opt }}</span>
+              <i class="bi" [ngClass]="selectedLifestyle.includes(opt) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions Row -->
+        <div class="form-actions-row">
+          <button type="button" class="btn btn-secondary btn-lg" (click)="goToStep(1)">
+            <i class="bi bi-arrow-left"></i> Back
+          </button>
+
+          <button type="submit" class="btn btn-primary btn-lg flex-grow-1" [disabled]="isLoading || isSuccess">
+            <span *ngIf="!isLoading">Create Account & Complete Registration</span>
+            <span *ngIf="isLoading"><i class="bi bi-arrow-repeat spin"></i> Creating Account...</span>
+          </button>
+        </div>
+
+      </div>
 
     </form>
 
-    <p class="login-link">
-      Already have an account?
-      <a routerLink="/auth/login">Login</a>
-    </p>
+    <!-- Footer Link -->
+    <div class="register-footer">
+      <p class="login-prompt">
+        Already have an EcoTrack account?
+        <a [routerLink]="['/auth/login']" class="link-highlight">Log In here</a>
+      </p>
+    </div>
 
   </div>
 </div>
-

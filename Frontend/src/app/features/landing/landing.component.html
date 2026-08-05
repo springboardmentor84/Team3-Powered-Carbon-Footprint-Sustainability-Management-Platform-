@@ -1,36 +1,34 @@
 <div class="landing-container">
-  <!-- Glowing Background Spots -->
+  <!-- Ambient Glowing Background Spots -->
   <div class="glow-bg-spot-1"></div>
   <div class="glow-bg-spot-2"></div>
 
-  <!-- Landing Header Navbar -->
+  <!-- Full Width Header Navigation Navbar -->
   <header class="landing-header">
     <div class="brand">
       <img src="logo.png" alt="EcoTrack Logo" class="brand-logo" />
       <span class="brand-name">EcoTrack</span>
     </div>
 
+    <!-- Navigation Links: Only Home & About Us as requested -->
     <nav class="landing-nav hide-on-mobile">
-      <a href="#platform" class="nav-item">Platform</a>
-      <a href="#solutions" class="nav-item">Solutions</a>
-      <a href="#resources" class="nav-item">Resources</a>
+      <a [routerLink]="['/']" class="nav-item active">Home</a>
       <a [routerLink]="['/about']" class="nav-item">About Us</a>
-      <a href="#pricing" class="nav-item">Pricing</a>
     </nav>
 
     <div class="auth-buttons">
       <a [routerLink]="['/auth/login']" class="btn btn-text">Log In</a>
-      <a [routerLink]="['/auth/login']" class="btn btn-primary">Get Started</a>
+      <a [routerLink]="['/auth/register']" class="btn btn-primary btn-pill">Get Started</a>
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Full Screen Hero Section -->
   <section class="hero-section">
     <div class="hero-content">
       <!-- Feature Tag Badge -->
       <div class="feature-badge">
         <span class="badge-icon"><i class="bi bi-sparkles"></i></span>
-        <span class="badge-text">New: AI-Powered Carbon Insights</span>
+        <span class="badge-text">New: AI-Powered Carbon Insights v2.0</span>
       </div>
 
       <!-- Headline -->
@@ -48,79 +46,75 @@
 
       <!-- Action Buttons -->
       <div class="cta-group">
-        <a [routerLink]="['/auth/login']" class="btn btn-large btn-primary shadow-glow">
+        <a [routerLink]="['/auth/register']" class="btn btn-large btn-primary btn-pill shadow-glow">
           Start Tracking Now <i class="bi bi-arrow-right"></i>
+        </a>
+        <a [routerLink]="['/auth/login']" class="btn btn-large btn-outline btn-pill">
+          View Live Demo
         </a>
       </div>
     </div>
 
-    <!-- Globe Illustration / Badges -->
+    <!-- Clean Blue Earth Planet Visual (Without floating cards) -->
     <div class="hero-visual">
-      <div class="globe-wrapper">
-        <video class="floating-globe" autoplay loop muted playsinline>
-          <source src="/globe.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <div class="globe-glow"></div>
-      </div>
-
-      <!-- Active Users Floating Card -->
-      <div class="floating-card card-users">
-        <div class="avatar-group">
-          <img
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=60&auto=format&fit=crop"
-            class="avatar-sm"
-            alt="User"
-          />
-          <img
-            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=60&auto=format&fit=crop"
-            class="avatar-sm"
-            alt="User"
-          />
-          <img
-            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=60&auto=format&fit=crop"
-            class="avatar-sm"
-            alt="User"
-          />
-          <div class="avatar-sm-more">+450k</div>
-        </div>
-        <div class="card-details">
-          <p class="card-title">Active Users</p>
-          <p class="card-value">450k+</p>
-        </div>
-      </div>
-
-      <!-- Carbon Saved Floating Card -->
-      <div class="floating-card card-saved">
-        <div class="icon-saved-wrapper">
-          <i class="bi bi-tree"></i>
-        </div>
-        <div class="card-details ">
-          <p class="card-title">Carbon Saved</p>
-          <p class="card-value text-success">1.2M Tons</p>
-        </div>
+      <div class="earth-wrapper">
+        <img src="earth.png" class="floating-earth-img" alt="Planet Earth Globe" />
+        <div class="earth-glow"></div>
       </div>
     </div>
   </section>
 
-  <!-- Statistics Banner -->
+  <!-- Statistics Banner Bar -->
   <section class="stats-section">
     <div class="stats-grid">
       <div class="stat-item" *ngFor="let stat of stats">
-        <h2 class="stat-value">{{ stat.value }}</h2>
+        <h2 class="stat-value text-gradient">{{ stat.value }}</h2>
         <p class="stat-label">{{ stat.label }}</p>
       </div>
     </div>
   </section>
-</div>
-<!-- Footer -->
-<footer class="footer">
-  <div class="footer-links">
-    <a [routerLink]="['/about']">About</a>
-    <a href="#">Privacy</a>
-    <a href="#">Terms</a>
-    <a href="#">Contact</a>
-  </div>
 
-  <p class="footer-copy">© 2026 EcoTrack. All Rights Reserved.</p>
-</footer>
+  <!-- Feature Categories Section -->
+  <section id="platform" class="categories-section">
+    <div class="section-header text-center">
+      <span class="section-badge">11 Tracking Categories</span>
+      <h2 class="section-title">Comprehensive Footprint Management</h2>
+      <p class="section-subtitle">Track every aspect of your daily life and organization with high-precision emission factors.</p>
+    </div>
+
+    <div class="categories-grid">
+      <div class="category-card" *ngFor="let cat of trackingCategories">
+        <div class="cat-icon-box">
+          <i class="bi" [ngClass]="cat.icon"></i>
+        </div>
+        <div class="cat-info">
+          <span class="cat-tag">{{ cat.count }}</span>
+          <h3 class="cat-name">{{ cat.name }}</h3>
+          <p class="cat-desc">{{ cat.desc }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="logo.png" alt="EcoTrack Logo" class="footer-logo" />
+        <span class="footer-brand-name">EcoTrack</span>
+        <p class="footer-tagline">AI-Powered Carbon Footprint & Sustainability Management Platform</p>
+      </div>
+
+      <div class="footer-links">
+        <a [routerLink]="['/']">Home</a>
+        <a [routerLink]="['/about']">About Us</a>
+        <a [routerLink]="['/auth/register']">Register</a>
+        <a [routerLink]="['/auth/login']">Login</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 EcoTrack Inc. All Rights Reserved. Built for a sustainable future.</p>
+    </div>
+  </footer>
+</div>

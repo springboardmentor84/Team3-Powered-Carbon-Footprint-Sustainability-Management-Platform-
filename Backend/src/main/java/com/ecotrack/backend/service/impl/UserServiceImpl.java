@@ -39,6 +39,10 @@ public class UserServiceImpl implements UserService {
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole() != null ? request.getRole() : "ROLE_USER")
+                .location(request.getLocation())
+                .environmentalInterests(request.getEnvironmentalInterests())
+                .lifestyleConfig(request.getLifestyleConfig())
                 .build();
 
         return userRepository.save(user);
@@ -63,7 +67,11 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getFullName(),
                 user.getRewardPoints(),
-                user.getBadgeName()
+                user.getBadgeName(),
+                user.getRole(),
+                user.getLocation(),
+                user.getEnvironmentalInterests(),
+                user.getLifestyleConfig()
         );
     }
 }

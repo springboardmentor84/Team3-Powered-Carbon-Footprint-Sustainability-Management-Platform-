@@ -16,4 +16,8 @@ public class LoginResponse {
     private String fullName;
     private Integer rewardPoints;
     private String badgeName;
+    private String role;
+    private String location;
+    private String environmentalInterests;
+    private String lifestyleConfig;
 }
