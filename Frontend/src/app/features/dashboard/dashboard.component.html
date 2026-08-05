@@ -86,14 +86,20 @@
       <div class="eco-card chart-card span-2">
         <div class="chart-header">
           <div>
-            <h3>Emissions Trend (July)</h3>
-            <p class="subtitle">Daily CO₂ output over the past 30 days</p>
+            <h3>Emissions Trend</h3>
+            <p class="subtitle">Daily CO₂ output over the last 8 days</p>
           </div>
           <div class="chart-actions">
-            <span class="badge badge-light">July 2026</span>
+            <span class="badge badge-light">Emissions Tracker</span>
           </div>
         </div>
         <div class="svg-chart-container" (mouseleave)="hideIndivTooltip()">
+          <!-- Dynamic Hover HTML Tooltip -->
+          <div *ngIf="activeIndivPoint" class="chart-tooltip" [style.left.%]="(activeIndivPoint.x / 300) * 100" [style.top.%]="((activeIndivPoint.y + 6) / 120) * 100">
+            <span class="tooltip-label">{{ activeIndivPoint.label }}</span>
+            <span class="tooltip-value">{{ activeIndivPoint.value }}</span>
+          </div>
+
           <svg viewBox="0 0 300 120" class="line-svg">
             <defs>
               <linearGradient id="indivGradient" x1="0" y1="0" x2="0" y2="1">
@@ -103,10 +109,16 @@
             </defs>
             
             <!-- Grid Lines -->
-            <line x1="0" y1="20" x2="300" y2="20" class="grid-line" />
-            <line x1="0" y1="50" x2="300" y2="50" class="grid-line" />
-            <line x1="0" y1="80" x2="300" y2="80" class="grid-line" />
-            <line x1="0" y1="110" x2="300" y2="110" class="grid-line" />
+            <line x1="25" y1="20" x2="300" y2="20" class="grid-line" />
+            <line x1="25" y1="50" x2="300" y2="50" class="grid-line" />
+            <line x1="25" y1="80" x2="300" y2="80" class="grid-line" />
+            <line x1="25" y1="110" x2="300" y2="110" class="grid-line" />
+
+            <!-- Y-Axis Value Labels -->
+            <text x="22" y="23" class="chart-y-label" text-anchor="end">{{ maxEmissionLabel }}</text>
+            <text x="22" y="53" class="chart-y-label" text-anchor="end">{{ midHighEmissionLabel }}</text>
+            <text x="22" y="83" class="chart-y-label" text-anchor="end">{{ midLowEmissionLabel }}</text>
+            <text x="22" y="113" class="chart-y-label" text-anchor="end">0.0</text>
 
             <!-- Area & Line -->
             <path [attr.d]="getAreaPathString(indivChartPoints, 110)" fill="url(#indivGradient)" />
@@ -120,13 +132,7 @@
                 r="4" 
                 class="chart-point"
                 (mouseenter)="showIndivTooltip(pt, i)" />
-              <text [attr.x]="pt.x" y="118" class="chart-x-label" text-anchor="middle">{{ pt.label }}</text>
-            </g>
-
-            <!-- Active Tooltip -->
-            <g *ngIf="activeIndivPoint" [attr.transform]="'translate(' + activeIndivPoint.x + ',' + activeIndivPoint.y + ')'">
-              <rect x="-35" y="-22" width="70" height="20" rx="4" class="svg-tooltip-bg" />
-              <text x="0" y="-8" text-anchor="middle" class="svg-tooltip-text">{{ activeIndivPoint.value }}</text>
+              <text [attr.x]="pt.x" y="119" class="chart-x-label" text-anchor="middle">{{ pt.label }}</text>
             </g>
           </svg>
         </div>

@@ -33,6 +33,11 @@ export class DashboardComponent implements OnInit {
   public ecoScore = 84;
   public totalOffsets = 0;
 
+  // Dynamic Y-axis labels for emissions trend chart
+  public maxEmissionLabel = '5.0';
+  public midHighEmissionLabel = '3.8';
+  public midLowEmissionLabel = '1.9';
+
   // Recent Activities from Activity Service
   public indivActivities: ActivityRecord[] = [];
   public categories: ActivityCategory[] = [];
@@ -107,9 +112,75 @@ export class DashboardComponent implements OnInit {
 
       const all = await this.activityService.getAllActivities();
       this.indivActivities = all.slice(0, 6);
+      this.calculateChartPoints(all);
     } catch (err) {
       console.warn('Dashboard load fallback used:', err);
     }
+  }
+
+  public calculateChartPoints(allActivities: ActivityRecord[]): void {
+    const points = [];
+    const today = new Date();
+    
+    // 1. Generate the last 8 dates (including today)
+    const dates = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      dates.push(d);
+    }
+    
+    // 2. Map activities to date keys (YYYY-MM-DD) and sum non-offset emissions
+    const emissionsMap = new Map<string, number>();
+    for (const d of dates) {
+      const key = d.toISOString().split('T')[0];
+      emissionsMap.set(key, 0);
+    }
+    
+    for (const act of allActivities) {
+      if (!act.isOffset) {
+        const key = act.activityDate;
+        if (emissionsMap.has(key)) {
+          const current = emissionsMap.get(key) || 0;
+          emissionsMap.set(key, current + act.calculatedCo2);
+        }
+      }
+    }
+    
+    // 3. Find the max value (for scaling Y coordinates)
+    const values = Array.from(emissionsMap.values());
+    const maxVal = Math.max(...values, 5.0); // baseline of at least 5.0 kg CO2e
+    
+    this.maxEmissionLabel = maxVal.toFixed(1);
+    this.midHighEmissionLabel = (maxVal * 0.75).toFixed(1);
+    this.midLowEmissionLabel = (maxVal * 0.375).toFixed(1);
+    
+    // 4. Map each date to X and Y coordinates
+    for (let i = 0; i < 8; i++) {
+      const d = dates[i];
+      const key = d.toISOString().split('T')[0];
+      const val = emissionsMap.get(key) || 0;
+      
+      // X spans from 30 to 289
+      const x = 30 + i * 37;
+      
+      // Y spans from 110 (bottom) to 30 (top)
+      const y = 110 - (val / maxVal) * 80;
+      
+      // Label: e.g. "05 Aug"
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = d.toLocaleDateString('en-US', { month: 'short' });
+      const label = i === 7 ? 'Today' : `${day} ${month}`;
+      
+      points.push({
+        x,
+        y: parseFloat(y.toFixed(1)),
+        label,
+        val: val.toFixed(1)
+      });
+    }
+    
+    this.indivChartPoints = points;
   }
 
   public openQuickModal() {
