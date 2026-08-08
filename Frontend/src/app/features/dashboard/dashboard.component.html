@@ -2,6 +2,7 @@
 <div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
   <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
   <span>{{ toastMessage }}</span>
+  <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
 </div>
 
 <div class="fade-in-section">
@@ -143,16 +144,26 @@
         <h3>Impact Breakdown</h3>
         <div class="donut-chart-container">
           <svg viewBox="0 0 100 100" class="donut-svg">
-            <circle cx="50" cy="50" r="35" fill="transparent" stroke="#10B981" stroke-width="12" stroke-dasharray="99 121" stroke-dashoffset="0" />
-            <circle cx="50" cy="50" r="35" fill="transparent" stroke="#3B82F6" stroke-width="12" stroke-dasharray="66 154" stroke-dashoffset="-99" />
-            <circle cx="50" cy="50" r="35" fill="transparent" stroke="#F59E0B" stroke-width="12" stroke-dasharray="55 165" stroke-dashoffset="-165" />
+            <circle 
+              *ngFor="let slice of donutSlices"
+              cx="50" 
+              cy="50" 
+              r="35" 
+              fill="transparent" 
+              [attr.stroke]="slice.color" 
+              stroke-width="12" 
+              [attr.stroke-dasharray]="slice.dashArray" 
+              [attr.stroke-dashoffset]="slice.dashOffset" 
+            />
             <text x="50" y="53" class="donut-text" text-anchor="middle">100%</text>
           </svg>
         </div>
         <ul class="donut-legend">
-          <li><span class="legend-dot transport-dot" style="background:#10B981"></span><span class="legend-name">Transport</span><span class="legend-val">45%</span></li>
-          <li><span class="legend-dot energy-dot" style="background:#3B82F6"></span><span class="legend-name">Energy Usage</span><span class="legend-val">30%</span></li>
-          <li><span class="legend-dot food-dot" style="background:#F59E0B"></span><span class="legend-name">Food & Diet</span><span class="legend-val">25%</span></li>
+          <li *ngFor="let slice of donutSlices">
+            <span class="legend-dot" [style.background]="slice.color"></span>
+            <span class="legend-name">{{ slice.label }}</span>
+            <span class="legend-val">{{ slice.percentage }}%</span>
+          </li>
         </ul>
       </div>
     </div>

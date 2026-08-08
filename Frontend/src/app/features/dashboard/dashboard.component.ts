@@ -42,6 +42,9 @@ export class DashboardComponent implements OnInit {
   public indivActivities: ActivityRecord[] = [];
   public categories: ActivityCategory[] = [];
 
+  // Dynamic Donut Chart Slices
+  public donutSlices: any[] = [];
+
   // Quick Add Activity Modal State
   public showQuickModal = false;
   public quickCategoryCode = 'TRANSPORTATION';
@@ -113,8 +116,13 @@ export class DashboardComponent implements OnInit {
       const all = await this.activityService.getAllActivities();
       this.indivActivities = all.slice(0, 6);
       this.calculateChartPoints(all);
+      this.calculateDonutSlices(summary);
     } catch (err) {
       console.warn('Dashboard load fallback used:', err);
+      const fallbackSummary = (this.activityService as any).calculateLocalSummary ? (this.activityService as any).calculateLocalSummary() : null;
+      if (fallbackSummary) {
+        this.calculateDonutSlices(fallbackSummary);
+      }
     }
   }
 
@@ -181,6 +189,54 @@ export class DashboardComponent implements OnInit {
     }
     
     this.indivChartPoints = points;
+  }
+
+  public calculateDonutSlices(summary: CarbonSummary) {
+    const breakdown = summary.categoryBreakdown || {};
+    
+    // Group categories
+    let transport = (breakdown['TRANSPORTATION'] || 0) + (breakdown['TRAVEL'] || 0);
+    let energy = (breakdown['ELECTRICITY'] || 0) + (breakdown['COOKING_FUEL'] || 0);
+    let food = (breakdown['FOOD_CONSUMPTION'] || 0) + (breakdown['WATER_USAGE'] || 0);
+    let other = (breakdown['WASTE_MANAGEMENT'] || 0) + (breakdown['SHOPPING'] || 0) + (breakdown['RECYCLING'] || 0) + (breakdown['TREE_PLANTATION'] || 0) + (breakdown['RENEWABLE_ENERGY'] || 0);
+    
+    const total = transport + energy + food + other;
+    
+    if (total === 0) {
+      transport = 45;
+      energy = 30;
+      food = 25;
+      other = 0;
+    }
+    
+    const rawSlices = [
+      { label: 'Transport', value: transport, color: '#10B981' },
+      { label: 'Energy Usage', value: energy, color: '#3B82F6' },
+      { label: 'Food & Diet', value: food, color: '#F59E0B' },
+      { label: 'Other Waste', value: other, color: '#8B5CF6' }
+    ].filter(s => s.value > 0);
+    
+    const grandTotal = rawSlices.reduce((acc, s) => acc + s.value, 0);
+    
+    const circumference = 219.9; // 2 * pi * 35
+    let currentOffset = 0;
+    
+    this.donutSlices = rawSlices.map(s => {
+      const pct = Math.round((s.value / grandTotal) * 100);
+      const sliceLength = (s.value / grandTotal) * circumference;
+      const remainingLength = circumference - sliceLength;
+      
+      const slice = {
+        label: s.label,
+        percentage: pct,
+        color: s.color,
+        dashArray: `${sliceLength.toFixed(1)} ${remainingLength.toFixed(1)}`,
+        dashOffset: -currentOffset
+      };
+      
+      currentOffset += sliceLength;
+      return slice;
+    });
   }
 
   public openQuickModal() {

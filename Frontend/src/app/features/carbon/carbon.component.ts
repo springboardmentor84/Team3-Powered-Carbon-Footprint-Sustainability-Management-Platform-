@@ -64,6 +64,8 @@ export class CarbonComponent implements OnInit {
 
   // Edit Modal
   public editingActivity: ActivityRecord | null = null;
+  public isUpdatingActivity = false;
+  public deletingActivityId: string | null = null;
 
   // Quick Add Modal state
   public showQuickModal = false;
@@ -404,12 +406,15 @@ export class CarbonComponent implements OnInit {
   }
 
   public async onDeleteActivity(id: string) {
+    this.deletingActivityId = id;
     try {
       await this.activityService.deleteActivity(id);
-      this.showToast('Activity record deleted.', 'success');
+      this.showToast('Activity deleted successfully', 'success');
       await this.loadDashboardData();
     } catch (err) {
       this.showToast('Could not delete activity.', 'error');
+    } finally {
+      this.deletingActivityId = null;
     }
   }
 
@@ -423,6 +428,7 @@ export class CarbonComponent implements OnInit {
 
   public async onSaveEdit() {
     if (!this.editingActivity) return;
+    this.isUpdatingActivity = true;
     try {
       await this.activityService.updateActivity(this.editingActivity.id, this.editingActivity);
       this.showToast('Activity updated successfully!', 'success');
@@ -430,6 +436,8 @@ export class CarbonComponent implements OnInit {
       await this.loadDashboardData();
     } catch (err) {
       this.showToast('Could not update activity.', 'error');
+    } finally {
+      this.isUpdatingActivity = false;
     }
   }
 

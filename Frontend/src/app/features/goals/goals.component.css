@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Goals Management CSS */
 
 .goals-header {
@@ -26,16 +27,160 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+=======
+/* Goals Management CSS - EcoTrack UI System */
+
+.goals-header {
+  margin-bottom: 20px;
+}
+
+/* Alert Notification Banners */
+.alert-banner {
+  padding: 14px 18px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--color-success, #10b981);
+  color: var(--color-success, #10b981);
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-error, #ef4444);
+  color: var(--color-error, #ef4444);
+}
+
+.alert-close {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+}
+.alert-close:hover {
+  opacity: 1;
+}
+
+/* TOAST NOTIFICATION (BOTTOM RIGHT) */
+.toast-alert {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 999999;
+  animation: slideUp 0.3s ease-out;
+  color: #ffffff;
+}
+
+.toast-alert.success {
+  background: #10b981;
+  border: 1px solid #059669;
+}
+
+.toast-alert.error {
+  background: #ef4444;
+  border: 1px solid #dc2626;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0.8;
+  margin-left: 8px;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 1. FULL-WIDTH TOP FORM CARD */
+.full-width-form-card {
+  width: 100%;
+  padding: 24px 28px;
+  border-radius: 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  margin-bottom: 28px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.form-header {
+  margin-bottom: 18px;
+}
+
+.form-header h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-form-horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-grid-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.flex-1 {
+  flex: 1;
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .form-item {
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   gap: 8px;
+=======
+  gap: 6px;
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .form-item label {
   font-weight: 600;
+<<<<<<< HEAD
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -57,10 +202,41 @@
 
 .form-item select:focus, .form-item input:focus {
   border-color: var(--color-primary);
+=======
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.invisible-label {
+  visibility: hidden;
+}
+
+.form-item select, 
+.form-item input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-item select:focus, 
+.form-item input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .create-goal-btn {
   width: 100%;
+<<<<<<< HEAD
   padding: 12px !important;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
@@ -68,6 +244,16 @@
 }
 
 /* Goals Progress Showcase */
+=======
+  padding: 10px 16px !important;
+  justify-content: center;
+  font-weight: 700;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+}
+
+/* 2. GOALS SHOWCASE PANEL BELOW */
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 .goals-list-panel {
   display: flex;
   flex-direction: column;
@@ -80,10 +266,20 @@
   align-items: center;
 }
 
+<<<<<<< HEAD
+=======
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 .badge-active {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--color-primary);
+<<<<<<< HEAD
   background: rgba(var(--color-primary-rgb), 0.08);
   padding: 4px 10px;
   border-radius: 20px;
@@ -103,21 +299,55 @@
   padding: 24px;
   position: relative;
   transition: all 0.3s ease;
+=======
+  background: rgba(46, 125, 50, 0.1);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* Multi-Column Grid Rules: 3-4 Desktop, 2-3 Laptop, 1-2 Tablet, 1 Mobile */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Goal Card Component */
+.goal-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .goal-card:hover {
   transform: translateY(-4px);
+<<<<<<< HEAD
   box-shadow: var(--card-shadow-hover);
+=======
+  box-shadow: var(--card-shadow-hover, 0 10px 25px -5px rgba(0, 0, 0, 0.1));
+  border-color: var(--color-border-hover, #cbd5e1);
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .completed-goal-card {
   border-color: var(--color-primary) !important;
+<<<<<<< HEAD
   background: linear-gradient(135deg, var(--color-card) 0%, rgba(46, 125, 50, 0.03) 100%);
+=======
+  background: linear-gradient(135deg, var(--color-card) 0%, rgba(46, 125, 50, 0.04) 100%);
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .goal-card-header {
   display: flex;
   justify-content: space-between;
+<<<<<<< HEAD
   width: 100%;
   align-items: center;
   margin-bottom: 16px;
@@ -137,6 +367,51 @@
 .electricity-icon { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
 .trees-icon { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
 .transit-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+=======
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.goal-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.emissions-icon { background: rgba(239, 68, 68, 0.12); color: var(--color-error, #ef4444); }
+.electricity-icon { background: rgba(245, 158, 11, 0.12); color: var(--color-warning, #f59e0b); }
+.trees-icon { background: rgba(16, 185, 129, 0.12); color: var(--color-success, #10b981); }
+.transit-icon { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.water-icon { background: rgba(14, 165, 233, 0.12); color: #0ea5e9; }
+.recycling-icon { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+
+.goal-status-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 
 .timeframe-tag {
   font-size: 0.7rem;
@@ -149,6 +424,7 @@
   border-radius: 6px;
 }
 
+<<<<<<< HEAD
 .goal-info {
   margin-bottom: 16px;
 }
@@ -205,6 +481,115 @@
   justify-content: center;
   font-size: 0.85rem !important;
   border-radius: 20px !important;
+=======
+.goal-body {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.goal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goal-category-label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.goal-fraction {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.current-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.divider {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+}
+
+.target-val {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+/* Dynamic Horizontal Progress Bar */
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.progress-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+.fill-completed {
+  background: var(--color-success, #10b981) !important;
+}
+
+.progress-pct {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  min-width: 36px;
+  text-align: right;
+}
+
+.goal-dates-line {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Card Actions Footer */
+.goal-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.action-progress-btn {
+  flex: 1;
+  justify-content: center;
+  font-size: 0.82rem !important;
+  padding: 6px 12px !important;
+  border-radius: 10px !important;
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
 }
 
 .action-progress-btn:disabled {
@@ -214,6 +599,7 @@
   cursor: not-allowed;
 }
 
+<<<<<<< HEAD
 /* Responsive overrides */
 @media (max-width: 1200px) {
   .goals-layout-grid {
@@ -224,5 +610,196 @@
 @media (max-width: 600px) {
   .goals-grid {
     grid-template-cols: 1fr;
+=======
+/* Icon Buttons with Rich Hover States */
+.card-icon-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+}
+
+.edit-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: rgba(46, 125, 50, 0.08);
+}
+
+.delete-btn:hover {
+  color: var(--color-error, #ef4444);
+  border-color: var(--color-error, #ef4444);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* Loading & Empty States */
+.loading-state-card, 
+.empty-state-card {
+  padding: 48px 24px;
+  background: var(--color-card);
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: var(--color-border-hover);
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* Spinner Keyframe */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+/* Modal Popup Backdrop & Cards */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--color-card);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+}
+
+.modal-lg {
+  max-width: 640px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.close-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.progress-modal-info {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  padding: 12px 16px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.quick-increment-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-increment-buttons button {
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-danger {
+  background: var(--color-error, #ef4444);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1100px) {
+  .form-grid-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .form-grid-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .invisible-label {
+    display: none;
+  }
+
+  .goals-grid {
+    grid-template-columns: 1fr;
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
   }
 }

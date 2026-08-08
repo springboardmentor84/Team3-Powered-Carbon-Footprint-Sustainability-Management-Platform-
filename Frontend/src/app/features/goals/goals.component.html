@@ -4,6 +4,7 @@
     <p class="subtitle text-secondary">Set target indicators, track real-time goal progress, and optimize your environmental habits.</p>
   </div>
 
+<<<<<<< HEAD
   <div class="goals-layout-grid">
     <!-- Goals Form -->
     <div class="eco-card form-card">
@@ -16,12 +17,48 @@
             <option value="electricity">Reduce Electricity Consumption (kWh)</option>
             <option value="trees">Plant Trees (count)</option>
             <option value="transit">Use Public Transport (trips)</option>
+=======
+  <!-- BOTTOM-RIGHT TOAST ALERT NOTIFICATION -->
+  <div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+    <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+    <span>{{ toastMessage }}</span>
+    <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
+  </div>
+
+  <!-- 1. FULL-WIDTH TOP FORM CARD -->
+  <div class="eco-card form-card full-width-form-card">
+    <div class="form-header">
+      <h3><i class="bi bi-bullseye text-primary"></i> Set a New Goal</h3>
+    </div>
+
+    <form (submit)="onCreateGoal(); $event.preventDefault();" class="goal-form-horizontal">
+      <div class="form-grid-row">
+        <div class="form-item">
+          <label for="goal-type">Goal Category</label>
+          <select id="goal-type" [(ngModel)]="goalType" name="goalType">
+            <option value="emissions">Reduce Carbon Emissions (kg CO₂e)</option>
+            <option value="electricity">Reduce Electricity Consumption (kWh)</option>
+            <option value="trees">Plant Trees (count)</option>
+            <option value="transit">Use Public Transport (trips)</option>
+            <option value="water">Reduce Water Usage (litres)</option>
+            <option value="recycling">Increase Recycling (kg)</option>
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
           </select>
         </div>
 
         <div class="form-item">
+<<<<<<< HEAD
           <label for="goal-target">Target Value</label>
           <input type="number" id="goal-target" [(ngModel)]="goalTarget" name="goalTarget" min="1" placeholder="e.g. 50">
+=======
+          <label for="goal-title">Goal Title (Optional)</label>
+          <input type="text" id="goal-title" [(ngModel)]="goalTitle" name="goalTitle" placeholder="e.g. Daily Commute Reduction">
+        </div>
+
+        <div class="form-item">
+          <label for="goal-target">Target Value</label>
+          <input type="number" id="goal-target" [(ngModel)]="goalTarget" name="goalTarget" min="1" required placeholder="e.g. 50">
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
         </div>
 
         <div class="form-item">
@@ -32,6 +69,7 @@
             <option value="yearly">Yearly</option>
           </select>
         </div>
+<<<<<<< HEAD
 
         <button type="submit" class="btn btn-primary create-goal-btn">
           <i class="bi bi-bullseye"></i> Set Goal
@@ -88,8 +126,279 @@
             <i class="bi" [ngClass]="goal.progress === 100 ? 'bi-check-all' : 'bi-plus-lg'"></i>
             {{ goal.progress === 100 ? 'Goal Met!' : 'Add Progress' }}
           </button>
+=======
+      </div>
+
+      <div class="form-grid-row mt-2">
+        <div class="form-item flex-1">
+          <label for="goal-start-date">Start Date</label>
+          <input type="date" id="goal-start-date" [(ngModel)]="goalStartDate" name="goalStartDate">
+        </div>
+
+        <div class="form-item flex-1">
+          <label for="goal-end-date">End Date / Deadline</label>
+          <input type="date" id="goal-end-date" [(ngModel)]="goalEndDate" name="goalEndDate">
+        </div>
+
+        <div class="form-item form-submit-container">
+          <label class="invisible-label">&nbsp;</label>
+          <button type="submit" class="btn btn-primary create-goal-btn" [disabled]="isCreatingGoal">
+            <i *ngIf="isCreatingGoal" class="bi bi-arrow-repeat spin-icon"></i>
+            <i *ngIf="!isCreatingGoal" class="bi bi-plus-circle"></i>
+            {{ isCreatingGoal ? 'Saving...' : 'Set Goal' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. ACTIVE GOALS LIST SECTION BELOW -->
+  <div class="goals-list-panel mt-4">
+    <div class="panel-header">
+      <div>
+        <h3>Active Goals</h3>
+        <p class="text-secondary small">Track your environmental targets & deadlines</p>
+      </div>
+      <span class="badge-active">{{ goals.length }} Active</span>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state-card text-center">
+      <i class="bi bi-arrow-repeat spin-icon"></i>
+      <p>Loading sustainability goals...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="goals.length === 0 && !isLoading" class="empty-state-card">
+      <i class="bi bi-journal-check empty-icon"></i>
+      <h4>No Goals Setup Yet</h4>
+      <p>Define your environmental targets using the form above to begin tracking your sustainability progress!</p>
+    </div>
+
+    <!-- Goals Grid -->
+    <div *ngIf="!isLoading && goals.length > 0" class="goals-grid">
+      <div class="eco-card goal-card" *ngFor="let goal of goals" [class.completed-goal-card]="goal.status === 'Completed'">
+        <!-- Card Header -->
+        <div class="goal-card-header">
+          <div class="goal-icon-wrapper" [ngClass]="goal.type + '-icon'">
+            <i class="bi" [ngClass]="getGoalTypeIcon(goal.type)"></i>
+          </div>
+          
+          <div class="goal-status-group">
+            <span class="status-badge" [class.status-completed]="goal.status === 'Completed'">
+              <i class="bi" [ngClass]="goal.status === 'Completed' ? 'bi-check-circle-fill' : 'bi-hourglass-split'"></i>
+              {{ goal.status }}
+            </span>
+            <span class="timeframe-tag">{{ goal.timeframe }}</span>
+          </div>
+        </div>
+
+        <!-- Goal Info -->
+        <div class="goal-body">
+          <h4 class="goal-title" [title]="goal.title">{{ goal.title }}</h4>
+          <p class="goal-category-label">{{ getGoalTypeLabel(goal.type) }}</p>
+
+          <!-- Value Fraction -->
+          <div class="goal-fraction">
+            <span class="current-val">{{ goal.current }}</span>
+            <span class="divider">/</span>
+            <span class="target-val">{{ goal.target }} {{ goal.unit }}</span>
+          </div>
+
+          <!-- Dynamic Horizontal Progress Bar -->
+          <div class="progress-bar-container">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="goal.progress" [class.fill-completed]="goal.status === 'Completed'"></div>
+            </div>
+            <span class="progress-pct">{{ goal.progress }}%</span>
+          </div>
+
+          <!-- Date Boundaries -->
+          <div class="goal-dates-line">
+            <i class="bi bi-calendar3"></i>
+            <span>{{ formatDateDisplay(goal.startDate) }} → {{ formatDateDisplay(goal.endDate) }}</span>
+          </div>
+        </div>
+
+        <!-- Card Actions Footer -->
+        <div class="goal-card-footer">
+          <button 
+            [disabled]="goal.status === 'Completed'" 
+            (click)="openProgressModal(goal)" 
+            class="btn btn-outline-light action-progress-btn">
+            <i class="bi" [ngClass]="goal.status === 'Completed' ? 'bi-check-all' : 'bi-plus-lg'"></i>
+            {{ goal.status === 'Completed' ? 'Goal Met!' : 'Add Progress' }}
+          </button>
+
+          <div class="card-icon-actions">
+            <button type="button" class="btn-icon edit-btn" (click)="openEditModal(goal)" title="Edit Goal">
+              <i class="bi bi-pencil"></i>
+            </button>
+
+            <button type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(goal)" title="Delete Goal">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)
         </div>
       </div>
     </div>
   </div>
 </div>
+<<<<<<< HEAD
+=======
+
+<!-- 3. EDIT GOAL MODAL POPUP -->
+<div *ngIf="showEditModal" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card modal-lg">
+    <div class="modal-header">
+      <h3><i class="bi bi-pencil-square text-primary"></i> Edit Goal</h3>
+      <button type="button" class="close-btn" (click)="closeEditModal()">&times;</button>
+    </div>
+
+    <form (submit)="onUpdateGoal(); $event.preventDefault();" class="modal-form">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-item flex-1">
+            <label for="edit-type">Goal Category</label>
+            <select id="edit-type" [(ngModel)]="editType" name="editType">
+              <option value="emissions">Reduce Carbon Emissions (kg CO₂e)</option>
+              <option value="electricity">Reduce Electricity Consumption (kWh)</option>
+              <option value="trees">Plant Trees (count)</option>
+              <option value="transit">Use Public Transport (trips)</option>
+              <option value="water">Reduce Water Usage (litres)</option>
+              <option value="recycling">Increase Recycling (kg)</option>
+            </select>
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="edit-title">Goal Title</label>
+            <input type="text" id="edit-title" [(ngModel)]="editTitle" name="editTitle" placeholder="e.g. Daily Commute Reduction">
+          </div>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-item flex-1">
+            <label for="edit-target">Target Value</label>
+            <input type="number" id="edit-target" [(ngModel)]="editTarget" name="editTarget" min="1" required>
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="edit-current">Current Progress</label>
+            <input type="number" id="edit-current" [(ngModel)]="editCurrent" name="editCurrent" min="0">
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="edit-timeframe">Timeframe</label>
+            <select id="edit-timeframe" [(ngModel)]="editTimeframe" name="editTimeframe">
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-item flex-1">
+            <label for="edit-start-date">Start Date</label>
+            <input type="date" id="edit-start-date" [(ngModel)]="editStartDate" name="editStartDate">
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="edit-end-date">End Date / Deadline</label>
+            <input type="date" id="edit-end-date" [(ngModel)]="editEndDate" name="editEndDate">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light" (click)="closeEditModal()" [disabled]="isUpdatingGoal">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isUpdatingGoal">
+          <i *ngIf="isUpdatingGoal" class="bi bi-arrow-repeat spin-icon"></i>
+          <i *ngIf="!isUpdatingGoal" class="bi bi-check-lg"></i>
+          {{ isUpdatingGoal ? 'Updating...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 4. ADD / UPDATE PROGRESS MODAL POPUP -->
+<div *ngIf="showProgressModal" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-plus-circle-fill text-success"></i> Update Progress</h3>
+      <button type="button" class="close-btn" (click)="closeProgressModal()">&times;</button>
+    </div>
+
+    <form (submit)="onSaveProgress(); $event.preventDefault();" class="modal-form">
+      <div class="modal-body">
+        <p class="mb-2">Goal: <strong>"{{ progressGoal?.title }}"</strong></p>
+
+        <div class="progress-modal-info">
+          <div class="info-row">
+            <span>Target:</span> <strong>{{ progressGoal?.target }} {{ progressGoal?.unit }}</strong>
+          </div>
+          <div class="info-row">
+            <span>Current:</span> <strong>{{ progressGoal?.current }} {{ progressGoal?.unit }}</strong>
+          </div>
+        </div>
+
+        <div class="form-item mt-3">
+          <label for="new-current">New Current Progress ({{ progressGoal?.unit }})</label>
+          <input 
+            type="number" 
+            id="new-current" 
+            [(ngModel)]="newCurrentValue" 
+            name="newCurrentValue" 
+            [min]="0" 
+            required
+            placeholder="Enter updated progress"
+          >
+        </div>
+
+        <div class="quick-increment-buttons mt-3">
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newCurrentValue = newCurrentValue + 1">+1</button>
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newCurrentValue = newCurrentValue + 5">+5</button>
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newCurrentValue = newCurrentValue + 10">+10</button>
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newCurrentValue = progressGoal?.target || newCurrentValue">Mark Met</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light" (click)="closeProgressModal()" [disabled]="isSavingProgress">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSavingProgress">
+          <i *ngIf="isSavingProgress" class="bi bi-arrow-repeat spin-icon"></i>
+          {{ isSavingProgress ? 'Saving...' : 'Update Progress' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 5. DELETE CONFIRMATION MODAL POPUP -->
+<div *ngIf="showDeleteConfirm" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-exclamation-triangle-fill text-danger"></i> Delete Goal?</h3>
+      <button type="button" class="close-btn" (click)="closeDeleteConfirm()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong>"{{ goalToDelete?.title }}"</strong>?</p>
+      <p class="text-secondary small">This action cannot be undone and will permanently remove this target.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-light" (click)="closeDeleteConfirm()" [disabled]="isDeletingGoal">
+        Cancel
+      </button>
+
+      <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeletingGoal">
+        <i *ngIf="isDeletingGoal" class="bi bi-arrow-repeat spin-icon"></i>
+        {{ isDeletingGoal ? 'Deleting...' : 'Delete Goal' }}
+      </button>
+    </div>
+  </div>
+</div>
+>>>>>>> a6a413e (feat: add goal management and dashboard updates)

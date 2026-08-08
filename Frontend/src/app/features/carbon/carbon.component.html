@@ -2,6 +2,7 @@
 <div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
   <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
   <span>{{ toastMessage }}</span>
+  <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
 </div>
 
 <div class="activity-module-container">
@@ -47,7 +48,7 @@
 
     <div class="analytics-card">
       <div class="card-icon purple-bg">
-        <i class="bi bi-calendar2-year-fill"></i>
+        <i class="bi bi-calendar3-range"></i>
       </div>
       <div class="card-info">
         <span class="card-label">YEARLY EMISSION</span>
