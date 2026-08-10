@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 export interface Goal {
   id: number | string;
@@ -65,7 +65,7 @@ export class GoalService {
 
   public async getGoals(): Promise<Goal[]> {
     try {
-      const res: any = await firstValueFrom(this.http.get(this.apiUrl));
+      const res: any = await firstValueFrom(this.http.get(this.apiUrl).pipe(timeout(2000)));
       let goalsList: Goal[] = [];
       if (res && res.success && Array.isArray(res.data)) {
         goalsList = res.data;
@@ -83,7 +83,7 @@ export class GoalService {
 
   public async createGoal(payload: Partial<Goal>): Promise<Goal> {
     try {
-      const res: any = await firstValueFrom(this.http.post(this.apiUrl, payload));
+      const res: any = await firstValueFrom(this.http.post(this.apiUrl, payload).pipe(timeout(2000)));
       if (res && (res.success || res.id)) {
         return this.enrichGoal(res.data || res);
       }
@@ -113,7 +113,7 @@ export class GoalService {
 
   public async updateGoal(id: number | string, payload: Partial<Goal>): Promise<Goal> {
     try {
-      const res: any = await firstValueFrom(this.http.put(`${this.apiUrl}/${id}`, payload));
+      const res: any = await firstValueFrom(this.http.put(`${this.apiUrl}/${id}`, payload).pipe(timeout(2000)));
       if (res && (res.success || res.id)) {
         return this.enrichGoal(res.data || res);
       }
@@ -143,7 +143,7 @@ export class GoalService {
 
   public async deleteGoal(id: number | string): Promise<void> {
     try {
-      await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`));
+      await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`).pipe(timeout(2000)));
     } catch (err) {
       console.warn('API deleteGoal failed, deleting from localStorage fallback:', err);
       let goals = this.getLocalGoals();

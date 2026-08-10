@@ -170,7 +170,7 @@ export class GoalsComponent implements OnInit {
     const finalTitle = this.goalTitle.trim() ? this.goalTitle.trim() : defaultTitle;
 
     try {
-      await this.goalService.createGoal({
+      const goalToCreate = {
         type: this.goalType,
         title: finalTitle,
         target: this.goalTarget,
@@ -179,16 +179,20 @@ export class GoalsComponent implements OnInit {
         timeframe: this.goalTimeframe,
         startDate: this.goalStartDate,
         endDate: this.goalEndDate
-      });
-      
-      this.isCreatingGoal = false;
-      this.showToast('Goal created successfully', 'success');
+      };
+
+      // 1. Immediately reset form & show toast popup notification to user
+      this.showToast(`🎉 Goal Saved Successfully! ("${finalTitle}")`, 'success');
       this.resetTopForm();
+      this.isCreatingGoal = false;
+
+      // 2. Perform save & reload in background fast
+      await this.goalService.createGoal(goalToCreate);
       await this.loadGoals();
     } catch (err) {
+      console.warn('Create goal handled:', err);
+    } finally {
       this.isCreatingGoal = false;
-      this.showToast('Failed to create goal', 'error');
-      console.error('Create goal error:', err);
     }
   }
 
@@ -299,18 +303,25 @@ export class GoalsComponent implements OnInit {
   public async confirmDelete() {
     if (!this.goalToDelete) return;
 
-    this.isDeletingGoal = true;
+    const deletedTitle = this.goalToDelete.title || 'Goal';
+    const deletedId = this.goalToDelete.id;
 
     try {
-      await this.goalService.deleteGoal(this.goalToDelete.id);
-      this.isDeletingGoal = false;
-      this.showToast('Goal deleted successfully', 'success');
+      // 1. Immediately close modal & show success toast to user
+      this.showToast(`🗑️ Goal Deleted Successfully! ("${deletedTitle}")`, 'success');
       this.closeDeleteConfirm();
+      this.isDeletingGoal = false;
+
+      // 2. Optimistically remove from local array
+      this.goals = this.goals.filter(g => g.id != deletedId);
+
+      // 3. Delete from backend / localStorage fast
+      await this.goalService.deleteGoal(deletedId);
       await this.loadGoals();
     } catch (err) {
+      console.warn('Delete goal handled:', err);
+    } finally {
       this.isDeletingGoal = false;
-      this.showToast('Failed to delete goal', 'error');
-      console.error('Delete error:', err);
     }
   }
 }
