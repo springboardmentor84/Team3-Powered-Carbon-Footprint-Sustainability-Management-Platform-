@@ -24,6 +24,8 @@ export class GoalService {
   private apiUrl = 'http://localhost:8081/api/goals';
   private storageKey = 'ecotrack_goals';
 
+  private cachedGoals: Goal[] | null = null;
+
   private getTodayStr(): string {
     return new Date().toISOString().split('T')[0];
   }
@@ -46,6 +48,9 @@ export class GoalService {
       if (!localStorage.getItem(this.storageKey)) {
         localStorage.setItem(this.storageKey, JSON.stringify(this.fallbackGoals));
       }
+      this.cachedGoals = this.getLocalGoals();
+    } else {
+      this.cachedGoals = this.fallbackGoals;
     }
   }
 
@@ -58,97 +63,123 @@ export class GoalService {
   }
 
   private saveLocalGoals(goals: Goal[]) {
+    this.cachedGoals = goals;
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem(this.storageKey, JSON.stringify(goals));
     }
   }
 
   public async getGoals(): Promise<Goal[]> {
+    // 1. Instantly return cached goals in 0ms if available
+    if (this.cachedGoals && this.cachedGoals.length > 0) {
+      // Trigger background sync non-blockingly
+      this.syncBackgroundGoals();
+      return this.enrichGoals(this.cachedGoals);
+    }
+
+    // 2. Fallback to local storage instant load
+    const local = this.getLocalGoals();
+    this.cachedGoals = local;
+    this.syncBackgroundGoals();
+    return this.enrichGoals(local);
+  }
+
+  private async syncBackgroundGoals(): Promise<void> {
     try {
-      const res: any = await firstValueFrom(this.http.get(this.apiUrl).pipe(timeout(2000)));
+      const res: any = await firstValueFrom(this.http.get(this.apiUrl).pipe(timeout(1500)));
       let goalsList: Goal[] = [];
       if (res && res.success && Array.isArray(res.data)) {
         goalsList = res.data;
       } else if (Array.isArray(res)) {
         goalsList = res;
-      } else {
-        goalsList = this.getLocalGoals();
       }
-      return this.enrichGoals(goalsList);
-    } catch (err) {
-      console.warn('API getGoals failed, using localStorage fallback:', err);
-      return this.enrichGoals(this.getLocalGoals());
+      if (goalsList.length > 0) {
+        this.saveLocalGoals(goalsList);
+      }
+    } catch {
+      // Silent background catch - cached data is already displayed instantly
     }
   }
 
   public async createGoal(payload: Partial<Goal>): Promise<Goal> {
+    const goals = this.cachedGoals ? [...this.cachedGoals] : this.getLocalGoals();
+    const targetVal = payload.target || 10;
+    const currentVal = payload.current || 0;
+    const newGoal: Goal = {
+      id: Date.now(),
+      type: payload.type || 'emissions',
+      title: payload.title || 'Reduce Carbon Footprint',
+      target: targetVal,
+      current: currentVal,
+      unit: payload.unit || 'kg',
+      timeframe: payload.timeframe || 'weekly',
+      status: currentVal >= targetVal ? 'Completed' : 'In Progress',
+      startDate: payload.startDate || this.getTodayStr(),
+      endDate: payload.endDate || this.getFutureDateStr(30)
+    };
+
+    // Instant local memory update (0ms)
+    goals.unshift(newGoal);
+    this.saveLocalGoals(goals);
+
+    // Sync with backend fast
     try {
-      const res: any = await firstValueFrom(this.http.post(this.apiUrl, payload).pipe(timeout(2000)));
+      const res: any = await firstValueFrom(this.http.post(this.apiUrl, payload).pipe(timeout(1500)));
       if (res && (res.success || res.id)) {
-        return this.enrichGoal(res.data || res);
+        const serverGoal = this.enrichGoal(res.data || res);
+        // Replace temp id with server id if needed
+        const idx = goals.findIndex(g => g.id === newGoal.id);
+        if (idx !== -1) {
+          goals[idx] = serverGoal;
+          this.saveLocalGoals(goals);
+        }
+        return serverGoal;
       }
-      throw new Error('API createGoal response invalid');
     } catch (err) {
-      console.warn('API createGoal failed, saving in localStorage fallback:', err);
-      const goals = this.getLocalGoals();
-      const targetVal = payload.target || 10;
-      const currentVal = payload.current || 0;
-      const newGoal: Goal = {
-        id: Date.now(),
-        type: payload.type || 'emissions',
-        title: payload.title || 'Reduce Carbon Footprint',
-        target: targetVal,
-        current: currentVal,
-        unit: payload.unit || 'kg',
-        timeframe: payload.timeframe || 'weekly',
-        status: currentVal >= targetVal ? 'Completed' : 'In Progress',
-        startDate: payload.startDate || this.getTodayStr(),
-        endDate: payload.endDate || this.getFutureDateStr(30)
-      };
-      goals.unshift(newGoal);
-      this.saveLocalGoals(goals);
-      return this.enrichGoal(newGoal);
+      console.warn('API createGoal background sync handled:', err);
     }
+    return this.enrichGoal(newGoal);
   }
 
   public async updateGoal(id: number | string, payload: Partial<Goal>): Promise<Goal> {
-    try {
-      const res: any = await firstValueFrom(this.http.put(`${this.apiUrl}/${id}`, payload).pipe(timeout(2000)));
-      if (res && (res.success || res.id)) {
-        return this.enrichGoal(res.data || res);
-      }
-      throw new Error('API updateGoal response invalid');
-    } catch (err) {
-      console.warn('API updateGoal failed, updating in localStorage fallback:', err);
-      const goals = this.getLocalGoals();
-      const idx = goals.findIndex(g => g.id == id);
-      if (idx !== -1) {
-        const existing = goals[idx];
-        const targetVal = payload.target !== undefined ? payload.target : existing.target;
-        const currentVal = payload.current !== undefined ? payload.current : existing.current;
-        const updated: Goal = {
-          ...existing,
-          ...payload,
-          target: targetVal,
-          current: currentVal,
-          status: currentVal >= targetVal ? 'Completed' : 'In Progress'
-        };
-        goals[idx] = updated;
-        this.saveLocalGoals(goals);
-        return this.enrichGoal(updated);
-      }
-      throw err;
+    const goals = this.cachedGoals ? [...this.cachedGoals] : this.getLocalGoals();
+    const idx = goals.findIndex(g => g.id == id);
+    let updatedGoal: Goal;
+
+    if (idx !== -1) {
+      const existing = goals[idx];
+      const targetVal = payload.target !== undefined ? payload.target : existing.target;
+      const currentVal = payload.current !== undefined ? payload.current : existing.current;
+      updatedGoal = {
+        ...existing,
+        ...payload,
+        target: targetVal,
+        current: currentVal,
+        status: currentVal >= targetVal ? 'Completed' : 'In Progress'
+      };
+      goals[idx] = updatedGoal;
+      this.saveLocalGoals(goals);
+    } else {
+      updatedGoal = this.enrichGoal(payload as Goal);
     }
+
+    try {
+      await firstValueFrom(this.http.put(`${this.apiUrl}/${id}`, payload).pipe(timeout(1500)));
+    } catch (err) {
+      console.warn('API updateGoal background sync handled:', err);
+    }
+    return this.enrichGoal(updatedGoal);
   }
 
   public async deleteGoal(id: number | string): Promise<void> {
+    let goals = this.cachedGoals ? [...this.cachedGoals] : this.getLocalGoals();
+    goals = goals.filter(g => g.id != id);
+    this.saveLocalGoals(goals);
+
     try {
-      await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`).pipe(timeout(2000)));
+      await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`).pipe(timeout(1500)));
     } catch (err) {
-      console.warn('API deleteGoal failed, deleting from localStorage fallback:', err);
-      let goals = this.getLocalGoals();
-      goals = goals.filter(g => g.id != id);
-      this.saveLocalGoals(goals);
+      console.warn('API deleteGoal background sync handled:', err);
     }
   }
 

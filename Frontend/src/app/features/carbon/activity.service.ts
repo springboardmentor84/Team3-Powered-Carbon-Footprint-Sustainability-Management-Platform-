@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 export interface ActivityCategory {
   id: number;
@@ -107,42 +107,60 @@ export class ActivityService {
     }
   ];
 
+  private cachedActivities: ActivityRecord[] | null = null;
+
   public async getCategories(): Promise<ActivityCategory[]> {
     try {
-      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/categories`));
+      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/categories`).pipe(timeout(1500)));
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         return res.data;
       }
       return this.fallbackCategories;
     } catch (err) {
-      console.warn('API getCategories failed, using fallback categories:', err);
       return this.fallbackCategories;
     }
   }
 
   public async getSummary(): Promise<CarbonSummary> {
     try {
-      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/summary/carbon`));
+      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/summary/carbon`).pipe(timeout(1500)));
       if (res && res.success && res.data) {
         return res.data;
       }
       return this.calculateLocalSummary();
     } catch (err) {
-      console.warn('API getSummary failed, using fallback summary:', err);
       return this.calculateLocalSummary();
     }
   }
 
   public async getAllActivities(): Promise<ActivityRecord[]> {
+    if (this.cachedActivities && this.cachedActivities.length > 0) {
+      this.syncBackgroundActivities();
+      return this.cachedActivities;
+    }
+
     try {
-      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/all`));
+      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/all`).pipe(timeout(1500)));
       if (res && res.success && Array.isArray(res.data)) {
+        this.cachedActivities = res.data;
         return res.data;
       }
+      this.cachedActivities = this.fallbackActivities;
       return this.fallbackActivities;
     } catch (err) {
-      console.warn('API getAllActivities failed, using fallback activities:', err);
+      this.cachedActivities = this.fallbackActivities;
       return this.fallbackActivities;
+    }
+  }
+
+  private async syncBackgroundActivities(): Promise<void> {
+    try {
+      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/all`).pipe(timeout(1500)));
+      if (res && res.success && Array.isArray(res.data)) {
+        this.cachedActivities = res.data;
+      }
+    } catch {
+      // Silent background refresh
     }
   }
 
