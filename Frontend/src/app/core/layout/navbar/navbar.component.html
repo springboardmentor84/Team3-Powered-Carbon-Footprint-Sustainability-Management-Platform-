@@ -19,21 +19,68 @@
       <i class="bi bi-list"></i>
     </button>
 
-    <div class="brand">
+    <div class="brand" (click)="navigateTo('/dashboard')" title="Go to Dashboard">
       <img src="logo.png" alt="EcoTrack Logo" class="brand-logo-img" aria-hidden="true" />
       <span class="brand-text">EcoTrack</span>
     </div>
   </div>
 
-  <!-- Center Side: Sleek Search Bar -->
+  <!-- Center Side: Interactive Search & Filter System -->
   <div class="nav-center hide-on-mobile">
     <div class="search-box">
       <i class="bi bi-search search-icon"></i>
       <input 
         type="text" 
+        [(ngModel)]="searchQuery"
+        (focus)="onSearchFocus()"
+        (input)="onSearchInput()"
         placeholder="Search carbon inputs, goals, activities..." 
         aria-label="Search"
         class="search-input focusable">
+
+      <!-- Clear Search Button -->
+      <button 
+        *ngIf="searchQuery" 
+        (click)="clearSearch()" 
+        class="clear-search-btn" 
+        aria-label="Clear Search">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <!-- Search Results Dropdown Overlay -->
+      <div class="search-dropdown glass-panel" *ngIf="showSearchDropdown">
+        <div class="search-header">
+          <span class="search-title">Search Results for "{{ searchQuery }}"</span>
+          <span class="results-count">{{ getFilteredResults().length }} matches</span>
+        </div>
+
+        <div class="search-results-list" *ngIf="getFilteredResults().length > 0; else noResults">
+          <div 
+            class="search-item" 
+            *ngFor="let item of getFilteredResults()" 
+            (click)="selectResult(item)">
+            <div class="search-item-icon" [ngClass]="item.type">
+              <i class="bi" [ngClass]="item.icon"></i>
+            </div>
+            <div class="search-item-info">
+              <div class="search-item-header">
+                <span class="search-item-title">{{ item.title }}</span>
+                <span class="search-badge" [ngClass]="item.type">{{ item.badgeText }}</span>
+              </div>
+              <span class="search-item-subtitle">{{ item.subtitle }}</span>
+            </div>
+            <i class="bi bi-arrow-right-short arrow-icon"></i>
+          </div>
+        </div>
+
+        <ng-template #noResults>
+          <div class="no-results">
+            <i class="bi bi-search-heart"></i>
+            <p>No matching activities, goals, or features found.</p>
+            <span class="no-results-hint">Try searching for "Electricity", "Car", "Solar", "Trees", or "Goals"</span>
+          </div>
+        </ng-template>
+      </div>
     </div>
   </div>
 
@@ -48,28 +95,96 @@
       <i class="bi" [ngClass]="layoutService.theme() === 'light' ? 'bi-moon-stars' : 'bi-sun'"></i>
     </button>
 
-    <!-- Notification Bell -->
-    <button 
-      class="nav-icon-btn focusable notification-btn" 
-      aria-label="View Notifications"
-      title="View Notifications">
-      <i class="bi bi-bell"></i>
-      <span *ngIf="unreadNotificationsCount > 0" class="badge-dot" aria-hidden="true"></span>
-    </button>
+    <!-- Notification Bell with Interactive Dropdown -->
+    <div class="dropdown-wrapper">
+      <button 
+        class="nav-icon-btn focusable notification-btn" 
+        (click)="toggleNotificationsDropdown($event)"
+        aria-label="View Notifications"
+        title="View Notifications">
+        <i class="bi bi-bell"></i>
+        <span *ngIf="unreadNotificationsCount > 0" class="badge-dot" aria-hidden="true"></span>
+      </button>
+
+      <!-- Notifications Dropdown Overlay -->
+      <div class="notifications-dropdown glass-panel" *ngIf="showNotificationsDropdown">
+        <div class="dropdown-header">
+          <div class="dropdown-header-title">
+            <span>Notifications</span>
+            <span class="badge-count" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount }} new</span>
+          </div>
+          <button class="mark-read-btn" (click)="markAllNotificationsRead()">Mark all as read</button>
+        </div>
+
+        <div class="notifications-list">
+          <div class="notification-item" *ngFor="let n of notifications" [class.unread]="!n.read">
+            <div class="notification-icon" [ngClass]="n.type">
+              <i class="bi" [ngClass]="n.icon"></i>
+            </div>
+            <div class="notification-content">
+              <p class="notification-title">{{ n.title }}</p>
+              <p class="notification-message">{{ n.message }}</p>
+              <span class="notification-time">{{ n.time }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Divider -->
     <div class="nav-divider"></div>
 
     <!-- User Profile Dropdown Toggle -->
-    <button class="profile-btn focusable" aria-label="User Account Options">
-      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" 
-           alt="User Profile Picture" 
-           class="avatar">
-      <div class="user-details hide-on-mobile">
-        <span class="user-name">Yash</span>
-        <span class="user-role">Sustainability Lead</span>
+    <div class="dropdown-wrapper">
+      <button 
+        class="profile-btn focusable" 
+        (click)="toggleProfileDropdown($event)"
+        aria-label="User Account Options">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" 
+             alt="User Profile Picture" 
+             class="avatar">
+        <div class="user-details hide-on-mobile">
+          <span class="user-name">{{ authService.currentUser()?.name || 'Yash' }}</span>
+          <span class="user-role">{{ authService.currentUser()?.role || 'Sustainability Lead' }}</span>
+        </div>
+        <i class="bi bi-chevron-down chevron-icon hide-on-mobile" [class.rotated]="showProfileDropdown"></i>
+      </button>
+
+      <!-- User Profile Dropdown Overlay -->
+      <div class="profile-dropdown glass-panel" *ngIf="showProfileDropdown">
+        <div class="profile-dropdown-header">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" class="dropdown-avatar" alt="Avatar">
+          <div class="dropdown-user-info">
+            <span class="dropdown-user-name">{{ authService.currentUser()?.name || 'Yash' }}</span>
+            <span class="dropdown-user-email">{{ authService.currentUser()?.email || 'yash@ecotrack.com' }}</span>
+            <span class="user-badge"><i class="bi bi-award-fill"></i> {{ authService.currentUser()?.badgeName || 'Gold Champion' }}</span>
+          </div>
+        </div>
+
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="navigateTo('/profile')">
+            <i class="bi bi-person"></i>
+            <span>My Profile</span>
+          </button>
+          <button class="dropdown-item" (click)="navigateTo('/goals')">
+            <i class="bi bi-bullseye"></i>
+            <span>My Goals & Targets</span>
+          </button>
+          <button class="dropdown-item" (click)="navigateTo('/reports')">
+            <i class="bi bi-bar-chart-line"></i>
+            <span>Sustainability Reports</span>
+          </button>
+          <button class="dropdown-item" (click)="navigateTo('/profile')">
+            <i class="bi bi-gear"></i>
+            <span>Account Settings</span>
+          </button>
+          <div class="menu-divider"></div>
+          <button class="dropdown-item logout-item" (click)="logout()">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Log Out</span>
+          </button>
+        </div>
       </div>
-      <i class="bi bi-chevron-down chevron-icon hide-on-mobile"></i>
-    </button>
+    </div>
   </div>
 </header>
