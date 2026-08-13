@@ -48,6 +48,11 @@ export class DashboardComponent implements OnInit {
   // 11 Category + Goal Progress Sustainability Trackers (Out of 100)
   public overallSustainabilityScore: number = 79;
   public goalProgressScore: number = 80;
+  public showFormulaModal: boolean = false;
+
+  public toggleFormulaModal(): void {
+    this.showFormulaModal = !this.showFormulaModal;
+  }
 
   public categoryTrackers: CategoryTrackerScore[] = [
     { code: 'CARBON', name: 'Carbon Footprint', score: 82, icon: 'bi-cloud-slash-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Net emissions below daily target' },
