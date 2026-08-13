@@ -221,72 +221,278 @@
   gap: 12px;
 }
 
-.formula-btn {
+.btn-emerald-pill {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  border: none;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 0.85rem;
-  padding: 8px 16px;
+  font-size: 0.875rem;
+  padding: 10px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-emerald-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+  color: #ffffff;
+}
+
+/* SOLID HIGH-VISIBILITY FORMULA MODAL OVERLAY */
+.modal-backdrop-solid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  padding: 20px;
 }
 
-.formula-modal {
-  max-width: 620px;
-  width: 90%;
-}
-
-.text-emerald {
-  color: #059669;
-}
-
-.formula-body {
+.solid-modal-dialog {
+  background: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  position: relative;
+}
+
+.solid-modal-header {
   padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-card, #ffffff);
 }
 
-.formula-intro {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  margin-bottom: 4px;
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.formula-block {
-  background: rgba(var(--color-card-rgb), 0.6);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 14px 16px;
+.header-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #d1fae5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
 }
 
-.formula-tag {
-  font-size: 0.8rem;
+.solid-modal-header h3 {
+  font-size: 1.15rem;
   font-weight: 800;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.math-box {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin: 8px 0;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.95rem;
-  font-weight: 700;
   color: var(--color-text-primary);
-  text-align: center;
-  overflow-x: auto;
+  margin: 0 0 2px 0;
 }
 
-.formula-desc {
-  font-size: 0.825rem;
+.modal-subtitle {
+  font-size: 0.8rem;
   color: var(--color-text-secondary);
   margin: 0;
-  line-height: 1.4;
+}
+
+.close-btn-solid {
+  background: var(--color-border);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.close-btn-solid:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.solid-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--color-card, #ffffff);
+}
+
+.section-formula-card {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(var(--color-card-rgb), 0.8);
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.section-card-header h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.formula-section-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.badge-green { background: #d1fae5; color: #047857; }
+.badge-blue { background: #dbeafe; color: #1d4ed8; }
+
+.formula-box-highlight {
+  background: #f0fdf4;
+  border: 1.5px solid #6ee7b7;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+}
+
+.blue-highlight {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.math-formula {
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  margin: 0;
+  font-family: inherit;
+}
+
+.section-card-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px 0;
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.example-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.ex-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.example-item code {
+  display: block;
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 700;
+}
+
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rule-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  background: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.rule-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rule-item p {
+  margin: 2px 0;
+}
+
+.rule-item code {
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.rule-item small {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.solid-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  background: var(--color-card, #ffffff);
+}
+
+.modal-close-btn {
+  padding: 10px 24px;
+  font-size: 0.9rem;
 }
 
 .scorecard-header {

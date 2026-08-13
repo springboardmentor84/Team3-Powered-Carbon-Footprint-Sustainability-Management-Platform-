@@ -98,8 +98,8 @@
         </div>
 
         <div class="scorecard-actions">
-          <button class="btn btn-sm btn-outline-primary formula-btn" (click)="toggleFormulaModal()">
-            <i class="bi bi-calculator"></i> View Calculation Formulas
+          <button class="btn btn-emerald-pill formula-btn" (click)="toggleFormulaModal()">
+            <i class="bi bi-calculator-fill"></i> View Formula
           </button>
           <div class="overall-status-pill badge-emerald">
             <i class="bi bi-award-fill"></i> Overall Score: <strong>{{ overallSustainabilityScore }}/100</strong>
@@ -107,57 +107,129 @@
         </div>
       </div>
 
-      <!-- ==================== FORMULA & CALCULATION LOGIC MODAL ==================== -->
-      <div *ngIf="showFormulaModal" class="modal-backdrop fade-in">
-        <div class="modal-dialog glass-modal formula-modal">
-          <div class="modal-header">
+      <!-- ==================== HIGH-VISIBILITY FORMULA & METHODOLOGY MODAL ==================== -->
+      <div *ngIf="showFormulaModal" class="modal-backdrop-solid fade-in">
+        <div class="modal-dialog solid-modal-dialog">
+          <div class="modal-header solid-modal-header">
             <div class="modal-header-title">
-              <i class="bi bi-calculator-fill text-emerald"></i>
-              <h3>Sustainability Score Formula & Logic</h3>
+              <div class="header-icon-badge">
+                <i class="bi bi-calculator-fill"></i>
+              </div>
+              <div>
+                <h3>Carbon Emission & Sustainability Score Formulas</h3>
+                <p class="modal-subtitle">Official mathematical methodology used in EcoTrack calculations</p>
+              </div>
             </div>
-            <button type="button" class="close-btn" (click)="toggleFormulaModal()">&times;</button>
+            <button type="button" class="close-btn-solid" (click)="toggleFormulaModal()">&times;</button>
           </div>
 
-          <div class="modal-body formula-body">
-            <p class="formula-intro">
-              The EcoTrack Sustainability Tracker evaluates your environmental footprint using a 4-part mathematical model rated out of 100:
-            </p>
-
-            <div class="formula-block">
-              <span class="formula-tag">1. Master Overall Score</span>
-              <div class="math-box">
-                Overall Score = Math.round( Sum(11 Category Scores + Goal Score) / 12 )
+          <div class="modal-body solid-modal-body">
+            
+            <!-- FORMULA SECTION 1: CARBON EMISSION CALCULATION -->
+            <div class="section-formula-card section-carbon">
+              <div class="section-card-header">
+                <span class="formula-section-badge badge-green">Formula 1</span>
+                <h4>Carbon Emission Calculation Formula (kg CO₂e)</h4>
               </div>
-              <p class="formula-desc">Computes the weighted composite average of all 11 Carbon Categories + Goal Progress.</p>
+
+              <div class="formula-box-highlight">
+                <p class="math-formula">
+                  <strong>Carbon Footprint (kg CO₂e)</strong> = Input Quantity &times; Emission Factor
+                </p>
+              </div>
+
+              <p class="section-card-desc">
+                Calculates the exact greenhouse gas footprint for logged activities based on IPCC / DEFRA standards:
+              </p>
+
+              <div class="examples-grid">
+                <div class="example-item">
+                  <span class="ex-icon"><i class="bi bi-car-front-fill"></i></span>
+                  <div>
+                    <strong>Transportation (Petrol Car):</strong>
+                    <code>Miles &times; 0.35 kg CO₂e</code>
+                  </div>
+                </div>
+
+                <div class="example-item">
+                  <span class="ex-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                  <div>
+                    <strong>Electricity (Grid Power):</strong>
+                    <code>kWh &times; 0.39 kg CO₂e</code>
+                  </div>
+                </div>
+
+                <div class="example-item">
+                  <span class="ex-icon"><i class="bi bi-fire"></i></span>
+                  <div>
+                    <strong>Cooking Fuel (LPG Gas):</strong>
+                    <code>kg &times; 2.05 kg CO₂e</code>
+                  </div>
+                </div>
+
+                <div class="example-item">
+                  <span class="ex-icon"><i class="bi bi-tree-fill"></i></span>
+                  <div>
+                    <strong>Tree Plantation (Offset):</strong>
+                    <code>Trees &times; -22.00 kg CO₂e (Deduction)</code>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="formula-block">
-              <span class="formula-tag">2. Emission Categories Score</span>
-              <div class="math-box">
-                Score = Math.max(30, Math.min(100, 85 - (Logged Emissions - Daily Baseline) * 0.8))
+            <!-- FORMULA SECTION 2: SUSTAINABILITY SCORE CALCULATION -->
+            <div class="section-formula-card section-score">
+              <div class="section-card-header">
+                <span class="formula-section-badge badge-blue">Formula 2</span>
+                <h4>Overall Sustainability Score Formula (Out of 100)</h4>
               </div>
-              <p class="formula-desc">Applies to Transport, Electricity, Fuel, Food, Water, Waste, Shopping, and Travel. Lower emissions increase the score towards 100.</p>
+
+              <div class="formula-box-highlight blue-highlight">
+                <p class="math-formula">
+                  <strong>Overall Sustainability Score</strong> = Math.round( Sum(11 Category Scores + Goal Score) / 12 )
+                </p>
+              </div>
+
+              <p class="section-card-desc">
+                Rates user eco-performance on a 0 – 100 scale using a 3-part sub-engine:
+              </p>
+
+              <div class="rules-list">
+                <div class="rule-item">
+                  <span class="rule-num">A</span>
+                  <div>
+                    <strong>Emission Categories Score (0–100):</strong>
+                    <p><code>Score = Math.max(30, 85 - (Logged Emissions - Daily Baseline) * 0.8)</code></p>
+                    <small>Lower emissions increase score towards 100.</small>
+                  </div>
+                </div>
+
+                <div class="rule-item">
+                  <span class="rule-num">B</span>
+                  <div>
+                    <strong>Green Offsets Bonus (0–100):</strong>
+                    <p><code>Score = Math.min(100, 85 + Total Offsets (kg CO2e) * 0.5)</code></p>
+                    <small>Tree planting, solar energy, and recycling add bonus points.</small>
+                  </div>
+                </div>
+
+                <div class="rule-item">
+                  <span class="rule-num">C</span>
+                  <div>
+                    <strong>Goal Progress Score (0–100):</strong>
+                    <p><code>Score = Math.min(100, 50 + (Completed Goals / Total Goals) * 40 + Avg Progress % * 0.6)</code></p>
+                    <small>Completing sustainability goals directly increases Goal Score and overall score.</small>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="formula-block">
-              <span class="formula-tag">3. Green Offsets Score</span>
-              <div class="math-box">
-                Score = Math.min(100, Math.max(85, 85 + Total Offsets (kg CO2e) * 0.5))
-              </div>
-              <p class="formula-desc">Applies to Tree Plantation, Recycling, and Renewable Solar. Eco-actions add bonus points directly towards 100.</p>
-            </div>
-
-            <div class="formula-block">
-              <span class="formula-tag">4. Goal Progress Score</span>
-              <div class="math-box">
-                Score = Math.min(100, Math.max(50, (Completed Goals / Total Goals) * 40 + Avg Progress % * 0.6))
-              </div>
-              <p class="formula-desc">Completing sustainability goals directly increases Goal Progress score and boosts the Overall Score!</p>
-            </div>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary btn-pill" (click)="toggleFormulaModal()">Got it!</button>
+          <div class="modal-footer solid-modal-footer">
+            <button type="button" class="btn btn-emerald-pill modal-close-btn" (click)="toggleFormulaModal()">
+              Close & Return to Dashboard
+            </button>
           </div>
         </div>
       </div>
