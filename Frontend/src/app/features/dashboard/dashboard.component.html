@@ -65,18 +65,72 @@
         <h2 class="stat-number">{{ monthlyCarbon }} <span class="stat-unit">kg CO₂e</span></h2>
       </div>
 
-      <!-- Eco Score Card -->
+      <!-- Overall Sustainability Score Card -->
       <div class="eco-card card-stat">
         <div class="card-stat-header">
           <div class="stat-icon-wrapper info-bg">
-            <i class="bi bi-bookmark-star"></i>
+            <i class="bi bi-shield-check"></i>
           </div>
-          <span class="stat-badge info-badge">Top 15%</span>
+          <span class="stat-badge info-badge">Rating: {{ overallSustainabilityScore >= 80 ? 'Excellent' : 'Good' }}</span>
         </div>
-        <p class="stat-title">Eco Score</p>
-        <h2 class="stat-number">{{ ecoScore }} <span class="stat-total">/ 100</span></h2>
+        <p class="stat-title">Overall Sustainability Score</p>
+        <h2 class="stat-number">{{ overallSustainabilityScore }} <span class="stat-total">/ 100</span></h2>
         <div class="progress-bar-container">
-          <div class="progress-bar info-bar" [style.width.%]="ecoScore"></div>
+          <div class="progress-bar info-bar" [style.width.%]="overallSustainabilityScore"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 11-CATEGORY SUSTAINABILITY TRACKER SCORECARD ==================== -->
+    <div class="eco-card tracker-scorecard-card">
+      <div class="scorecard-header">
+        <div class="scorecard-title-group">
+          <div class="overall-badge-circle">
+            <span class="overall-score-num">{{ overallSustainabilityScore }}</span>
+            <span class="overall-score-denom">/ 100</span>
+          </div>
+          <div>
+            <h3 class="scorecard-main-title">11-Category Sustainability Scorecard</h3>
+            <p class="scorecard-subtitle">
+              Dynamic sustainability performance rated out of 100 based on your carbon emissions, eco-behavior, and completed goals.
+            </p>
+          </div>
+        </div>
+
+        <div class="overall-status-pill badge-emerald">
+          <i class="bi bi-award-fill"></i> Overall Score: <strong>{{ overallSustainabilityScore }}/100</strong>
+        </div>
+      </div>
+
+      <!-- 12-Item Trackers Grid (11 Categories + Goal Progress) -->
+      <div class="tracker-grid">
+        <div class="tracker-item-card" *ngFor="let item of categoryTrackers">
+          <div class="tracker-item-top">
+            <div class="tracker-item-info">
+              <div class="tracker-icon-box" [ngClass]="item.badgeClass">
+                <i class="bi" [ngClass]="item.icon"></i>
+              </div>
+              <span class="tracker-item-name">{{ item.name }}</span>
+            </div>
+            <div class="tracker-item-score">
+              <span class="score-val">{{ item.score }}</span>
+              <span class="score-max">/ 100</span>
+            </div>
+          </div>
+
+          <!-- Animated Progress Bar -->
+          <div class="tracker-bar-bg">
+            <div 
+              class="tracker-bar-fill" 
+              [ngClass]="item.badgeClass"
+              [style.width.%]="item.score">
+            </div>
+          </div>
+
+          <div class="tracker-item-bottom">
+            <span class="status-chip" [ngClass]="item.badgeClass">{{ item.statusText }}</span>
+            <span class="tracker-item-desc">{{ item.desc }}</span>
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { DashboardService } from './dashboard.service';
 import { ActivityService, ActivityCategory, ActivityRecord, CarbonSummary } from '../carbon/activity.service';
+import { GoalService } from '../goals/goal.service';
 
 interface Champion {
   rank: number;
@@ -11,6 +12,16 @@ interface Champion {
   dept: string;
   points: number;
   avatar: string;
+}
+
+export interface CategoryTrackerScore {
+  code: string;
+  name: string;
+  score: number; // Score out of 100
+  icon: string;
+  statusText: 'Excellent' | 'Good' | 'Needs Attention';
+  badgeClass: string;
+  desc: string;
 }
 
 @Component({
@@ -23,6 +34,7 @@ interface Champion {
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private activityService = inject(ActivityService);
+  private goalService = inject(GoalService);
   private router = inject(Router);
 
   public currentMode: 'individual' | 'organization' = 'individual';
@@ -32,6 +44,26 @@ export class DashboardComponent implements OnInit {
   public monthlyCarbon = 128.5;
   public ecoScore = 84;
   public totalOffsets = 0;
+
+  // 11 Category + Goal Progress Sustainability Trackers (Out of 100)
+  public overallSustainabilityScore: number = 79;
+  public goalProgressScore: number = 80;
+
+  public categoryTrackers: CategoryTrackerScore[] = [
+    { code: 'CARBON', name: 'Carbon Footprint', score: 82, icon: 'bi-cloud-slash-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Net emissions below daily target' },
+    { code: 'ELECTRICITY', name: 'Energy (Electricity)', score: 75, icon: 'bi-lightning-charge-fill', statusText: 'Good', badgeClass: 'badge-amber', desc: '12 kWh consumed today' },
+    { code: 'WATER_USAGE', name: 'Water Usage', score: 60, icon: 'bi-droplet-fill', statusText: 'Needs Attention', badgeClass: 'badge-coral', desc: '120L household consumption' },
+    { code: 'WASTE_MANAGEMENT', name: 'Waste Management', score: 90, icon: 'bi-trash3-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'High waste diversion rate' },
+    { code: 'TRANSPORTATION', name: 'Transportation', score: 85, icon: 'bi-car-front-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Low vehicle emissions' },
+    { code: 'COOKING_FUEL', name: 'Cooking Fuel', score: 88, icon: 'bi-fire', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Efficient fuel usage' },
+    { code: 'FOOD_CONSUMPTION', name: 'Food & Diet', score: 82, icon: 'bi-egg-fried', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Plant-forward diet' },
+    { code: 'SHOPPING', name: 'Shopping & Goods', score: 84, icon: 'bi-bag-check-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Low consumer waste' },
+    { code: 'TRAVEL', name: 'Travel & Lodging', score: 80, icon: 'bi-airplane-fill', statusText: 'Good', badgeClass: 'badge-amber', desc: 'Eco-conscious trips' },
+    { code: 'TREE_PLANTATION', name: 'Tree Plantation', score: 95, icon: 'bi-tree-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Active reforestation' },
+    { code: 'RECYCLING', name: 'Recycling', score: 92, icon: 'bi-recycle', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Paper & plastic recycling' },
+    { code: 'RENEWABLE_ENERGY', name: 'Renewable Solar', score: 96, icon: 'bi-sun-fill', statusText: 'Excellent', badgeClass: 'badge-emerald', desc: 'Rooftop solar generation' },
+    { code: 'GOAL_PROGRESS', name: 'Goal Progress', score: 80, icon: 'bi-bullseye', statusText: 'Good', badgeClass: 'badge-amber', desc: 'Target indicators completion' }
+  ];
 
   // Dynamic Y-axis labels for emissions trend chart
   public maxEmissionLabel = '5.0';
@@ -110,19 +142,98 @@ export class DashboardComponent implements OnInit {
       const summary: CarbonSummary = await this.activityService.getSummary();
       this.todayCarbon = summary.todayEmission;
       this.monthlyCarbon = summary.monthlyEmission;
-      this.ecoScore = summary.netCarbonScore;
       this.totalOffsets = summary.totalOffsets;
 
       const all = await this.activityService.getAllActivities();
       this.indivActivities = all.slice(0, 6);
       this.calculateChartPoints(all);
       this.calculateDonutSlices(summary);
+      await this.calculateSustainabilityTrackers(all);
     } catch (err) {
       console.warn('Dashboard load fallback used:', err);
       const fallbackSummary = (this.activityService as any).calculateLocalSummary ? (this.activityService as any).calculateLocalSummary() : null;
       if (fallbackSummary) {
         this.calculateDonutSlices(fallbackSummary);
       }
+    }
+  }
+
+  /**
+   * Calculates sustainability scores out of 100 for all 11 Carbon Categories + Goal Progress.
+   * Dynamically adjusts scores based on user activity logging, offsets, and completed goals.
+   */
+  public async calculateSustainabilityTrackers(allActivities: ActivityRecord[]): Promise<void> {
+    try {
+      const goals = await this.goalService.getGoals();
+      
+      // 1. Calculate Goal Progress Score based on user completed goals
+      const totalGoals = goals.length || 1;
+      const completedGoals = goals.filter(g => g.status === 'Completed' || (g.progress && g.progress >= 100)).length;
+      const avgGoalProgress = goals.reduce((acc, g) => acc + (g.progress || 0), 0) / totalGoals;
+
+      // Dynamic Goal Progress Score out of 100
+      let calcGoalScore = Math.min(100, Math.max(50, Math.round((completedGoals / totalGoals) * 40 + avgGoalProgress * 0.6)));
+      this.goalProgressScore = calcGoalScore;
+
+      // 2. Map emissions by category code
+      const breakdownMap = new Map<string, number>();
+      for (const act of allActivities) {
+        const code = act.categoryCode;
+        const current = breakdownMap.get(code) || 0;
+        breakdownMap.set(code, current + (act.calculatedCo2 || 0));
+      }
+
+      // 3. Recalculate score out of 100 for each of the 12 Category Trackers
+      this.categoryTrackers = this.categoryTrackers.map(item => {
+        let score = item.score;
+
+        if (item.code === 'GOAL_PROGRESS') {
+          score = calcGoalScore;
+        } else if (item.code === 'TREE_PLANTATION' || item.code === 'RECYCLING' || item.code === 'RENEWABLE_ENERGY') {
+          // Green offsets boost score towards 100
+          const offsetVal = breakdownMap.get(item.code) || 0;
+          score = Math.min(100, Math.max(85, Math.round(85 + offsetVal * 0.5)));
+        } else if (item.code === 'CARBON') {
+          const net = this.monthlyCarbon || 100;
+          score = Math.min(100, Math.max(40, Math.round(100 - (net / 200) * 20)));
+        } else {
+          // Emission categories: lower emissions = higher score out of 100
+          const emissionVal = breakdownMap.get(item.code) || 0;
+          if (emissionVal > 20) {
+            score = Math.max(45, Math.round(85 - (emissionVal - 20) * 0.8));
+          } else {
+            score = Math.min(100, Math.max(70, Math.round(85 + (20 - emissionVal) * 0.5)));
+          }
+        }
+
+        let statusText: 'Excellent' | 'Good' | 'Needs Attention' = 'Excellent';
+        let badgeClass = 'badge-emerald';
+
+        if (score >= 80) {
+          statusText = 'Excellent';
+          badgeClass = 'badge-emerald';
+        } else if (score >= 60) {
+          statusText = 'Good';
+          badgeClass = 'badge-amber';
+        } else {
+          statusText = 'Needs Attention';
+          badgeClass = 'badge-coral';
+        }
+
+        return {
+          ...item,
+          score,
+          statusText,
+          badgeClass
+        };
+      });
+
+      // 4. Calculate Overall Sustainability Score (Average out of 100)
+      const totalScoreSum = this.categoryTrackers.reduce((acc, cat) => acc + cat.score, 0);
+      this.overallSustainabilityScore = Math.round(totalScoreSum / this.categoryTrackers.length);
+      this.ecoScore = this.overallSustainabilityScore;
+    } catch (err) {
+      console.warn('Category tracker calculation handled:', err);
     }
   }
 
