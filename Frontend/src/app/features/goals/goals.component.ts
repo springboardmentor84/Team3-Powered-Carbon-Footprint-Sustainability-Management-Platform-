@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoalService, Goal } from './goal.service';
@@ -12,6 +12,7 @@ import { GoalService, Goal } from './goal.service';
 })
 export class GoalsComponent implements OnInit {
   private goalService = inject(GoalService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Top Form State (Set Goal)
   public goalType = 'emissions';
@@ -79,6 +80,8 @@ export class GoalsComponent implements OnInit {
       console.error('Failed to load goals:', err);
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     }
   }
 

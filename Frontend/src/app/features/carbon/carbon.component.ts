@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivityService, ActivityCategory, ActivityRecord, CarbonSummary } from './activity.service';
@@ -12,6 +12,7 @@ import { ActivityService, ActivityCategory, ActivityRecord, CarbonSummary } from
 })
 export class CarbonComponent implements OnInit {
   private activityService = inject(ActivityService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Categories & Selection
   public categories: ActivityCategory[] = [];
@@ -81,16 +82,22 @@ export class CarbonComponent implements OnInit {
     await this.loadCategories();
     await this.loadDashboardData();
     this.selectCategory('TRANSPORTATION');
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   public async loadCategories() {
     this.categories = await this.activityService.getCategories();
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   public async loadDashboardData() {
     this.summary = await this.activityService.getSummary();
     this.activities = await this.activityService.getAllActivities();
     this.applyFiltersAndSort();
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   public selectCategory(code: string) {

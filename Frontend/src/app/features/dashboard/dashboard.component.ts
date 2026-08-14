@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit {
   private activityService = inject(ActivityService);
   private goalService = inject(GoalService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   public currentMode: 'individual' | 'organization' = 'individual';
 
@@ -140,6 +141,8 @@ export class DashboardComponent implements OnInit {
   async ngOnInit() {
     this.categories = await this.activityService.getCategories();
     await this.loadDashboardData();
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   public async loadDashboardData() {
@@ -154,12 +157,16 @@ export class DashboardComponent implements OnInit {
       this.calculateChartPoints(all);
       this.calculateDonutSlices(summary);
       await this.calculateSustainabilityTrackers(all);
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     } catch (err) {
       console.warn('Dashboard load fallback used:', err);
       const fallbackSummary = (this.activityService as any).calculateLocalSummary ? (this.activityService as any).calculateLocalSummary() : null;
       if (fallbackSummary) {
         this.calculateDonutSlices(fallbackSummary);
       }
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     }
   }
 
