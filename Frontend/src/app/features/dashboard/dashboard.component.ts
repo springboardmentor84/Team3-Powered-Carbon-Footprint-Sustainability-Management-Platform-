@@ -39,6 +39,33 @@ export class DashboardComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   public currentMode: 'individual' | 'organization' | 'admin' = 'individual';
+  public userRole: string = 'ROLE_USER';
+  public allowedModes: string[] = ['individual'];
+
+  public loadUserRole() {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('ecotrack_user');
+      if (userData) {
+        try {
+          const u = JSON.parse(userData);
+          this.userRole = u.userRole || u.role || 'ROLE_USER';
+        } catch {
+          this.userRole = 'ROLE_USER';
+        }
+      }
+    }
+
+    if (this.userRole === 'ROLE_ORGANIZATION') {
+      this.currentMode = 'organization';
+      this.allowedModes = ['organization'];
+    } else if (this.userRole === 'ROLE_ADMIN') {
+      this.currentMode = 'admin';
+      this.allowedModes = ['admin', 'organization', 'individual'];
+    } else {
+      this.currentMode = 'individual';
+      this.allowedModes = ['individual'];
+    }
+  }
 
   // Admin Mode Data
   public adminUserAccounts = [
@@ -154,6 +181,7 @@ export class DashboardComponent implements OnInit {
   ];
 
   async ngOnInit() {
+    this.loadUserRole();
     this.categories = await this.activityService.getCategories();
     await this.loadDashboardData();
     this.cdr.markForCheck();

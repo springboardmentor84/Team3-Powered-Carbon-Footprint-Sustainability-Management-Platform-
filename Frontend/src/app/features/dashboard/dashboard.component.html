@@ -8,21 +8,27 @@
 <div class="fade-in-section">
   <!-- Mode Selector Bar -->
   <div class="dashboard-toggle-bar glass-panel">
-    <span class="toggle-title"><i class="bi bi-sliders"></i> Switch Dashboard View:</span>
+    <span class="toggle-title">
+      <i class="bi" [ngClass]="userRole === 'ROLE_ADMIN' ? 'bi-sliders' : (userRole === 'ROLE_ORGANIZATION' ? 'bi-building-fill' : 'bi-person-fill')"></i> 
+      {{ userRole === 'ROLE_ADMIN' ? 'Administrator View Switcher:' : (userRole === 'ROLE_ORGANIZATION' ? 'Organization ESG Corporate Dashboard' : 'Individual Sustainability Dashboard') }}
+    </span>
     <div class="toggle-buttons">
       <button 
+        *ngIf="allowedModes.includes('individual')"
         class="toggle-btn" 
         [class.active]="currentMode === 'individual'" 
         (click)="setMode('individual')">
         <i class="bi bi-person-fill"></i> Individual Dashboard
       </button>
       <button 
+        *ngIf="allowedModes.includes('organization')"
         class="toggle-btn" 
         [class.active]="currentMode === 'organization'" 
         (click)="setMode('organization')">
         <i class="bi bi-building-fill"></i> Organization Dashboard
       </button>
       <button 
+        *ngIf="allowedModes.includes('admin')"
         class="toggle-btn" 
         [class.active]="currentMode === 'admin'" 
         (click)="setMode('admin')">

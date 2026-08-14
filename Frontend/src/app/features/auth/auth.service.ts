@@ -55,7 +55,8 @@ export class AuthService {
           id: loginData.id || 1,
           name: loginData.fullName || email.split('@')[0],
           email: loginData.email || email,
-          role: 'Sustainability Lead',
+          userRole: loginData.role || 'ROLE_USER',
+          role: loginData.role || 'ROLE_USER',
           rewardPoints: loginData.rewardPoints || 1240,
           badgeName: loginData.badgeName || 'Gold'
         };
@@ -70,13 +71,21 @@ export class AuthService {
       }
     } catch (err: any) {
       console.warn('API login error, using local fallback:', err);
-      // Robust fallback for demo or when server is unavailable
+      // Determine role from email for testing/demo fallback
+      let fallbackRole = 'ROLE_USER';
+      if (email.includes('org') || email.includes('corporate') || email.includes('green')) {
+        fallbackRole = 'ROLE_ORGANIZATION';
+      } else if (email.includes('admin') || email.includes('ecotrack.org')) {
+        fallbackRole = 'ROLE_ADMIN';
+      }
+
       const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mockTokenYash';
       const mockUser = {
         id: 1,
         name: email.split('@')[0] || 'Alex Rivers',
         email: email,
-        role: 'Sustainability Lead',
+        userRole: fallbackRole,
+        role: fallbackRole,
         rewardPoints: 1240,
         badgeName: 'Gold'
       };
