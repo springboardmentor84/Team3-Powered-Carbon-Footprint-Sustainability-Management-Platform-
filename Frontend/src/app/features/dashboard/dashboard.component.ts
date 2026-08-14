@@ -38,7 +38,22 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  public currentMode: 'individual' | 'organization' = 'individual';
+  public currentMode: 'individual' | 'organization' | 'admin' = 'individual';
+
+  // Admin Mode Data
+  public adminUserAccounts = [
+    { id: 1, name: 'Alex Rivers', email: 'alex@ecotrack.org', role: 'ROLE_ADMIN', status: 'Active', joined: '01 Jan 2026' },
+    { id: 2, name: 'Sarah Jenkins', email: 'sarah@greenlogistics.com', role: 'ROLE_ORGANIZATION', status: 'Verified', joined: '15 Feb 2026' },
+    { id: 3, name: 'David Chen', email: 'david.chen@gmail.com', role: 'ROLE_USER', status: 'Active', joined: '10 Mar 2026' },
+    { id: 4, name: 'Elena Rostova', email: 'elena@ecocorporate.eu', role: 'ROLE_ORGANIZATION', status: 'Verified', joined: '22 Apr 2026' }
+  ];
+
+  public adminEmissionFactors = [
+    { category: 'Transportation', subCategory: 'Car (Petrol)', factor: 0.35, unit: 'kg CO₂e / mile' },
+    { category: 'Electricity', subCategory: 'Grid Power', factor: 0.39, unit: 'kg CO₂e / kWh' },
+    { category: 'Cooking Fuel', subCategory: 'LPG Gas', factor: 2.05, unit: 'kg CO₂e / kg' },
+    { category: 'Tree Plantation', subCategory: 'Tree Planted', factor: -22.00, unit: 'kg CO₂e / tree (Offset)' }
+  ];
 
   // Summary Analytics from Activity Service
   public todayCarbon = 4.2;
@@ -536,8 +551,10 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  public setMode(mode: 'individual' | 'organization') {
+  public setMode(mode: 'individual' | 'organization' | 'admin') {
     this.currentMode = mode;
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   public showIndivTooltip(point: any, index: number) {

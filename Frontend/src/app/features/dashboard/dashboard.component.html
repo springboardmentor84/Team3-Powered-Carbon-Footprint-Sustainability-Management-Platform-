@@ -22,6 +22,12 @@
         (click)="setMode('organization')">
         <i class="bi bi-building-fill"></i> Organization Dashboard
       </button>
+      <button 
+        class="toggle-btn" 
+        [class.active]="currentMode === 'admin'" 
+        (click)="setMode('admin')">
+        <i class="bi bi-gear-wide-connected"></i> Administrator Control Panel
+      </button>
     </div>
   </div>
 
@@ -433,6 +439,132 @@
         <p class="stat-title">Renewable Ratio</p>
         <h2 class="stat-number">42 <span class="stat-total">%</span></h2>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== 3. ADMINISTRATOR CONTROL PANEL VIEW ==================== -->
+  <div *ngIf="currentMode === 'admin'" class="dashboard-view-wrapper">
+    <div class="dashboard-header">
+      <div class="header-text">
+        <h1>Administrator Control Panel</h1>
+        <p class="subtitle text-secondary">System-wide governance, user management, and emission factor calibration.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline-secondary" (click)="showToast('System audit log generated', 'success')"><i class="bi bi-shield-lock"></i> Audit Logs</button>
+        <button class="btn btn-primary" (click)="showToast('Emission Factors Recalibrated!', 'success')"><i class="bi bi-sliders"></i> Recalibrate Factors</button>
+      </div>
+    </div>
+
+    <!-- Admin Master Stats Grid -->
+    <div class="eco-grid eco-grid-cols-4">
+      <div class="eco-card card-stat">
+        <div class="card-stat-header">
+          <div class="stat-icon-wrapper info-bg"><i class="bi bi-people-fill"></i></div>
+          <span class="stat-badge info-badge">System Active</span>
+        </div>
+        <p class="stat-title">Total Registered Users</p>
+        <h2 class="stat-number">1,284 <span class="stat-unit">accounts</span></h2>
+      </div>
+
+      <div class="eco-card card-stat">
+        <div class="card-stat-header">
+          <div class="stat-icon-wrapper success-bg"><i class="bi bi-database-check"></i></div>
+          <span class="stat-badge success-badge">100% Operational</span>
+        </div>
+        <p class="stat-title">PostgreSQL DB Health</p>
+        <h2 class="stat-number">99.9 <span class="stat-unit">%</span></h2>
+      </div>
+
+      <div class="eco-card card-stat">
+        <div class="card-stat-header">
+          <div class="stat-icon-wrapper danger-bg"><i class="bi bi-globe-americas"></i></div>
+          <span class="stat-badge danger-badge">Platform Total</span>
+        </div>
+        <p class="stat-title">Total Platform Carbon</p>
+        <h2 class="stat-number">45,820 <span class="stat-unit">tCO₂e</span></h2>
+      </div>
+
+      <div class="eco-card card-stat">
+        <div class="card-stat-header">
+          <div class="stat-icon-wrapper info-bg"><i class="bi bi-diagram-3-fill"></i></div>
+          <span class="stat-badge info-badge">11 Categories</span>
+        </div>
+        <p class="stat-title">Active Emission Factors</p>
+        <h2 class="stat-number">11 <span class="stat-unit">Active</span></h2>
+      </div>
+    </div>
+
+    <!-- Admin Master Management Grid -->
+    <div class="eco-grid eco-grid-cols-2 charts-row" style="margin-top: 20px;">
+      
+      <!-- Emission Factor Recalibration Table -->
+      <div class="eco-card chart-card">
+        <div class="chart-header">
+          <div>
+            <h3><i class="bi bi-sliders" style="color: #059669; margin-right: 6px;"></i> Emission Factor Database</h3>
+            <p class="subtitle">IPCC / DEFRA carbon coefficients (kg CO₂e per unit)</p>
+          </div>
+          <span class="badge badge-emerald">Live Config</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--color-border); text-align: left; color: var(--color-text-secondary);">
+                <th style="padding: 8px;">Category</th>
+                <th style="padding: 8px;">Sub-Category</th>
+                <th style="padding: 8px;">Factor Value</th>
+                <th style="padding: 8px;">Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ef of adminEmissionFactors" style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 10px 8px; font-weight: 700;">{{ ef.category }}</td>
+                <td style="padding: 10px 8px;">{{ ef.subCategory }}</td>
+                <td style="padding: 10px 8px; font-weight: 800; color: #059669;">{{ ef.factor }}</td>
+                <td style="padding: 10px 8px; color: var(--color-text-secondary);">{{ ef.unit }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- User Account Governance Table -->
+      <div class="eco-card chart-card">
+        <div class="chart-header">
+          <div>
+            <h3><i class="bi bi-person-gear" style="color: #3B82F6; margin-right: 6px;"></i> User & Organization Governance</h3>
+            <p class="subtitle">Platform accounts and security roles</p>
+          </div>
+          <span class="badge badge-light">4 Accounts</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--color-border); text-align: left; color: var(--color-text-secondary);">
+                <th style="padding: 8px;">User Name</th>
+                <th style="padding: 8px;">Role</th>
+                <th style="padding: 8px;">Status</th>
+                <th style="padding: 8px;">Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let usr of adminUserAccounts" style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 10px 8px; font-weight: 700;">{{ usr.name }} <br><small style="color: var(--color-text-secondary); font-weight: 400;">{{ usr.email }}</small></td>
+                <td style="padding: 10px 8px;">
+                  <span class="status-chip" [ngClass]="usr.role === 'ROLE_ADMIN' ? 'badge-coral' : (usr.role === 'ROLE_ORGANIZATION' ? 'badge-amber' : 'badge-emerald')">
+                    {{ usr.role }}
+                  </span>
+                </td>
+                <td style="padding: 10px 8px; font-weight: 700; color: #059669;">{{ usr.status }}</td>
+                <td style="padding: 10px 8px; color: var(--color-text-secondary);">{{ usr.joined }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
