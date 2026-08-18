@@ -56,6 +56,55 @@ public class AIServiceImpl implements AIService {
                 .build();
     }
 
+    @Override
+    public String analyzePrompt(String prompt, String authenticatedEmail) {
+        if (prompt == null || prompt.isBlank()) {
+            return "Please ask a question about carbon reduction or sustainability.";
+        }
+
+        if (openAiApiKey == null || openAiApiKey.isBlank()) {
+            return null;
+        }
+
+        try {
+            String systemMessage = "You are Eco-AI, an expert sustainability assistant. " +
+                    "Answer the user's question clearly, directly, and concisely. " +
+                    "If the user asks about carbon footprint, emissions, or score, provide practical steps to reduce emissions.";
+
+            OpenAiChatRequest requestPayload = new OpenAiChatRequest(
+                    "gpt-4o-mini",
+                    List.of(
+                            new ChatMessage("system", systemMessage),
+                            new ChatMessage("user", prompt)
+                    ),
+                    null
+            );
+
+            String requestJson = buildRequestJson(requestPayload);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(OPENAI_ENDPOINT))
+                    .timeout(Duration.ofSeconds(6))
+                    .header("Authorization", "Bearer " + openAiApiKey)
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .POST(HttpRequest.BodyPublishers.ofString(requestJson, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                String content = extractAssistantContent(response.body());
+                if (content != null && !content.isBlank()) {
+                    return content;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("OpenAI API call exception: " + e.getMessage());
+        }
+        return null;
+    }
+
     private String callOpenAi(String prompt) {
         if (openAiApiKey == null || openAiApiKey.isBlank()) {
             throw new IllegalStateException("OpenAI API key is not configured");
@@ -141,10 +190,12 @@ public class AIServiceImpl implements AIService {
                 builder.append(',');
             }
         }
-        builder.append("],");
-        builder.append("\"response_format\":{\"type\":\"")
-                .append(escapeJson(requestPayload.responseFormat().type()))
-                .append("\"}");
+        builder.append("]");
+        if (requestPayload.responseFormat() != null) {
+            builder.append(",\"response_format\":{\"type\":\"")
+                    .append(escapeJson(requestPayload.responseFormat().type()))
+                    .append("\"}");
+        }
         builder.append('}');
         return builder.toString();
     }

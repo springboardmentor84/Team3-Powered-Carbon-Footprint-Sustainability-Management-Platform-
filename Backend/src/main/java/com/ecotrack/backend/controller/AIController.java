@@ -25,6 +25,14 @@ public class AIController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Recommendations generated successfully", response));
     }
 
+    @PostMapping("/analyze")
+    public ResponseEntity<ApiResponse<String>> analyze(@org.springframework.web.bind.annotation.RequestBody(required = false) java.util.Map<String, String> payload) {
+        String prompt = payload != null ? payload.getOrDefault("prompt", "") : "";
+        String authenticatedEmail = getAuthenticatedEmail();
+        String result = aiService.analyzePrompt(prompt, authenticatedEmail);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Analysis complete", result));
+    }
+
     private String getAuthenticatedEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null ? authentication.getName() : null;
