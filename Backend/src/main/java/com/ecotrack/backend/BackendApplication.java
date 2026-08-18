@@ -27,9 +27,7 @@ public class BackendApplication {
 						String[] parts = line.split("=", 2);
 						String key = parts[0].trim();
 						String val = parts[1].trim().replaceAll("^\"|\"$", "");
-						if (System.getProperty(key) == null && System.getenv(key) == null) {
-							System.setProperty(key, val);
-						}
+						System.setProperty(key, val);
 					}
 				});
 			}

@@ -131,8 +131,8 @@ export class AiComponent implements OnInit {
   }
 
   /**
-   * Sends user message to Backend OpenAI API first.
-   * Falls back instantly to the smart local engine if the backend is unavailable.
+   * Sends user question to OpenRouter AI backend with live dashboard score context.
+   * Falls back to local engine only if network/API is completely unavailable.
    */
   public async onSendMessage(text?: string) {
     const messageText = (text || this.chatInput).trim();
@@ -147,19 +147,85 @@ export class AiComponent implements OnInit {
     this.cdr.markForCheck();
     this.cdr.detectChanges();
 
-    // Try live OpenAI API via backend
+    // Step 1: Send user question to OpenRouter LLM with live score context
     try {
-      const backendReply = await this.aiService.analyzeEmissions({ prompt: messageText });
+      const contextPrompt = this.buildOpenAIPrompt(messageText);
+      const backendReply = await this.aiService.analyzeEmissions({ prompt: contextPrompt });
       if (backendReply && !backendReply.includes('commuting transportation')) {
         this.pushAiMessage(backendReply);
         return;
       }
-    } catch {
-      // Fall through to instant local engine
+    } catch (err) {
+      console.warn('AI backend call failed, falling back to local engine:', err);
     }
 
-    // Instant local engine as fallback
-    this.pushAiMessage(this.generateContextualResponse(messageText));
+    // Step 2: Fallback to local engine only if OpenRouter is offline
+    const localResponse = this.tryLocalScoreResponse(messageText) || this.buildGenericFallback();
+    this.pushAiMessage(localResponse);
+  }
+
+  /**
+   * Builds a prompt for OpenAI/OpenRouter that provides the user question
+   * and supplementary dashboard context.
+   */
+  private buildOpenAIPrompt(userQuestion: string): string {
+    const scoresSummary = this.categoryScores
+      .map(c => `${c.name}: ${c.score}/100`)
+      .join(', ');
+
+    return `User Question: "${userQuestion}"\n\n[Context: User Overall Sustainability Score is ${this.overallScore}/100. Category breakdown: ${scoresSummary}]`;
+  }
+
+  /**
+   * Checks if the user's question matches a specific score/category intent
+   * that we can answer locally with live dashboard data.
+   * Returns null if no specific intent is detected (question should go to OpenAI).
+   */
+  private tryLocalScoreResponse(prompt: string): string | null {
+    const query = prompt.toLowerCase();
+
+    // Earth/environment impact questions
+    if (this.matchesAny(query, ['earth', 'affect', 'impact', 'planet', 'global warming', 'climate', 'pollution', 'environment', 'atmosphere', 'greenhouse', 'warming'])) {
+      return this.buildEarthImpactResponse();
+    }
+
+    // Specific category score questions (user is asking about their score in a category)
+    if (this.matchesAny(query, ['electricity', 'energy', 'kwh', 'power', 'bulb', 'appliance'])) {
+      return this.buildElectricityResponse();
+    }
+    if (this.matchesAny(query, ['water', 'litre', 'liter', 'shower', 'tap'])) {
+      return this.buildWaterResponse();
+    }
+    if (this.matchesAny(query, ['transport', 'commute', 'drive', 'bike', 'flight', 'petrol', 'fuel', 'vehicle'])) {
+      return this.buildTransportResponse();
+    }
+    if (this.matchesAny(query, ['waste', 'trash', 'garbage', 'landfill', 'bin'])) {
+      return this.buildWasteResponse();
+    }
+    if (this.matchesAny(query, ['food', 'diet', 'meat', 'vegan', 'meal', 'agriculture', 'dairy'])) {
+      return this.buildFoodResponse();
+    }
+    if (this.matchesAny(query, ['recycle', 'tree', 'solar', 'renewable', 'offset'])) {
+      return this.buildOffsetResponse();
+    }
+    if (this.matchesAny(query, ['goal', 'target', 'progress', 'challenge'])) {
+      return this.buildGoalResponse();
+    }
+
+    // "What is my overall score" or "improve my score" type questions
+    if (this.matchesAny(query, ['my score', 'overall score', 'sustainability score', 'improve my', 'increase my'])) {
+      return this.buildOverallScoreResponse();
+    }
+
+    // Greetings
+    if (this.matchesAny(query, ['hi', 'hello', 'hey', 'who are you', 'what are you'])) {
+      return `Hello! I am your Eco-AI Assistant.\n\n` +
+        `Your current Overall Sustainability Score is ${this.overallScore}/100.\n\n` +
+        `Ask me about any category (Electricity, Water, Transportation, Waste, Food, Goals) or ask how your score affects the earth!`;
+    }
+
+    // No specific intent matched — return null so the question goes to OpenAI
+    return null;
   }
 
   /** Adds an AI message to the chat and triggers change detection. */
@@ -189,50 +255,6 @@ export class AiComponent implements OnInit {
   /** Returns true if the query includes any keyword from the provided list. */
   private matchesAny(query: string, keywords: string[]): boolean {
     return keywords.some(k => query.includes(k));
-  }
-
-  /**
-   * Routes the user's message to the correct response builder based on detected intent.
-   * Earth/environment impact is checked first to prevent it from being caught
-   * by the generic score bucket.
-   */
-  private generateContextualResponse(prompt: string): string {
-    const query = prompt.toLowerCase();
-
-    if (this.matchesAny(query, ['earth', 'affect', 'impact', 'planet', 'global warming', 'climate', 'pollution', 'environment', 'atmosphere', 'greenhouse', 'nature', 'world', 'warming'])) {
-      return this.buildEarthImpactResponse();
-    }
-    if (this.matchesAny(query, ['electricity', 'energy', 'kwh', 'power', 'bulb', 'appliance', 'grid'])) {
-      return this.buildElectricityResponse();
-    }
-    if (this.matchesAny(query, ['water', 'litre', 'liter', 'shower', 'tap', 'consumption'])) {
-      return this.buildWaterResponse();
-    }
-    if (this.matchesAny(query, ['transport', 'car', 'ev', 'commute', 'drive', 'bike', 'flight', 'petrol', 'fuel', 'vehicle'])) {
-      return this.buildTransportResponse();
-    }
-    if (this.matchesAny(query, ['waste', 'trash', 'garbage', 'landfill', 'bin', 'plastic'])) {
-      return this.buildWasteResponse();
-    }
-    if (this.matchesAny(query, ['food', 'diet', 'meat', 'vegan', 'meal', 'agriculture', 'dairy'])) {
-      return this.buildFoodResponse();
-    }
-    if (this.matchesAny(query, ['recycle', 'tree', 'plant', 'solar', 'renewable', 'offset'])) {
-      return this.buildOffsetResponse();
-    }
-    if (this.matchesAny(query, ['goal', 'target', 'progress', 'challenge', 'complete'])) {
-      return this.buildGoalResponse();
-    }
-    if (this.matchesAny(query, ['score', 'overall', 'sustainability', 'carbon', 'footprint', 'reduce', 'emission', 'improve', 'rating'])) {
-      return this.buildOverallScoreResponse();
-    }
-    if (this.matchesAny(query, ['hi', 'hello', 'hey', 'who are you', 'what are you'])) {
-      return `Hello! I am your Eco-AI Assistant.\n\n` +
-        `Your current Overall Sustainability Score is ${this.overallScore}/100.\n\n` +
-        `Ask me about any category (Electricity, Water, Transportation, Waste, Food, Goals) or ask how your score affects the earth!`;
-    }
-
-    return this.buildGenericFallback();
   }
 
   // ─── Response Builders ───────────────────────────────────────────────────────

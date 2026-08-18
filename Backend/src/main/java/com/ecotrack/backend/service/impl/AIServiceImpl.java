@@ -14,6 +14,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -29,12 +32,13 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AIServiceImpl implements AIService {
 
-    private static final String OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-    private static final String OPENAI_MODEL = "gpt-4o-mini";
+    private static final String OPENAI_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+    private static final String OPENAI_MODEL = "google/gemma-4-26b-a4b-it:free";
 
     private final CarbonEmissionRepository carbonEmissionRepository;
     private final UserRepository userRepository;
     private final PromptBuilder promptBuilder;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${openai.api.key}")
     private String openAiApiKey;
@@ -56,6 +60,13 @@ public class AIServiceImpl implements AIService {
                 .build();
     }
 
+    private static final List<String> FREE_MODELS = List.of(
+            "google/gemma-4-26b-a4b-it:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "nvidia/nemotron-nano-9b-v2:free",
+            "poolside/laguna-s-2.1:free"
+    );
+
     @Override
     public String analyzePrompt(String prompt, String authenticatedEmail) {
         if (prompt == null || prompt.isBlank()) {
@@ -66,41 +77,51 @@ public class AIServiceImpl implements AIService {
             return null;
         }
 
-        try {
-            String systemMessage = "You are Eco-AI, an expert sustainability assistant. " +
-                    "Answer the user's question clearly, directly, and concisely. " +
-                    "If the user asks about carbon footprint, emissions, or score, provide practical steps to reduce emissions.";
+        String systemMessage = "You are Eco-AI, an expert sustainability and climate science assistant for the EcoTrack platform.\n" +
+                "Guidelines:\n" +
+                "1. When the user asks general or scientific questions (e.g., 'what is carbon', 'what is carbon emission', 'what causes climate change', 'why is global warming happening'), answer the question directly, accurately, and comprehensively with clear explanations.\n" +
+                "2. Understand user intent naturally even if there are typos or misspellings (e.g., 'corban' means 'carbon', 'emmision' means 'emission'). NEVER point out typos or say 'this is not a standard term' - simply answer the intended question directly and helpfully.\n" +
+                "3. If the user asks about EcoTrack, sustainability scores, or platform calculations, explain that the platform tracks 12 categories (Carbon Footprint, Electricity, Water, Waste, Transport, Travel, Food, Shopping, Recycling, Tree Plantation, Renewable Energy, Goal Progress) and calculates emissions using standard emission factors (e.g., 0.39 kg CO2/kWh for electricity, 2.31 kg CO2/L for petrol).\n" +
+                "4. Only reference personal dashboard scores if the user specifically asks about their score, their performance, or personal improvement tips.\n" +
+                "5. Keep responses structured, concise, informative, and completely free of emojis.";
 
-            OpenAiChatRequest requestPayload = new OpenAiChatRequest(
-                    "gpt-4o-mini",
-                    List.of(
-                            new ChatMessage("system", systemMessage),
-                            new ChatMessage("user", prompt)
-                    ),
-                    null
-            );
+        for (String model : FREE_MODELS) {
+            try {
+                OpenAiChatRequest requestPayload = new OpenAiChatRequest(
+                        model,
+                        List.of(
+                                new ChatMessage("system", systemMessage),
+                                new ChatMessage("user", prompt)
+                        ),
+                        null
+                );
 
-            String requestJson = buildRequestJson(requestPayload);
+                String requestJson = buildRequestJson(requestPayload);
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(OPENAI_ENDPOINT))
-                    .timeout(Duration.ofSeconds(6))
-                    .header("Authorization", "Bearer " + openAiApiKey)
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .POST(HttpRequest.BodyPublishers.ofString(requestJson, StandardCharsets.UTF_8))
-                    .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(OPENAI_ENDPOINT))
+                        .timeout(Duration.ofSeconds(12))
+                        .header("Authorization", "Bearer " + openAiApiKey)
+                        .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                        .header("HTTP-Referer", "http://localhost:4200")
+                        .header("X-Title", "EcoTrack")
+                        .POST(HttpRequest.BodyPublishers.ofString(requestJson, StandardCharsets.UTF_8))
+                        .build();
 
-            HttpResponse<String> response = HttpClient.newHttpClient()
-                    .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                HttpResponse<String> response = HttpClient.newHttpClient()
+                        .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-            if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                String content = extractAssistantContent(response.body());
-                if (content != null && !content.isBlank()) {
-                    return content;
+                if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                    String content = extractAssistantContent(response.body());
+                    if (content != null && !content.isBlank()) {
+                        return content;
+                    }
+                } else {
+                    System.err.println("Model " + model + " returned " + response.statusCode() + ", trying next free model...");
                 }
+            } catch (Exception e) {
+                System.err.println("Model " + model + " exception: " + e.getMessage() + ", trying next free model...");
             }
-        } catch (Exception e) {
-            System.err.println("OpenAI API call exception: " + e.getMessage());
         }
         return null;
     }
@@ -127,6 +148,8 @@ public class AIServiceImpl implements AIService {
                     .timeout(Duration.ofSeconds(30))
                     .header("Authorization", "Bearer " + openAiApiKey)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .header("HTTP-Referer", "http://localhost:4200")
+                    .header("X-Title", "EcoTrack")
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson, StandardCharsets.UTF_8))
                     .build();
 
@@ -201,11 +224,24 @@ public class AIServiceImpl implements AIService {
     }
 
     private String extractAssistantContent(String responseBody) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            JsonNode choices = root.path("choices");
+            if (choices.isArray() && !choices.isEmpty()) {
+                String content = choices.get(0).path("message").path("content").asText();
+                if (content != null && !content.isBlank()) {
+                    return content;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing OpenRouter response: " + e.getMessage());
+        }
+
         Pattern contentPattern = Pattern.compile("\\\"content\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"", Pattern.DOTALL);
         Matcher contentMatcher = contentPattern.matcher(responseBody);
 
         if (!contentMatcher.find()) {
-            throw new IllegalStateException("OpenAI returned no recommendations");
+            throw new IllegalStateException("OpenAI/OpenRouter returned no response content");
         }
 
         return unescapeJsonString(contentMatcher.group(1));
