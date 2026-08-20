@@ -4,7 +4,10 @@ import com.ecotrack.backend.activity.entity.CarbonActivityCategory;
 import com.ecotrack.backend.activity.entity.CarbonEmissionFactor;
 import com.ecotrack.backend.activity.repository.CarbonActivityCategoryRepository;
 import com.ecotrack.backend.activity.repository.CarbonEmissionFactorRepository;
+import com.ecotrack.backend.entity.Challenge;
+import com.ecotrack.backend.entity.ChallengeType;
 import com.ecotrack.backend.entity.User;
+import com.ecotrack.backend.repository.ChallengeRepository;
 import com.ecotrack.backend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
     private final CarbonActivityCategoryRepository categoryRepository;
     private final CarbonEmissionFactorRepository factorRepository;
     private final UserRepository userRepository;
+    private final ChallengeRepository challengeRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
@@ -52,7 +56,6 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
             log.info("Seeding default Emission Factors for all 11 categories...");
 
             List<CarbonEmissionFactor> factors = List.of(
-                    // 1. TRANSPORTATION
                     createFactor("TRANSPORTATION", "CAR_PETROL", "0.35", "miles"),
                     createFactor("TRANSPORTATION", "CAR_EV", "0.12", "miles"),
                     createFactor("TRANSPORTATION", "BUS", "0.08", "miles"),
@@ -61,56 +64,128 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                     createFactor("TRANSPORTATION", "FLIGHT", "0.25", "miles"),
                     createFactor("TRANSPORTATION", "BIKE", "0.15", "miles"),
                     createFactor("TRANSPORTATION", "WALKING", "0.00", "miles"),
-
-                    // 2. ELECTRICITY
                     createFactor("ELECTRICITY", "GRID_POWER", "0.39", "kWh"),
                     createFactor("ELECTRICITY", "RENEWABLE", "0.05", "kWh"),
-
-                    // 3. COOKING FUEL
                     createFactor("COOKING_FUEL", "LPG", "2.98", "kg"),
                     createFactor("COOKING_FUEL", "PNG", "2.05", "m3"),
                     createFactor("COOKING_FUEL", "ELECTRIC_STOVE", "0.39", "kWh"),
                     createFactor("COOKING_FUEL", "BIOGAS", "0.10", "kg"),
                     createFactor("COOKING_FUEL", "WOOD", "1.80", "kg"),
-
-                    // 4. FOOD CONSUMPTION
                     createFactor("FOOD_CONSUMPTION", "MEAT", "2.50", "meals"),
                     createFactor("FOOD_CONSUMPTION", "BEEF", "4.50", "meals"),
                     createFactor("FOOD_CONSUMPTION", "CHICKEN", "1.80", "meals"),
                     createFactor("FOOD_CONSUMPTION", "VEGETARIAN", "0.80", "meals"),
                     createFactor("FOOD_CONSUMPTION", "VEGAN", "0.30", "meals"),
                     createFactor("FOOD_CONSUMPTION", "FAST_FOOD", "2.10", "meals"),
-
-                    // 5. WATER USAGE
                     createFactor("WATER_USAGE", "TAP_WATER", "0.001", "litres"),
                     createFactor("WATER_USAGE", "HOT_WATER", "0.015", "litres"),
-
-                    // 6. WASTE MANAGEMENT
                     createFactor("WASTE_MANAGEMENT", "PLASTIC", "2.10", "kg"),
                     createFactor("WASTE_MANAGEMENT", "PAPER", "0.90", "kg"),
                     createFactor("WASTE_MANAGEMENT", "FOOD_WASTE", "0.50", "kg"),
                     createFactor("WASTE_MANAGEMENT", "ELECTRONIC_WASTE", "3.50", "kg"),
-
-                    // 7. SHOPPING
                     createFactor("SHOPPING", "CLOTHING", "12.00", "items"),
                     createFactor("SHOPPING", "ELECTRONICS", "85.00", "items"),
                     createFactor("SHOPPING", "GROCERIES", "3.50", "items"),
-
-                    // 8. TRAVEL
                     createFactor("TRAVEL", "HOTEL", "25.00", "nights"),
                     createFactor("TRAVEL", "FLIGHT_INTL", "0.28", "miles"),
-
-                    // 9. TREE PLANTATION (OFFSET)
                     createFactor("TREE_PLANTATION", "TREE_PLANTED", "22.00", "trees"),
-
-                    // 10. RECYCLING (OFFSET)
                     createFactor("RECYCLING", "RECYCLED_MATERIAL", "1.50", "kg"),
-
-                    // 11. RENEWABLE ENERGY (OFFSET)
                     createFactor("RENEWABLE_ENERGY", "SOLAR_KWH", "0.35", "kWh")
             );
             factorRepository.saveAll(factors);
             log.info("Successfully seeded {} emission factors.", factors.size());
+        }
+
+        if (challengeRepository.count() == 0) {
+            log.info("Seeding default Community Challenges into PostgreSQL...");
+            List<Challenge> challenges = List.of(
+                    Challenge.builder()
+                            .title("Plastic-Free Week")
+                            .category("PLASTIC_FREE_WEEK")
+                            .description("Reduce single-use plastic for 7 consecutive days. Avoid plastic bottles, bags, and packaging.")
+                            .targetValue(7)
+                            .unit("days")
+                            .rewardPoints(100)
+                            .badgeName("Plastic Fighter")
+                            .challengeType(ChallengeType.WEEKLY)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(7))
+                            .rules("Avoid single-use plastic bags, use reusable water bottles, and purchase unpackaged fresh produce.")
+                            .active(true)
+                            .build(),
+                    Challenge.builder()
+                            .title("Cycle to Work")
+                            .category("CYCLE_TO_WORK")
+                            .description("Swap your car or motorized vehicle for a bicycle for at least 5 commute trips.")
+                            .targetValue(5)
+                            .unit("trips")
+                            .rewardPoints(150)
+                            .badgeName("Pedal Power")
+                            .challengeType(ChallengeType.WEEKLY)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(10))
+                            .rules("Track your cycling commute trips. Walking or public transport can count towards non-motorized travel.")
+                            .active(true)
+                            .build(),
+                    Challenge.builder()
+                            .title("Energy Saving Challenge")
+                            .category("ENERGY_SAVING")
+                            .description("Reduce household electricity consumption by 20 kWh this week by turning off unused appliances.")
+                            .targetValue(20)
+                            .unit("kWh")
+                            .rewardPoints(120)
+                            .badgeName("Grid Saver")
+                            .challengeType(ChallengeType.WEEKLY)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(14))
+                            .rules("Unplug standby electronics, switch to LED lighting, and minimize air conditioning usage.")
+                            .active(true)
+                            .build(),
+                    Challenge.builder()
+                            .title("Tree Plantation Drive")
+                            .category("TREE_PLANTATION")
+                            .description("Plant trees in your local community or support reforestation initiatives.")
+                            .targetValue(5)
+                            .unit("trees")
+                            .rewardPoints(200)
+                            .badgeName("Forest Guardian")
+                            .challengeType(ChallengeType.WEEKLY)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(30))
+                            .rules("Plant saplings in community parks, gardens, or participate in authorized local planting drives.")
+                            .active(true)
+                            .build(),
+                    Challenge.builder()
+                            .title("Water Conservation Week")
+                            .category("WATER_CONSERVATION")
+                            .description("Practice water-saving habits daily for 7 days to preserve freshwater resources.")
+                            .targetValue(7)
+                            .unit("days")
+                            .rewardPoints(100)
+                            .badgeName("Hydro Hero")
+                            .challengeType(ChallengeType.WEEKLY)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(7))
+                            .rules("Take shorter showers, fix leaking taps, and reuse greywater for garden plants.")
+                            .active(true)
+                            .build(),
+                    Challenge.builder()
+                            .title("Zero Waste Challenge")
+                            .category("ZERO_WASTE")
+                            .description("Divert at least 10 kg of waste from landfills through composting and recycling.")
+                            .targetValue(10)
+                            .unit("kg")
+                            .rewardPoints(180)
+                            .badgeName("Zero Waster")
+                            .challengeType(ChallengeType.WEEKLY)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(14))
+                            .rules("Separate organic waste for compost, clean dry recyclables, and avoid landfill trash.")
+                            .active(true)
+                            .build()
+            );
+            challengeRepository.saveAll(challenges);
+            log.info("Successfully seeded {} community challenges.", challenges.size());
         }
 
         if (!userRepository.existsByEmail("demo@ecotrack.com")) {
@@ -128,11 +203,11 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
 
         if (!userRepository.existsByEmail("user@ecotrack.com")) {
             User testUser = User.builder()
-                    .fullName("Alex Rivers")
+                    .fullName("Yash Patel")
                     .email("user@ecotrack.com")
                     .password(passwordEncoder.encode("demo123"))
-                    .rewardPoints(1240)
-                    .badgeName("Level 12 Explorer")
+                    .rewardPoints(720)
+                    .badgeName("Eco Champion")
                     .build();
             userRepository.save(testUser);
             log.info("Successfully seeded test user: user@ecotrack.com / demo123");

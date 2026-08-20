@@ -15,4 +15,7 @@ public class LeaderboardResponse {
     private String fullName;
     private Integer rewardPoints;
     private String badgeName;
+    private Integer challengesCompleted;
+    private Boolean isCurrentUser;
+    private String profileImage;
 }

@@ -45,4 +45,7 @@ public class User {
 
     @Column(length = 1000)
     private String lifestyleConfig;
+
+    @Column(length = 500)
+    private String profileImage;
 }
