@@ -68,7 +68,7 @@ public class AIServiceImpl implements AIService {
     );
 
     @Override
-    public String analyzePrompt(String prompt, String authenticatedEmail) {
+    public String analyzePrompt(String prompt, String context, String authenticatedEmail) {
         if (prompt == null || prompt.isBlank()) {
             return "Please ask a question about carbon reduction or sustainability.";
         }
@@ -77,13 +77,21 @@ public class AIServiceImpl implements AIService {
             return null;
         }
 
-        String systemMessage = "You are Eco-AI, an expert sustainability and climate science assistant for the EcoTrack platform.\n" +
-                "Guidelines:\n" +
-                "1. When the user asks general or scientific questions (e.g., 'what is carbon', 'what is carbon emission', 'what causes climate change', 'why is global warming happening'), answer the question directly, accurately, and comprehensively with clear explanations.\n" +
-                "2. Understand user intent naturally even if there are typos or misspellings (e.g., 'corban' means 'carbon', 'emmision' means 'emission'). NEVER point out typos or say 'this is not a standard term' - simply answer the intended question directly and helpfully.\n" +
-                "3. If the user asks about EcoTrack, sustainability scores, or platform calculations, explain that the platform tracks 12 categories (Carbon Footprint, Electricity, Water, Waste, Transport, Travel, Food, Shopping, Recycling, Tree Plantation, Renewable Energy, Goal Progress) and calculates emissions using standard emission factors (e.g., 0.39 kg CO2/kWh for electricity, 2.31 kg CO2/L for petrol).\n" +
-                "4. Only reference personal dashboard scores if the user specifically asks about their score, their performance, or personal improvement tips.\n" +
-                "5. Keep responses structured, concise, informative, and completely free of emojis.";
+        // Build system message — inject live score context if provided
+        String scoreSection = (context != null && !context.isBlank())
+                ? "\n\nUSER'S LIVE DASHBOARD DATA (use these exact numbers when answering personal score or category questions):\n" + context + "\n"
+                : "";
+
+        String systemMessage =
+                "You are Eco-AI, an expert sustainability and climate science assistant for the EcoTrack platform." + scoreSection + "\n" +
+                "STRICT GUIDELINES:\n" +
+                "1. GENERAL SCIENCE QUESTIONS: If the user asks a general/scientific question (e.g., 'what is carbon', 'what is carbon emission', 'what is global warming', 'what causes climate change'), answer it directly, accurately, and comprehensively. Do NOT reference the user's personal scores for these questions.\n" +
+                "2. PERSONAL SCORE QUESTIONS: If the user asks about their score in any category (e.g., 'what is my electricity score', 'what is my score in Planting', 'how did I do in Water'), you MUST look up the exact number from the USER'S LIVE DASHBOARD DATA above and state it precisely (e.g., 'Your Tree Plantation score is 85/100'). Never invent or guess scores.\n" +
+                "3. LIST ALL SCORES: If the user asks to list their scores or asks about all categories, list EVERY category with its exact score from the USER'S LIVE DASHBOARD DATA above, formatted clearly. Include the overall score.\n" +
+                "4. SCORE CALCULATION: If the user asks how their score was calculated, explain that EcoTrack tracks 12 categories using standard emission factors (e.g., 0.39 kg CO2/kWh for electricity, 2.31 kg CO2/L for petrol) and converts emissions to a 0-100 scale per category. The overall score is the average of all 12 category scores.\n" +
+                "5. IMPROVEMENT TIPS: If the user asks how to improve a specific category, reference their actual score for that category from the dashboard data and give targeted advice.\n" +
+                "6. TYPOS: Understand user intent with typos (e.g., 'corban' = 'carbon', 'emmision' = 'emission', 'Planting' = 'Tree Plantation'). Never mention the typo.\n" +
+                "7. FORMAT: Responses must be structured, concise, and completely free of emojis.";
 
         for (String model : FREE_MODELS) {
             try {
@@ -100,7 +108,7 @@ public class AIServiceImpl implements AIService {
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(OPENAI_ENDPOINT))
-                        .timeout(Duration.ofSeconds(12))
+                        .timeout(Duration.ofSeconds(15))
                         .header("Authorization", "Bearer " + openAiApiKey)
                         .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .header("HTTP-Referer", "http://localhost:4200")
@@ -114,13 +122,14 @@ public class AIServiceImpl implements AIService {
                 if (response.statusCode() >= 200 && response.statusCode() < 300) {
                     String content = extractAssistantContent(response.body());
                     if (content != null && !content.isBlank()) {
+                        System.out.println("[AI] Model " + model + " responded successfully.");
                         return content;
                     }
                 } else {
-                    System.err.println("Model " + model + " returned " + response.statusCode() + ", trying next free model...");
+                    System.err.println("[AI] Model " + model + " returned HTTP " + response.statusCode() + ": " + response.body());
                 }
             } catch (Exception e) {
-                System.err.println("Model " + model + " exception: " + e.getMessage() + ", trying next free model...");
+                System.err.println("[AI] Model " + model + " exception: " + e.getMessage());
             }
         }
         return null;

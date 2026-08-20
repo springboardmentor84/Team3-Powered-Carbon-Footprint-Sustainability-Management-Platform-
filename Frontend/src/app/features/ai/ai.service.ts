@@ -80,10 +80,10 @@ export class AIService {
       if (res && res.success && res.data) {
         return res.data;
       }
-      return 'AI Analysis complete: Your primary carbon footprint driver is commuting transportation. Switching 2 days a week to remote or transit will reduce your total carbon footprint by ~22%.';
+      return '';
     } catch (err) {
-      console.warn('API analyzeEmissions failed, using fallback insight:', err);
-      return 'AI Analysis complete: Your primary carbon footprint driver is commuting transportation. Switching 2 days a week to remote or transit will reduce your total carbon footprint by ~22%.';
+      console.warn('API analyzeEmissions failed:', err);
+      return '';
     }
   }
 }

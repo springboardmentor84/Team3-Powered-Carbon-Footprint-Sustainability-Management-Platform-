@@ -149,9 +149,12 @@ export class AiComponent implements OnInit {
 
     // Step 1: Send user question to OpenRouter LLM with live score context
     try {
-      const contextPrompt = this.buildOpenAIPrompt(messageText);
-      const backendReply = await this.aiService.analyzeEmissions({ prompt: contextPrompt });
-      if (backendReply && !backendReply.includes('commuting transportation')) {
+      const scoreContext = this.buildScoresContext();
+      const backendReply = await this.aiService.analyzeEmissions({
+        prompt:  messageText,
+        context: scoreContext
+      });
+      if (backendReply && backendReply.trim().length > 0) {
         this.pushAiMessage(backendReply);
         return;
       }
@@ -165,15 +168,16 @@ export class AiComponent implements OnInit {
   }
 
   /**
-   * Builds a prompt for OpenAI/OpenRouter that provides the user question
-   * and supplementary dashboard context.
+   * Builds the scores context string for injection into the backend system message.
+   * Returns a plain text summary of all category scores plus the overall score.
    */
-  private buildOpenAIPrompt(userQuestion: string): string {
-    const scoresSummary = this.categoryScores
-      .map(c => `${c.name}: ${c.score}/100`)
-      .join(', ');
-
-    return `User Question: "${userQuestion}"\n\n[Context: User Overall Sustainability Score is ${this.overallScore}/100. Category breakdown: ${scoresSummary}]`;
+  private buildScoresContext(): string {
+    if (this.categoryScores.length === 0) {
+      return `Overall Sustainability Score: ${this.overallScore}/100`;
+    }
+    const lines = this.categoryScores.map(c => `${c.name}: ${c.score}/100`);
+    lines.unshift(`Overall Sustainability Score: ${this.overallScore}/100`);
+    return lines.join('\n');
   }
 
   /**
