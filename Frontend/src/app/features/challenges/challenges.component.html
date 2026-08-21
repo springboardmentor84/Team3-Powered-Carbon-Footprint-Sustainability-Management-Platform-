@@ -1,125 +1,682 @@
 <div class="fade-in-section">
-  <!-- Search & Navigation Header -->
+  <!-- TOP HEADER & CONTROLS BAR -->
   <div class="challenges-top-header">
     <div class="title-meta">
-      <h1>Challenges & Rewards</h1>
-      <p class="subtitle text-secondary">Engage with your community and earn badges for sustainable actions.</p>
+      <h1>Community Challenge Management</h1>
+      <p class="subtitle text-secondary">Join sustainability drives, track your progress, earn Eco Points, and climb the leaderboard.</p>
     </div>
-    
-    <div class="header-search-bar hide-on-mobile">
-      <div class="search-input-wrapper">
-        <i class="bi bi-search"></i>
-        <input type="text" placeholder="Search challenges or users..." aria-label="Search" />
+
+    <div class="header-actions-group">
+      <button class="btn btn-primary create-challenge-top-btn" (click)="openCreateModal()">
+        <i class="bi bi-plus-circle-fill"></i> Create Challenge
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTTOM-RIGHT TOAST NOTIFICATION CONTAINER -->
+  <div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+    <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+    <span>{{ toastMessage }}</span>
+    <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
+  </div>
+
+  <!-- SEARCH & CATEGORY FILTER BAR -->
+  <div class="eco-card filter-bar-card mb-4">
+    <div class="filter-grid">
+      <!-- Search Input -->
+      <div class="filter-item search-item">
+        <label for="ch-search"><i class="bi bi-search"></i> Search Challenges</label>
+        <input 
+          type="text" 
+          id="ch-search" 
+          [(ngModel)]="searchQuery" 
+          (ngModelChange)="onFilterChange()"
+          placeholder="Search by keyword, category, or rules..." 
+        />
       </div>
-      <button class="nav-bell-btn"><i class="bi bi-bell"></i></button>
-      <button class="btn btn-primary calculate-impact-top-btn"><i class="bi bi-calculator"></i> Calculate Impact</button>
+
+      <!-- Category Filter Dropdown -->
+      <div class="filter-item">
+        <label for="ch-category-filter">Category</label>
+        <select id="ch-category-filter" [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()">
+          <option value="ALL">All Categories (6 Available)</option>
+          <option value="PLASTIC_FREE_WEEK">🌱 Plastic-Free Week</option>
+          <option value="CYCLE_TO_WORK">🚲 Cycle to Work</option>
+          <option value="ENERGY_SAVING">⚡ Energy Saving Challenge</option>
+          <option value="TREE_PLANTATION">🌳 Tree Plantation Drive</option>
+          <option value="WATER_CONSERVATION">💧 Water Conservation Week</option>
+          <option value="ZERO_WASTE">♻️ Zero Waste Challenge</option>
+        </select>
+      </div>
+
+      <!-- Status Filter Dropdown -->
+      <div class="filter-item">
+        <label for="ch-status-filter">Status</label>
+        <select id="ch-status-filter" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
+          <option value="ALL">All Statuses</option>
+          <option value="ACTIVE">Available Drives</option>
+          <option value="JOINED">Active Drives (Joined)</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="EXPIRED">Expired</option>
+        </select>
+      </div>
     </div>
   </div>
 
   <div class="challenges-layout-grid">
-    <!-- Main Content Area: Recommended Challenges -->
+    <!-- MAIN CONTENT AREA -->
     <div class="challenges-main-area">
-      <!-- Active Challenge Banner Card -->
-      <div class="eco-card active-challenge-card">
-        <div class="card-status-badge"><span class="badge-dot"></span> ACTIVE NOW</div>
-        <div class="challenge-title-area">
-          <h2>Plastic-Free Week</h2>
-          <span class="days-left-tag">4 days left</span>
-        </div>
-        
-        <div class="progress-details">
-          <span class="progress-label">Current Progress</span>
-          <span class="progress-pct">65%</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar success-bar" style="width: 65%"></div>
-        </div>
 
-        <div class="avatar-group-row">
-          <div class="avatar-group">
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=60&auto=format&fit=crop" class="avatar-sm" alt="Friend" />
-            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=60&auto=format&fit=crop" class="avatar-sm" alt="Friend" />
-            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=60&auto=format&fit=crop" class="avatar-sm" alt="Friend" />
-            <div class="avatar-sm-more">+42</div>
+     
+
+      <!-- ================================================== -->
+      <!-- 1. AVAILABLE CHALLENGES SECTION -->
+      <!-- ================================================== -->
+      <div class="section-container mb-4">
+        <div class="section-header">
+          <div>
+            <h3>Available Challenges</h3>
+            <p class="font-sm text-secondary">Discover sustainability drives and join the community initiatives.</p>
           </div>
-          <span class="friends-participating">Friends also participating</span>
+          <span class="count-badge">{{ availableDrives.length }} Available</span>
         </div>
-      </div>
 
-      <!-- Recommended Section Header -->
-      <div class="section-header">
-        <h3>Recommended Challenges</h3>
-        <p class="font-sm text-secondary">Based on your sustainability interests and local impact.</p>
-      </div>
+        <!-- Empty State -->
+        <div *ngIf="availableDrives.length === 0 && !isLoading" class="empty-state-card">
+          <i class="bi bi-check-circle empty-icon text-success"></i>
+          <h4>All Available Challenges Joined!</h4>
+          <p>You have joined all available drives or matched your current filter criteria.</p>
+        </div>
 
-      <!-- Recommended Grid -->
-      <div class="recommended-grid">
-        <div class="eco-card ch-card" *ngFor="let ch of recommendedChallenges">
-          <div class="ch-image-wrapper">
-            <img [src]="ch.image" [alt]="ch.title" class="ch-img" />
-            <span class="xp-badge">+{{ ch.xp }} XP</span>
-          </div>
+        <!-- Available Challenges Grid -->
+        <div *ngIf="availableDrives.length > 0" class="challenges-grid">
+          <div 
+            class="eco-card challenge-card" 
+            *ngFor="let ch of availableDrives"
+          >
+            <!-- Card Header -->
+            <div class="ch-card-header">
+              <span class="category-badge" [ngClass]="getCategoryBadgeClass(ch.category)">
+                <i class="bi" [ngClass]="getCategoryIcon(ch.category)"></i>
+                {{ getCategoryLabel(ch.category) }}
+              </span>
 
-          <div class="ch-body">
-            <div class="ch-tags">
-              <span class="tag" *ngFor="let t of ch.tags">{{ t }}</span>
+              <span class="status-tag">
+                <i class="bi bi-clock-history"></i> {{ ch.status || 'Not Started' }}
+              </span>
             </div>
-            <h4>{{ ch.title }}</h4>
-            <p class="ch-desc">{{ ch.desc }}</p>
-          </div>
 
-          <div class="ch-footer">
-            <span class="joined-count"><i class="bi bi-people"></i> {{ ch.joinedCount }}</span>
-            <button 
-              (click)="onJoinChallenge(ch.id)" 
-              class="btn-join-link"
-              [class.joined-btn]="ch.joined">
-              {{ ch.joined ? 'Leave Challenge' : 'Join Challenge' }} &rarr;
-            </button>
+            <!-- Card Body -->
+            <div class="ch-card-body">
+              <h4 class="ch-title" [title]="ch.title">{{ ch.title }}</h4>
+              <p class="ch-desc">{{ ch.description }}</p>
+
+              <!-- Metadata Row -->
+              <div class="ch-meta-row">
+                <div class="meta-item">
+                  <i class="bi bi-calendar3"></i>
+                  <span>{{ formatDateDisplay(ch.startDate) }} → {{ formatDateDisplay(ch.endDate) }}</span>
+                </div>
+
+                <div class="meta-item reward-item">
+                  <i class="bi bi-trophy-fill text-warning"></i>
+                  <span>+{{ ch.rewardPoints }} Eco Points</span>
+                </div>
+              </div>
+
+              <!-- Target Goal Summary Line -->
+              <div class="ch-target-summary">
+                <span>Target Goal: <strong>{{ ch.targetValue }} {{ ch.unit }}</strong></span>
+                <span class="participants-badge"><i class="bi bi-people"></i> {{ ch.participantCount || 1 }} joined</span>
+              </div>
+            </div>
+
+            <!-- Card Footer Actions -->
+            <div class="ch-card-footer">
+              <div class="main-action-buttons">
+                <!-- Subtle Primary Join Challenge Button -->
+                <button 
+                  class="btn btn-primary btn-sm join-action-btn"
+                  (click)="onJoinChallenge(ch)"
+                  [disabled]="isJoiningId === ch.id"
+                >
+                  <i *ngIf="isJoiningId === ch.id" class="bi bi-arrow-repeat spin-icon"></i>
+                  <i *ngIf="isJoiningId !== ch.id" class="bi bi-plus-lg"></i>
+                  {{ isJoiningId === ch.id ? 'Joining...' : 'Join Challenge' }}
+                </button>
+              </div>
+
+              <!-- Icon Actions -->
+              <div class="card-icon-actions">
+                <button type="button" class="btn-icon view-btn" (click)="openDetailsModal(ch)" title="View Details">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button type="button" class="btn-icon edit-btn" (click)="openEditModal(ch)" title="Edit Challenge">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(ch)" title="Delete Challenge">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+       <!-- ================================================== -->
+      <!-- 2. ACTIVE DRIVES SECTION (JOINED CHALLENGES) -->
+      <!-- ================================================== -->
+      <div class="section-container mb-4">
+        <div class="section-header">
+          <div>
+            <h3><i class="bi bi-play-circle-fill text-primary"></i> Active Drives</h3>
+            <p class="font-sm text-secondary">Challenges you have joined that are currently in progress.</p>
+          </div>
+          <span class="count-badge active-badge">{{ activeDrives.length }} Active</span>
+        </div>
+
+        <!-- Empty Active Drives State -->
+        <div *ngIf="activeDrives.length === 0" class="empty-state-card active-empty-card">
+          <i class="bi bi-flag empty-icon"></i>
+          <h4>No Active Drives Joined</h4>
+          <p>Browse the available challenges below and click "Join Challenge" to start tracking your progress!</p>
+        </div>
+
+        <!-- Active Drives Grid -->
+        <div *ngIf="activeDrives.length > 0" class="challenges-grid">
+          <div 
+            class="eco-card challenge-card joined-card" 
+            *ngFor="let ch of activeDrives"
+          >
+            <!-- Card Header -->
+            <div class="ch-card-header">
+              <span class="category-badge" [ngClass]="getCategoryBadgeClass(ch.category)">
+                <i class="bi" [ngClass]="getCategoryIcon(ch.category)"></i>
+                {{ getCategoryLabel(ch.category) }}
+              </span>
+
+              <span class="status-tag tag-joined">
+                <i class="bi bi-check2"></i> Joined
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="ch-card-body">
+              <h4 class="ch-title" [title]="ch.title">{{ ch.title }}</h4>
+              <p class="ch-desc">{{ ch.description }}</p>
+
+              <!-- Metadata Row -->
+              <div class="ch-meta-row">
+                <div class="meta-item">
+                  <i class="bi bi-calendar3"></i>
+                  <span>{{ formatDateDisplay(ch.startDate) }} → {{ formatDateDisplay(ch.endDate) }}</span>
+                </div>
+
+                <div class="meta-item reward-item">
+                  <i class="bi bi-trophy-fill text-warning"></i>
+                  <span>+{{ ch.rewardPoints }} Eco Points</span>
+                </div>
+              </div>
+
+              <!-- Dynamic Progress Section -->
+              <div class="ch-progress-section">
+                <div class="progress-fraction-line">
+                  <span class="fraction-text">
+                    Progress: <strong>{{ ch.currentProgress || 0 }} / {{ ch.targetValue }} {{ ch.unit }}</strong>
+                  </span>
+                  <span class="pct-text">{{ getProgressPercentage(ch) }}%</span>
+                </div>
+
+                <div class="progress-track-bg">
+                  <div class="progress-fill-bar" [style.width.%]="getProgressPercentage(ch)"></div>
+                </div>
+
+                <div class="remaining-line">
+                  <span>Days remaining: <strong>{{ getDaysRemaining(ch.endDate) }}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Footer Actions -->
+            <div class="ch-card-footer">
+              <div class="main-action-buttons">
+                <!-- Subtle Neutral Update Progress Button -->
+                <button 
+                  class="btn btn-outline-secondary btn-sm progress-action-btn"
+                  (click)="openProgressModal(ch)"
+                >
+                  <i class="bi bi-plus-lg"></i> Update Progress
+                </button>
+              </div>
+
+              <!-- Icon Actions -->
+              <div class="card-icon-actions">
+                <button type="button" class="btn-icon view-btn" (click)="openDetailsModal(ch)" title="View Details">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button type="button" class="btn-icon edit-btn" (click)="openEditModal(ch)" title="Edit Challenge">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(ch)" title="Delete Challenge">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- 3. COMPLETED CHALLENGES SECTION -->
+      <!-- ================================================== -->
+      <div *ngIf="completedDrives.length > 0" class="section-container mb-4">
+        <div class="section-header">
+          <div>
+            <h3><i class="bi bi-trophy-fill text-warning"></i> Completed Drives</h3>
+            <p class="font-sm text-secondary">Challenges you have successfully completed!</p>
+          </div>
+          <span class="count-badge completed-badge">{{ completedDrives.length }} Completed</span>
+        </div>
+
+        <div class="challenges-grid">
+          <div class="eco-card challenge-card completed-card" *ngFor="let ch of completedDrives">
+            <div class="ch-card-header">
+              <span class="category-badge" [ngClass]="getCategoryBadgeClass(ch.category)">
+                <i class="bi" [ngClass]="getCategoryIcon(ch.category)"></i>
+                {{ getCategoryLabel(ch.category) }}
+              </span>
+
+              <span class="status-tag tag-completed">
+                <i class="bi bi-check-circle-fill"></i> Completed
+              </span>
+            </div>
+
+            <div class="ch-card-body">
+              <h4 class="ch-title">{{ ch.title }}</h4>
+              <p class="ch-desc">{{ ch.description }}</p>
+
+              <div class="ch-meta-row">
+                <div class="meta-item reward-item">
+                  <i class="bi bi-trophy-fill text-warning"></i>
+                  <span>Earned +{{ ch.rewardPoints }} Eco Points</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ch-card-footer">
+              <div class="main-action-buttons">
+                <span class="badge-completed">🎉 Challenge Completed</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Side Widgets (Leaderboard, Badges) -->
+    <!-- SIDE WIDGETS PANEL (LEADERBOARD & REWARDS) -->
     <div class="challenges-side-area">
-      <!-- Leaderboard Card -->
+      <!-- LEADERBOARD CARD -->
       <div class="eco-card side-widget-card">
         <div class="widget-header">
-          <h3>Leaderboard</h3>
-          <i class="bi bi-trophy text-warning"></i>
+          <div>
+            <h3>Community Leaderboard</h3>
+            <p class="font-xs text-secondary">Top sustainability champions this month</p>
+          </div>
+          <i class="bi bi-trophy-fill trophy-icon text-warning"></i>
         </div>
+
         <div class="leaderboard-list">
-          <div class="leader-item" *ngFor="let l of leaderboard">
+          <div 
+            class="leader-item" 
+            *ngFor="let user of leaderboard"
+            [class.current-user-highlight]="user.isCurrentUser"
+          >
             <div class="leader-left">
-              <span class="leader-rank">{{ l.rank }}</span>
-              <div class="leader-avatar-placeholder"></div>
-              <span class="leader-name">{{ l.name }}</span>
+              <!-- Rank Badge -->
+              <span class="rank-badge" [class.rank-1]="user.rank === 1" [class.rank-2]="user.rank === 2" [class.rank-3]="user.rank === 3">
+                <i *ngIf="user.rank === 1" class="bi bi-award-fill text-warning"></i>
+                <i *ngIf="user.rank === 2" class="bi bi-award-fill text-secondary"></i>
+                <i *ngIf="user.rank === 3" class="bi bi-award-fill text-bronze"></i>
+                {{ user.rank }}
+              </span>
+
+              <!-- Avatar with Graceful Image / Letter Fallback -->
+              <div class="leader-avatar-box">
+                <img 
+                  *ngIf="user.profileImage && !user.hasImageError" 
+                  [src]="user.profileImage" 
+                  [alt]="user.fullName" 
+                  class="leader-avatar-img"
+                  (error)="user.hasImageError = true"
+                />
+                <span *ngIf="!user.profileImage || user.hasImageError">{{ user.fullName.charAt(0) }}</span>
+              </div>
+
+              <div class="leader-info">
+                <span class="leader-name">
+                  {{ user.fullName }}
+                  <span *ngIf="user.isCurrentUser" class="you-pill">You</span>
+                </span>
+                <span class="leader-badge-tag">{{ user.badgeName || 'Eco Explorer' }}</span>
+              </div>
             </div>
-            <span class="leader-points text-success">{{ l.points }}</span>
+
+            <div class="leader-right text-right">
+              <span class="leader-pts">{{ user.rewardPoints }} <small>pts</small></span>
+              <span class="completed-cnt">{{ user.challengesCompleted || 0 }} completed</span>
+            </div>
           </div>
         </div>
-        <button class="btn btn-text btn-block-link">View Full Leaderboard</button>
       </div>
 
-      <!-- Latest Badges Card -->
-      <div class="eco-card side-widget-card">
+      <!-- CHALLENGE REWARDS & BADGES SHOWCASE CARD -->
+      <div class="eco-card side-widget-card mt-3">
         <div class="widget-header">
-          <h3>Latest Badges</h3>
-          <i class="bi bi-patch-check text-primary"></i>
+          <div>
+            <h3>Earnable Badges & Tier Rewards</h3>
+            <p class="font-xs text-secondary">Complete challenges to unlock achievements</p>
+          </div>
+          <i class="bi bi-patch-check-fill text-primary"></i>
         </div>
-        <div class="badges-grid">
-          <div class="badge-item-box" *ngFor="let b of badges" [title]="b.desc">
-            <div class="badge-icon-box">
-              <i class="bi" [ngClass]="b.icon"></i>
+
+        <div class="badges-grid-list">
+          <div class="badge-item-card" title="Reach 1,000 Eco Points">
+            <div class="badge-icon-box platinum">
+              <i class="bi bi-gem"></i>
             </div>
-            <span class="badge-box-name">{{ b.name }}</span>
+            <div class="badge-text">
+              <strong>Platinum Champion</strong>
+              <small>1,000+ Eco Points</small>
+            </div>
+          </div>
+
+          <div class="badge-item-card" title="Reach 500 Eco Points">
+            <div class="badge-icon-box gold">
+              <i class="bi bi-trophy-fill"></i>
+            </div>
+            <div class="badge-text">
+              <strong>Gold Achiever</strong>
+              <small>500+ Eco Points</small>
+            </div>
+          </div>
+
+          <div class="badge-item-card" title="Reach 250 Eco Points">
+            <div class="badge-icon-box silver">
+              <i class="bi bi-award-fill"></i>
+            </div>
+            <div class="badge-text">
+              <strong>Silver Contender</strong>
+              <small>250+ Eco Points</small>
+            </div>
+          </div>
+
+          <div class="badge-item-card" title="Start your first challenge">
+            <div class="badge-icon-box bronze">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="badge-text">
+              <strong>Bronze Pioneer</strong>
+              <small>Default Starter Tier</small>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Floating Action Button + (Matching mockup screenshot 4) -->
-  <button class="fab-btn" title="Create a Challenge"><i class="bi bi-plus-lg"></i></button>
+  <!-- FLOATING ACTION BUTTON (+) FOR QUICK CREATE -->
+  <button class="fab-btn" (click)="openCreateModal()" title="Create a New Community Challenge">
+    <i class="bi bi-plus-lg"></i>
+  </button>
+</div>
+
+<!-- ================================================== -->
+<!-- MODAL POPUPS SYSTEM -->
+<!-- ================================================== -->
+
+<!-- 1. CREATE / EDIT CHALLENGE MODAL POPUP -->
+<div *ngIf="showCreateEditModal" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card modal-lg">
+    <div class="modal-header">
+      <h3>
+        <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square text-primary' : 'bi-plus-circle-fill text-success'"></i>
+        {{ isEditMode ? 'Edit Community Challenge' : 'Create Community Challenge' }}
+      </h3>
+      <button type="button" class="close-btn" (click)="closeCreateEditModal()">&times;</button>
+    </div>
+
+    <form (submit)="onSubmitChallengeForm(); $event.preventDefault();" class="modal-form">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-item flex-2">
+            <label for="form-title">Challenge Title *</label>
+            <input 
+              type="text" 
+              id="form-title" 
+              [(ngModel)]="formTitle" 
+              name="formTitle" 
+              placeholder="e.g. Plastic-Free Week" 
+              required
+            />
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="form-category">Category *</label>
+            <select id="form-category" [(ngModel)]="formCategory" name="formCategory">
+              <option value="PLASTIC_FREE_WEEK">🌱 Plastic-Free Week</option>
+              <option value="CYCLE_TO_WORK">🚲 Cycle to Work</option>
+              <option value="ENERGY_SAVING">⚡ Energy Saving Challenge</option>
+              <option value="TREE_PLANTATION">🌳 Tree Plantation Drive</option>
+              <option value="WATER_CONSERVATION">💧 Water Conservation Week</option>
+              <option value="ZERO_WASTE">♻️ Zero Waste Challenge</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-item mt-2">
+          <label for="form-desc">Challenge Description *</label>
+          <textarea 
+            id="form-desc" 
+            [(ngModel)]="formDescription" 
+            name="formDescription" 
+            rows="3" 
+            placeholder="Explain the environmental goal and purpose of this challenge..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-item flex-1">
+            <label for="form-start">Start Date</label>
+            <input type="date" id="form-start" [(ngModel)]="formStartDate" name="formStartDate" />
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="form-end">End Date / Deadline</label>
+            <input type="date" id="form-end" [(ngModel)]="formEndDate" name="formEndDate" />
+          </div>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-item flex-1">
+            <label for="form-target">Target Goal Value *</label>
+            <input type="number" id="form-target" [(ngModel)]="formTargetValue" name="formTargetValue" min="1" required />
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="form-unit">Unit (e.g. days, trips, kWh, trees, kg)</label>
+            <input type="text" id="form-unit" [(ngModel)]="formUnit" name="formUnit" placeholder="days" />
+          </div>
+
+          <div class="form-item flex-1">
+            <label for="form-reward">Reward Points (Eco Points) *</label>
+            <input type="number" id="form-reward" [(ngModel)]="formRewardPoints" name="formRewardPoints" min="0" required />
+          </div>
+        </div>
+
+        <div class="form-item mt-2">
+          <label for="form-rules">Challenge Rules & Instructions</label>
+          <textarea 
+            id="form-rules" 
+            [(ngModel)]="formRules" 
+            name="formRules" 
+            rows="2" 
+            placeholder="Provide specific guidelines, restrictions, or instructions for participants..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light" (click)="closeCreateEditModal()" [disabled]="isSubmitting">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+          <i *ngIf="isSubmitting" class="bi bi-arrow-repeat spin-icon"></i>
+          <i *ngIf="!isSubmitting" class="bi" [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-plus-circle'"></i>
+          {{ isSubmitting ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Save Changes' : 'Create Challenge') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 2. UPDATE PROGRESS MODAL POPUP -->
+<div *ngIf="showProgressModal" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-plus-circle-fill text-success"></i> Update Challenge Progress</h3>
+      <button type="button" class="close-btn" (click)="closeProgressModal()">&times;</button>
+    </div>
+
+    <form (submit)="onSaveProgress(); $event.preventDefault();" class="modal-form">
+      <div class="modal-body">
+        <p class="mb-2">Challenge: <strong>"{{ progressChallenge?.title }}"</strong></p>
+
+        <div class="progress-modal-info">
+          <div class="info-row">
+            <span>Target:</span> <strong>{{ progressChallenge?.targetValue }} {{ progressChallenge?.unit }}</strong>
+          </div>
+          <div class="info-row">
+            <span>Current:</span> <strong>{{ progressChallenge?.currentProgress || 0 }} {{ progressChallenge?.unit }}</strong>
+          </div>
+        </div>
+
+        <div class="form-item mt-3">
+          <label for="new-progress">Enter New Progress ({{ progressChallenge?.unit }})</label>
+          <input 
+            type="number" 
+            id="new-progress" 
+            [(ngModel)]="newProgressValue" 
+            name="newProgressValue" 
+            min="0" 
+            required 
+          />
+        </div>
+
+        <!-- Quick Increment Buttons -->
+        <div class="quick-increment-buttons mt-3">
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newProgressValue = newProgressValue + 1">+1</button>
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newProgressValue = newProgressValue + 5">+5</button>
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newProgressValue = newProgressValue + 10">+10</button>
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="newProgressValue = progressChallenge?.targetValue || newProgressValue">Mark Met</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light" (click)="closeProgressModal()" [disabled]="isUpdatingProgress">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isUpdatingProgress">
+          <i *ngIf="isUpdatingProgress" class="bi bi-arrow-repeat spin-icon"></i>
+          {{ isUpdatingProgress ? 'Updating...' : 'Update Progress' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 3. DELETE CONFIRMATION MODAL POPUP -->
+<div *ngIf="showDeleteConfirm" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-exclamation-triangle-fill text-danger"></i> Delete Challenge?</h3>
+      <button type="button" class="close-btn" (click)="closeDeleteConfirm()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong>"{{ challengeToDelete?.title }}"</strong>?</p>
+      <p class="text-secondary small">This action cannot be undone and will remove this challenge from the community feed.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-light" (click)="closeDeleteConfirm()" [disabled]="isDeletingId === challengeToDelete?.id">
+        Cancel
+      </button>
+
+      <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeletingId === challengeToDelete?.id">
+        <i *ngIf="isDeletingId === challengeToDelete?.id" class="bi bi-arrow-repeat spin-icon"></i>
+        {{ isDeletingId === challengeToDelete?.id ? 'Deleting...' : 'Delete Challenge' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. CHALLENGE DETAILS MODAL POPUP -->
+<div *ngIf="showDetailsModal" class="modal-backdrop fade-in">
+  <div class="modal-card eco-card modal-lg">
+    <div class="modal-header">
+      <h3>
+        <i class="bi" [ngClass]="getCategoryIcon(selectedChallengeDetails?.category)"></i>
+        {{ selectedChallengeDetails?.title }}
+      </h3>
+      <button type="button" class="close-btn" (click)="closeDetailsModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="detail-category-line mb-3">
+        <span class="category-badge" [ngClass]="getCategoryBadgeClass(selectedChallengeDetails?.category)">
+          {{ getCategoryLabel(selectedChallengeDetails?.category) }}
+        </span>
+        <span class="reward-pill ml-2">
+          <i class="bi bi-trophy-fill text-warning"></i> 🏆 +{{ selectedChallengeDetails?.rewardPoints }} Eco Points
+        </span>
+      </div>
+
+      <h4>Description</h4>
+      <p class="text-secondary">{{ selectedChallengeDetails?.description }}</p>
+
+      <h4 class="mt-3">Challenge Rules & Guidelines</h4>
+      <p class="text-secondary rules-box">{{ selectedChallengeDetails?.rules || 'Follow standard community sustainability guidelines.' }}</p>
+
+      <div class="detail-metrics-grid mt-3">
+        <div class="metric-box">
+          <span class="label">Target</span>
+          <span class="val">{{ selectedChallengeDetails?.targetValue }} {{ selectedChallengeDetails?.unit }}</span>
+        </div>
+
+        <div class="metric-box">
+          <span class="label">Duration</span>
+          <span class="val">{{ formatDateDisplay(selectedChallengeDetails?.startDate) }} → {{ formatDateDisplay(selectedChallengeDetails?.endDate) }}</span>
+        </div>
+
+        <div class="metric-box">
+          <span class="label">Participants</span>
+          <span class="val">{{ selectedChallengeDetails?.participantCount || 1 }} Members</span>
+        </div>
+
+        <div class="metric-box">
+          <span class="label">Status</span>
+          <span class="val text-primary">{{ selectedChallengeDetails?.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-light" (click)="closeDetailsModal()">Close</button>
+      <button 
+        *ngIf="selectedChallengeDetails && !selectedChallengeDetails.joined" 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="onJoinChallenge(selectedChallengeDetails); closeDetailsModal();"
+      >
+        <i class="bi bi-person-plus-fill"></i> Join Challenge
+      </button>
+    </div>
+  </div>
 </div>
