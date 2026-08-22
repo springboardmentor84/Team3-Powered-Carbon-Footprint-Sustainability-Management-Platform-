@@ -44,7 +44,7 @@
       <!-- STEP 1: Credentials & Role -->
       <div *ngIf="currentStep === 1" class="step-content">
 
-        <!-- Account Role Selection -->
+        <!-- Account Role Selection (Individual User & Organization Only) -->
         <div class="form-group">
           <label class="form-label">Select Your Account Type</label>
           <div class="role-selector-grid">
@@ -53,7 +53,7 @@
               <i class="bi bi-person-fill role-icon"></i>
               <div class="role-info">
                 <span class="role-title">Individual User</span>
-                <span class="role-desc">Track personal daily carbon impact</span>
+                <span class="role-desc">Track personal daily carbon impact & challenges</span>
               </div>
             </label>
 
@@ -62,18 +62,13 @@
               <i class="bi bi-building role-icon"></i>
               <div class="role-info">
                 <span class="role-title">Organization</span>
-                <span class="role-desc">Manage ESG & corporate emissions</span>
+                <span class="role-desc">Manage ESG & corporate team emissions</span>
               </div>
             </label>
-
-            <label class="role-card" [class.selected]="registerForm.value.role === 'ROLE_ADMIN'">
-              <input type="radio" formControlName="role" value="ROLE_ADMIN" class="visually-hidden" />
-              <i class="bi bi-shield-check role-icon"></i>
-              <div class="role-info">
-                <span class="role-title">Administrator</span>
-                <span class="role-desc">System moderation & global analytics</span>
-              </div>
-            </label>
+          </div>
+          <div class="admin-access-notice">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span><strong>Need Administrator access?</strong> Admin accounts are strictly restricted and can only be granted by an existing Platform Administrator.</span>
           </div>
         </div>
 

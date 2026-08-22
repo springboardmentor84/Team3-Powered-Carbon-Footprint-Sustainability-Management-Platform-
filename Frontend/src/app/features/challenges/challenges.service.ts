@@ -61,9 +61,9 @@ export class ChallengesService {
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
       rules: 'Avoid single-use plastic bags, use reusable water bottles, and purchase unpackaged fresh produce.',
-      joined: true,
-      currentProgress: 4,
-      status: 'In Progress',
+      joined: false,
+      currentProgress: 0,
+      status: 'Not Started',
       participantCount: 42
     },
     {
@@ -95,9 +95,9 @@ export class ChallengesService {
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
       rules: 'Unplug standby electronics, switch to LED lighting, and minimize air conditioning usage.',
-      joined: true,
-      currentProgress: 20,
-      status: 'Completed',
+      joined: false,
+      currentProgress: 0,
+      status: 'Not Started',
       participantCount: 65
     },
     {
@@ -161,18 +161,24 @@ export class ChallengesService {
     { rank: 5, fullName: 'You (Current User)', rewardPoints: 720, badgeName: 'Silver', challengesCompleted: 4, isCurrentUser: true }
   ];
 
+  private getUserStorageKey(baseKey: string): string {
+    if (typeof window === 'undefined') return baseKey;
+    try {
+      const userRaw = localStorage.getItem('ecotrack_user');
+      if (userRaw) {
+        const user = JSON.parse(userRaw);
+        if (user && (user.id || user.email)) {
+          return `${baseKey}_${user.id || user.email}`;
+        }
+      }
+    } catch {}
+    return `${baseKey}_anonymous`;
+  }
+
   private getJoinedMap(): Record<number, { joined: boolean; currentProgress: number; status: string }> {
     if (typeof window === 'undefined') return {};
-    const raw = localStorage.getItem('ecotrack_joined_map');
-    if (!raw) {
-      // Default seed initial joined map
-      const initialMap: Record<number, { joined: boolean; currentProgress: number; status: string }> = {
-        1: { joined: true, currentProgress: 4, status: 'In Progress' },
-        3: { joined: true, currentProgress: 20, status: 'Completed' }
-      };
-      localStorage.setItem('ecotrack_joined_map', JSON.stringify(initialMap));
-      return initialMap;
-    }
+    const raw = localStorage.getItem(this.getUserStorageKey('ecotrack_joined_map'));
+    if (!raw) return {};
     try {
       return JSON.parse(raw);
     } catch {
@@ -182,7 +188,7 @@ export class ChallengesService {
 
   public saveJoinedMap(map: Record<number, { joined: boolean; currentProgress: number; status: string }>): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('ecotrack_joined_map', JSON.stringify(map));
+      localStorage.setItem(this.getUserStorageKey('ecotrack_joined_map'), JSON.stringify(map));
     }
   }
 
@@ -200,10 +206,8 @@ export class ChallengesService {
         return {
           ...ch,
           joined: true,
-          currentProgress: Math.max(ch.currentProgress || 0, entry.currentProgress || 0),
-          status: (ch.status === 'Completed' || entry.status === 'Completed') 
-            ? 'Completed' 
-            : (entry.status || ch.status || 'In Progress' as any)
+          currentProgress: entry.currentProgress !== undefined ? entry.currentProgress : (ch.currentProgress || 0),
+          status: (entry.status || ch.status || 'In Progress' as any)
         };
       }
       return ch;
@@ -235,11 +239,9 @@ export class ChallengesService {
 
   private getStoredChallenges(): Challenge[] {
     if (typeof window === 'undefined') return this.defaultFallbackChallenges;
-    const raw = localStorage.getItem('ecotrack_challenges');
+    const raw = localStorage.getItem(this.getUserStorageKey('ecotrack_challenges'));
     if (!raw) {
-      const merged = this.mergeWithJoinedMap(this.defaultFallbackChallenges);
-      localStorage.setItem('ecotrack_challenges', JSON.stringify(merged));
-      return merged;
+      return this.mergeWithJoinedMap(this.defaultFallbackChallenges);
     }
     try {
       const parsed: Challenge[] = JSON.parse(raw);
@@ -251,8 +253,7 @@ export class ChallengesService {
 
   public saveStoredChallenges(challenges: Challenge[]): void {
     if (typeof window !== 'undefined') {
-      const merged = this.mergeWithJoinedMap(challenges);
-      localStorage.setItem('ecotrack_challenges', JSON.stringify(merged));
+      localStorage.setItem(this.getUserStorageKey('ecotrack_challenges'), JSON.stringify(challenges));
     }
   }
 

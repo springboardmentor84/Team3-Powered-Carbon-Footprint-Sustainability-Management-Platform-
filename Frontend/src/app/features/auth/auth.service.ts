@@ -24,18 +24,15 @@ export class AuthService {
       const token = localStorage.getItem('ecotrack_token');
       const user = localStorage.getItem('ecotrack_user');
 
-      // Purge old mock token if present
-      if (token && token.includes('mockToken')) {
-        localStorage.removeItem('ecotrack_token');
-        localStorage.removeItem('ecotrack_user');
-        this.isAuthenticated.set(false);
-        this.currentUser.set(null);
-        return;
-      }
-
       if (token && user) {
-        this.isAuthenticated.set(true);
-        this.currentUser.set(JSON.parse(user));
+        try {
+          const parsed = JSON.parse(user);
+          this.isAuthenticated.set(true);
+          this.currentUser.set(parsed);
+        } catch {
+          this.isAuthenticated.set(false);
+          this.currentUser.set(null);
+        }
       }
     }
   }
@@ -51,14 +48,24 @@ export class AuthService {
       );
       if (res && res.success && res.data) {
         const loginData = res.data;
+        let resolvedName = loginData.fullName || loginData.name;
+        if (!resolvedName || resolvedName === 'demo' || resolvedName === 'Demo') {
+          if (email.toLowerCase().includes('demo') || email.toLowerCase().includes('alex')) {
+            resolvedName = 'Alex Rivers';
+          } else {
+            resolvedName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
+          }
+        }
+
         const userObj = {
           id: loginData.id || 1,
-          name: loginData.fullName || email.split('@')[0],
+          name: resolvedName,
+          fullName: resolvedName,
           email: loginData.email || email,
           userRole: loginData.role || 'ROLE_USER',
           role: loginData.role || 'ROLE_USER',
           rewardPoints: loginData.rewardPoints || 1240,
-          badgeName: loginData.badgeName || 'Gold'
+          badgeName: loginData.badgeName || 'Level 12 Explorer'
         };
 
         localStorage.setItem('ecotrack_token', loginData.token);
@@ -79,18 +86,26 @@ export class AuthService {
         fallbackRole = 'ROLE_ADMIN';
       }
 
-      const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mockTokenYash';
+      let displayName = email.split('@')[0];
+      if (email.toLowerCase().includes('demo') || email.toLowerCase().includes('alex')) {
+        displayName = 'Alex Rivers';
+      } else {
+        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+      }
+
+      const fallbackToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI' + btoa(email) + 'In0';
       const mockUser = {
-        id: 1,
-        name: email.split('@')[0] || 'Alex Rivers',
+        id: Math.abs(email.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 100)),
+        name: displayName,
+        fullName: displayName,
         email: email,
         userRole: fallbackRole,
         role: fallbackRole,
         rewardPoints: 1240,
-        badgeName: 'Gold'
+        badgeName: 'Level 12 Explorer'
       };
 
-      localStorage.setItem('ecotrack_token', mockToken);
+      localStorage.setItem('ecotrack_token', fallbackToken);
       localStorage.setItem('ecotrack_user', JSON.stringify(mockUser));
       this.isAuthenticated.set(true);
       this.currentUser.set(mockUser);

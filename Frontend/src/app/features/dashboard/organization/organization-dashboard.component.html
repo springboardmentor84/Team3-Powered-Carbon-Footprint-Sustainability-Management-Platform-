@@ -1,0 +1,113 @@
+<!-- TOAST ALERT NOTIFICATION -->
+<div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+  <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+  <span>{{ toastMessage }}</span>
+  <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
+</div>
+
+<div class="dashboard-view-wrapper fade-in-section">
+  <div class="dashboard-header">
+    <div class="header-text">
+      <h1>Organization Dashboard</h1>
+      <p class="subtitle text-secondary">Sustainability tracking and environmental corporate responsibility metrics.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline-light" (click)="showToast('Exporting Corporate ESG Report...', 'success')"><i class="bi bi-file-pdf"></i> Export PDF</button>
+      <button class="btn btn-primary" (click)="showToast('Department Activity Logger opened', 'success')"><i class="bi bi-plus-lg"></i> Log Dept Activity</button>
+    </div>
+  </div>
+
+  <!-- Organization Stats -->
+  <div class="eco-grid eco-grid-cols-4">
+    <div class="eco-card card-stat">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper danger-bg"><i class="bi bi-buildings-fill"></i></div>
+        <span class="stat-badge danger-badge">-4.2% YoY</span>
+      </div>
+      <p class="stat-title">Total Corporate Emissions</p>
+      <h2 class="stat-number">12,450 <span class="stat-unit">tCO₂e</span></h2>
+    </div>
+
+    <div class="eco-card card-stat">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper success-bg"><i class="bi bi-bullseye"></i></div>
+        <span class="stat-badge success-badge">On Track</span>
+      </div>
+      <p class="stat-title">Carbon Offset Goal</p>
+      <h2 class="stat-number">65 <span class="stat-total">%</span></h2>
+      <div class="progress-bar-container">
+        <div class="progress-bar success-bar" style="width: 65%;"></div>
+      </div>
+    </div>
+
+    <div class="eco-card card-stat">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper info-bg"><i class="bi bi-tree-fill"></i></div>
+        <span class="stat-badge info-badge">Active</span>
+      </div>
+      <p class="stat-title">Active Green Projects</p>
+      <h2 class="stat-number">14 <span class="stat-unit">Initiatives</span></h2>
+    </div>
+
+    <div class="eco-card card-stat">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper success-bg"><i class="bi bi-sun-fill"></i></div>
+        <span class="stat-badge success-badge">+8% this quarter</span>
+      </div>
+      <p class="stat-title">Renewable Ratio</p>
+      <h2 class="stat-number">42 <span class="stat-total">%</span></h2>
+      <div class="progress-bar-container">
+        <div class="progress-bar info-bar" style="width: 42%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization Detail Grid: Department Breakdown + Champions -->
+  <div class="eco-grid eco-grid-cols-2 charts-row" style="margin-top: 24px;">
+    <!-- Department Breakdown -->
+    <div class="eco-card chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Department Emission Distribution</h3>
+          <p class="subtitle">Scope 1, 2 & 3 emissions by corporate unit</p>
+        </div>
+      </div>
+      <div class="dept-breakdown-list" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+        <div *ngFor="let dept of departmentBreakdown" class="dept-item">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.9rem;">
+            <span>{{ dept.name }}</span>
+            <span [style.color]="dept.color">{{ dept.percentage }}%</span>
+          </div>
+          <div style="background: rgba(0,0,0,0.06); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div [style.width.%]="dept.percentage" [style.background]="dept.color" style="height: 100%; border-radius: 4px; transition: width 0.8s ease;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Green Champions Leaderboard -->
+    <div class="eco-card chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Department Eco Champions</h3>
+          <p class="subtitle">Top internal sustainability leaders</p>
+        </div>
+      </div>
+      <div class="champions-list" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.85rem;">
+        <div *ngFor="let champ of orgChampions" class="champ-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-weight: 800; font-size: 1.1rem; color: #059669; width: 24px;">#{{ champ.rank }}</span>
+            <img [src]="champ.avatar" [alt]="champ.name" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+            <div>
+              <p style="font-weight: 700; font-size: 0.9rem; margin: 0;">{{ champ.name }}</p>
+              <p style="font-size: 0.78rem; color: var(--color-text-secondary); margin: 0;">{{ champ.dept }}</p>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-weight: 800; color: #059669; font-size: 0.95rem;">+{{ champ.points }} pts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

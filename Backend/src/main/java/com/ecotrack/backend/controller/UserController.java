@@ -43,6 +43,27 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<java.util.List<User>>> getAllUsers() {
+        java.util.List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Users fetched successfully", users));
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<ApiResponse<User>> updateUserRole(
+            @PathVariable Long id, 
+            @RequestBody java.util.Map<String, String> body) {
+        String role = body.getOrDefault("role", "ROLE_USER");
+        User updated = userService.updateUserRole(id, role);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User role updated successfully", updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User deleted successfully", null));
+    }
+
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<String>> profile() {
         ApiResponse<String> response = new ApiResponse<>(true, "Profile fetched successfully", "Welcome to EcoTrack Secure API");

@@ -11,4 +11,9 @@ public interface UserService {
 
     LoginResponse loginUser(LoginRequest request);
 
+    java.util.List<User> getAllUsers();
+
+    User updateUserRole(Long id, String role);
+
+    void deleteUser(Long id);
 }

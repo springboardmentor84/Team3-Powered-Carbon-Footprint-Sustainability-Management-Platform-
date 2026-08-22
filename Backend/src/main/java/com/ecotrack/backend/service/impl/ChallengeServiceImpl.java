@@ -44,6 +44,15 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional
     public ChallengeResponse createChallenge(ChallengeRequest request, String authenticatedEmail) {
         User user = findUserByEmailNullable(authenticatedEmail);
+        if (user == null) {
+            user = userRepository.findByEmail("demo@ecotrack.com")
+                    .or(() -> userRepository.findAll().stream().findFirst())
+                    .orElse(null);
+        }
+
+        String creator = (user != null && user.getFullName() != null && !user.getFullName().isBlank()) 
+                ? user.getFullName() 
+                : "Alex Rivers (EcoTrack Admin)";
 
         Challenge challenge = Challenge.builder()
                 .title(request.getTitle())
@@ -59,7 +68,7 @@ public class ChallengeServiceImpl implements ChallengeService {
                 .challengeType(ChallengeType.WEEKLY)
                 .active(true)
                 .createdBy(user)
-                .creatorName(user != null ? user.getFullName() : "EcoTrack Community")
+                .creatorName(creator)
                 .build();
 
         Challenge saved = challengeRepository.save(challenge);
@@ -100,7 +109,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional
     public ChallengeResponse joinChallenge(Long id, String authenticatedEmail) {
         User user = findUserByEmail(authenticatedEmail);
-        Challenge challenge = challengeRepository.findByIdAndActiveTrue(id)
+        Challenge challenge = challengeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge not found with id: " + id));
 
         if (userChallengeProgressRepository.existsByUserIdAndChallengeId(user.getId(), challenge.getId())) {
@@ -124,7 +133,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional
     public ChallengeResponse updateProgress(Long id, ChallengeProgressRequest request, String authenticatedEmail) {
         User user = findUserByEmail(authenticatedEmail);
-        Challenge challenge = challengeRepository.findByIdAndActiveTrue(id)
+        Challenge challenge = challengeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge not found with id: " + id));
 
         UserChallengeProgress progress = userChallengeProgressRepository.findByUserIdAndChallengeId(user.getId(), challenge.getId())
@@ -261,7 +270,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     private User findUserByEmail(String email) {
-        if (email == null || email.isBlank()) {
+        if (email == null || email.isBlank() || "anonymousUser".equalsIgnoreCase(email)) {
             throw new ResourceNotFoundException("User not authenticated");
         }
         return userRepository.findByEmail(email)
@@ -269,7 +278,9 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     private User findUserByEmailNullable(String email) {
-        if (email == null || email.isBlank()) return null;
+        if (email == null || email.isBlank() || "anonymousUser".equalsIgnoreCase(email)) {
+            return null;
+        }
         return userRepository.findByEmail(email).orElse(null);
     }
 

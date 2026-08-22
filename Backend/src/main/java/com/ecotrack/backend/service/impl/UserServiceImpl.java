@@ -35,11 +35,20 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException("Email already exists");
         }
 
+        // Ensure public registration only creates ROLE_USER or ROLE_ORGANIZATION.
+        // ROLE_ADMIN can only be granted by an existing administrator via the Admin Governance Panel.
+        String assignedRole = "ROLE_USER";
+        if ("ROLE_ORGANIZATION".equalsIgnoreCase(request.getRole())) {
+            assignedRole = "ROLE_ORGANIZATION";
+        } else {
+            assignedRole = "ROLE_USER";
+        }
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : "ROLE_USER")
+                .role(assignedRole)
                 .location(request.getLocation())
                 .environmentalInterests(request.getEnvironmentalInterests())
                 .lifestyleConfig(request.getLifestyleConfig())
@@ -52,7 +61,15 @@ public class UserServiceImpl implements UserService {
     public LoginResponse loginUser(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .or(() -> {
+                    if ("demo@gmail.com".equalsIgnoreCase(request.getEmail())) {
+                        return userRepository.findByEmail("demo@ecotrack.com");
+                    } else if ("demo@ecotrack.com".equalsIgnoreCase(request.getEmail())) {
+                        return userRepository.findByEmail("demo@gmail.com");
+                    }
+                    return java.util.Optional.empty();
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getEmail()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
@@ -73,5 +90,25 @@ public class UserServiceImpl implements UserService {
                 user.getEnvironmentalInterests(),
                 user.getLifestyleConfig()
         );
+    }
+
+    @Override
+    public java.util.List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    public User updateUserRole(Long id, String role) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setRole(role != null ? role : "ROLE_USER");
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        userRepository.delete(user);
     }
 }

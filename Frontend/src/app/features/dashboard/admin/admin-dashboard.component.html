@@ -1,0 +1,687 @@
+<!-- TOAST ALERT NOTIFICATION -->
+<div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+  <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+  <span>{{ toastMessage }}</span>
+  <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
+</div>
+
+<div class="dashboard-view-wrapper fade-in-section">
+  <!-- Admin Header -->
+  <div class="dashboard-header admin-main-header">
+    <div class="header-text">
+      <div class="admin-badge-pill">
+        <i class="bi bi-shield-fill-check"></i> Platform Manager & Moderator
+      </div>
+      <h1>Administrator Control Panel</h1>
+      <p class="subtitle text-secondary">
+        Lifecycle challenge management, user role governance, and platform analytics.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline-secondary" (click)="activeTab = 'audit'">
+        <i class="bi bi-journal-text"></i> Audit Logs
+      </button>
+      <button class="btn btn-primary" (click)="openCreateChallengeModal()">
+        <i class="bi bi-plus-circle-fill"></i> + Create Challenge
+      </button>
+    </div>
+  </div>
+
+  <!-- Master Platform KPI Summary Grid -->
+  <div class="eco-grid eco-grid-cols-4 admin-kpi-grid">
+    <!-- Active Challenges Card -->
+    <div class="eco-card card-stat clickable" (click)="activeTab = 'challenges'" [class.kpi-active]="activeTab === 'challenges'">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper info-bg"><i class="bi bi-trophy-fill"></i></div>
+        <span class="stat-badge info-badge">{{ publishedChallengesCount }} Published</span>
+      </div>
+      <p class="stat-title">Platform Challenges</p>
+      <h2 class="stat-number">{{ challenges.length }} <span class="stat-unit">drives</span></h2>
+      <p class="kpi-meta"><i class="bi bi-people"></i> {{ totalParticipantsCount }} total participants</p>
+    </div>
+
+    <!-- Registered Users Card -->
+    <div class="eco-card card-stat clickable" (click)="activeTab = 'users'" [class.kpi-active]="activeTab === 'users'">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper success-bg"><i class="bi bi-people-fill"></i></div>
+        <span class="stat-badge success-badge">100% Verified</span>
+      </div>
+      <p class="stat-title">User Accounts</p>
+      <h2 class="stat-number">{{ adminUserAccounts.length }} <span class="stat-unit">registered</span></h2>
+      <p class="kpi-meta"><i class="bi bi-person-check"></i> Active governance</p>
+    </div>
+
+    <!-- Total Platform Carbon Monitored -->
+    <div class="eco-card card-stat clickable" (click)="activeTab = 'factors'" [class.kpi-active]="activeTab === 'factors'">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper danger-bg"><i class="bi bi-globe-americas"></i></div>
+        <span class="stat-badge danger-badge">Live Metric</span>
+      </div>
+      <p class="stat-title">Platform Carbon Monitored</p>
+      <h2 class="stat-number">45,820 <span class="stat-unit">tCO₂e</span></h2>
+      <p class="kpi-meta"><i class="bi bi-sliders"></i> 9 active emission factors</p>
+    </div>
+
+    <!-- Database / System Health -->
+    <div class="eco-card card-stat clickable" (click)="activeTab = 'audit'" [class.kpi-active]="activeTab === 'audit'">
+      <div class="card-stat-header">
+        <div class="stat-icon-wrapper success-bg"><i class="bi bi-database-check"></i></div>
+        <span class="stat-badge success-badge">99.9% Uptime</span>
+      </div>
+      <p class="stat-title">PostgreSQL DB Engine</p>
+      <h2 class="stat-number">Healthy <span class="stat-unit">0ms Lag</span></h2>
+      <p class="kpi-meta"><i class="bi bi-shield-lock"></i> Spring Security Active</p>
+    </div>
+  </div>
+
+  <!-- Admin Sub-Navigation Tabs Bar -->
+  <div class="admin-nav-tabs glass-panel">
+    <button class="admin-tab-btn" [class.active]="activeTab === 'challenges'" (click)="activeTab = 'challenges'">
+      <i class="bi bi-trophy-fill"></i> Challenge Management ({{ challenges.length }})
+    </button>
+    <button class="admin-tab-btn" [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">
+      <i class="bi bi-people-fill"></i> User Governance ({{ adminUserAccounts.length }})
+    </button>
+    <button class="admin-tab-btn" [class.active]="activeTab === 'factors'" (click)="activeTab = 'factors'">
+      <i class="bi bi-sliders"></i> Emission Database & Factors ({{ adminEmissionFactors.length }})
+    </button>
+    <button class="admin-tab-btn" [class.active]="activeTab === 'audit'" (click)="activeTab = 'audit'">
+      <i class="bi bi-journal-text"></i> Audit Logs & Moderation ({{ auditLogs.length }})
+    </button>
+  </div>
+
+  <!-- ==================== TAB 1: CHALLENGES MANAGEMENT (MATCHING SCREENSHOT 2) ==================== -->
+  <div *ngIf="activeTab === 'challenges'" class="admin-section fade-in">
+    <!-- Challenge List Header with Search & Filter -->
+    <div class="section-toolbar">
+      <div class="toolbar-left">
+        <div class="search-input-box">
+          <i class="bi bi-search"></i>
+          <input 
+            type="text" 
+            placeholder="Search challenges by title, category, badge..." 
+            [(ngModel)]="challengeSearchQuery" 
+            class="form-control-search">
+        </div>
+        <div class="filter-chips">
+          <button class="chip" [class.active]="challengeFilter === 'ALL'" (click)="challengeFilter = 'ALL'">All ({{ challenges.length }})</button>
+          <button class="chip chip-published" [class.active]="challengeFilter === 'PUBLISHED'" (click)="challengeFilter = 'PUBLISHED'">Published</button>
+          <button class="chip chip-paused" [class.active]="challengeFilter === 'PAUSED'" (click)="challengeFilter = 'PAUSED'">Paused</button>
+          <button class="chip chip-ended" [class.active]="challengeFilter === 'ENDED'" (click)="challengeFilter = 'ENDED'">Ended</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary btn-sm" (click)="openCreateChallengeModal()">
+          <i class="bi bi-plus-lg"></i> + Create Challenge
+        </button>
+      </div>
+    </div>
+
+    <!-- Challenges Grid List as seen in Screenshot 2 -->
+    <div class="challenges-admin-grid">
+      <div class="eco-card challenge-admin-card" *ngFor="let ch of filteredChallenges">
+        <div class="ch-card-header">
+          <div class="ch-title-wrap">
+            <div class="ch-category-pill">{{ ch.category }}</div>
+            <h3 class="ch-title">{{ ch.title }}</h3>
+          </div>
+          <div class="ch-status-badge" [ngClass]="'status-' + (ch.customStatus || 'Published').toLowerCase()">
+            <span class="status-dot"></span>
+            {{ ch.customStatus || 'Published' }}
+          </div>
+        </div>
+
+        <p class="ch-desc">{{ ch.description }}</p>
+
+        <!-- Metrics Row -->
+        <div class="ch-metrics-row">
+          <div class="metric-item">
+            <i class="bi bi-people-fill text-primary"></i>
+            <div>
+              <span class="m-val">{{ ch.participantCount || 0 }}</span>
+              <span class="m-lbl">Participants</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <i class="bi bi-bullseye text-warning"></i>
+            <div>
+              <span class="m-val">{{ ch.targetValue }} {{ ch.unit }}</span>
+              <span class="m-lbl">Target Goal</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <i class="bi bi-award-fill text-success"></i>
+            <div>
+              <span class="m-val">+{{ ch.rewardPoints }} pts</span>
+              <span class="m-lbl">Reward</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <i class="bi bi-patch-check-fill text-info"></i>
+            <div>
+              <span class="m-val">{{ ch.badgeName || 'Eco Warrior' }}</span>
+              <span class="m-lbl">Assigned Badge</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Duration bar -->
+        <div class="ch-dates-bar">
+          <i class="bi bi-calendar3"></i>
+          <span>Duration: <strong>{{ ch.startDate || '01 Aug 2026' }}</strong> &rarr; <strong>{{ ch.endDate || '31 Aug 2026' }}</strong></span>
+        </div>
+
+        <!-- Action Buttons matching Screenshot 2: [Edit] [View Participants] [End Challenge] -->
+        <div class="ch-action-buttons">
+          <button class="btn btn-outline-primary btn-action" (click)="openEditChallengeModal(ch)">
+            <i class="bi bi-pencil-square"></i> Edit
+          </button>
+          <button class="btn btn-emerald btn-action" (click)="openParticipantsModal(ch)">
+            <i class="bi bi-people"></i> View Participants ({{ ch.participantCount }})
+          </button>
+          <button 
+            *ngIf="ch.customStatus !== 'Ended'" 
+            class="btn btn-outline-secondary btn-action" 
+            (click)="togglePublishStatus(ch)">
+            <i class="bi" [ngClass]="ch.customStatus === 'Published' ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+            {{ ch.customStatus === 'Published' ? 'Pause' : 'Publish' }}
+          </button>
+          <button 
+            *ngIf="ch.customStatus !== 'Ended'" 
+            class="btn btn-outline-danger btn-action" 
+            (click)="endChallenge(ch)">
+            <i class="bi bi-stop-circle"></i> End Challenge
+          </button>
+          <button class="btn-icon delete-btn-card" (click)="deleteChallenge(ch)" title="Delete Challenge">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredChallenges.length === 0" class="empty-state-card">
+        <i class="bi bi-search font-xl"></i>
+        <h4>No challenges match your search criteria</h4>
+        <p>Try clearing filters or click <strong>+ Create Challenge</strong> to add a new initiative.</p>
+        <button class="btn btn-primary" (click)="openCreateChallengeModal()"><i class="bi bi-plus-lg"></i> Create Challenge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: USER GOVERNANCE (SCREENSHOT 3: USERS) ==================== -->
+  <div *ngIf="activeTab === 'users'" class="admin-section fade-in">
+    <div class="section-toolbar">
+      <div class="toolbar-left">
+        <div class="search-input-box">
+          <i class="bi bi-search"></i>
+          <input 
+            type="text" 
+            placeholder="Search users by name, email..." 
+            [(ngModel)]="userSearchQuery" 
+            class="form-control-search">
+        </div>
+        <div class="filter-chips">
+          <button class="chip" [class.active]="userRoleFilter === 'ALL'" (click)="userRoleFilter = 'ALL'">All Users ({{ adminUserAccounts.length }})</button>
+          <button class="chip" [class.active]="userRoleFilter === 'ROLE_USER'" (click)="userRoleFilter = 'ROLE_USER'">Individual (ROLE_USER)</button>
+          <button class="chip" [class.active]="userRoleFilter === 'ROLE_ORGANIZATION'" (click)="userRoleFilter = 'ROLE_ORGANIZATION'">Organization</button>
+          <button class="chip" [class.active]="userRoleFilter === 'ROLE_ADMIN'" (click)="userRoleFilter = 'ROLE_ADMIN'">Admin</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary btn-sm" (click)="openAddUserModal()">
+          <i class="bi bi-person-plus-fill"></i> + Add User Account
+        </button>
+      </div>
+    </div>
+
+    <!-- Users Governance Table -->
+    <div class="eco-card table-card">
+      <div class="table-responsive">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>User / Entity</th>
+              <th>Assigned Security Role</th>
+              <th>Status</th>
+              <th>Reward Points</th>
+              <th>Joined Date</th>
+              <th style="text-align: right;">Moderation Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let usr of filteredUsers">
+              <td>
+                <div class="user-cell">
+                  <img [src]="usr.avatar" [alt]="usr.name" class="user-avatar-sm">
+                  <div>
+                    <div class="user-name-text">{{ usr.name }}</div>
+                    <div class="user-email-text">{{ usr.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <select 
+                  class="role-select" 
+                  [ngModel]="usr.role" 
+                  (ngModelChange)="changeUserRole(usr, $event)">
+                  <option value="ROLE_USER">Individual (ROLE_USER)</option>
+                  <option value="ROLE_ORGANIZATION">Organization (ROLE_ORGANIZATION)</option>
+                  <option value="ROLE_ADMIN">Administrator (ROLE_ADMIN)</option>
+                </select>
+              </td>
+              <td>
+                <span 
+                  class="status-chip" 
+                  [ngClass]="usr.status === 'Active' || usr.status === 'Verified' ? 'badge-emerald' : 'badge-coral'">
+                  {{ usr.status }}
+                </span>
+              </td>
+              <td>
+                <strong style="color: #059669;">+{{ usr.points }} pts</strong>
+              </td>
+              <td class="text-secondary">{{ usr.joined }}</td>
+              <td style="text-align: right;">
+                <div class="table-actions">
+                  <button 
+                    class="btn btn-sm" 
+                    [ngClass]="usr.status === 'Active' || usr.status === 'Verified' ? 'btn-outline-warning' : 'btn-outline-success'"
+                    (click)="toggleUserStatus(usr)">
+                    <i class="bi" [ngClass]="usr.status === 'Active' || usr.status === 'Verified' ? 'bi-slash-circle' : 'bi-check-circle'"></i>
+                    {{ usr.status === 'Active' || usr.status === 'Verified' ? 'Suspend' : 'Activate' }}
+                  </button>
+                  <button class="btn-icon delete-btn-table" (click)="deleteUser(usr)" title="Delete Account">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: EMISSION DATABASE & FACTORS (SCREENSHOT 3: PLATFORM) ==================== -->
+  <div *ngIf="activeTab === 'factors'" class="admin-section fade-in">
+    <div class="section-toolbar">
+      <div class="toolbar-left">
+        <div>
+          <h3>IPCC & DEFRA Carbon Emission Database</h3>
+          <p class="subtitle">Platform coefficients used to calculate user footprints and green offsets.</p>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary btn-sm" (click)="showToast('Database synchronized with international standards', 'success')">
+          <i class="bi bi-arrow-repeat"></i> Sync Standards
+        </button>
+      </div>
+    </div>
+
+    <div class="eco-card table-card">
+      <div class="table-responsive">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Sub-Category</th>
+              <th>Emission Factor</th>
+              <th>Unit of Measure</th>
+              <th>Regulatory Standard</th>
+              <th>Last Calibrated</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ef of adminEmissionFactors">
+              <td style="font-weight: 700;">{{ ef.category }}</td>
+              <td>{{ ef.subCategory }}</td>
+              <td>
+                <span class="factor-val" [style.color]="ef.factor < 0 ? '#059669' : '#0F172A'">
+                  {{ ef.factor > 0 ? '+' : '' }}{{ ef.factor }}
+                </span>
+              </td>
+              <td class="text-secondary">{{ ef.unit }}</td>
+              <td><span class="badge badge-light">{{ ef.source }}</span></td>
+              <td class="text-secondary">{{ ef.lastUpdated }}</td>
+              <td style="text-align: right;">
+                <button class="btn btn-outline-primary btn-sm" (click)="openEditFactorModal(ef)">
+                  <i class="bi bi-sliders"></i> Recalibrate
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 4: AUDIT LOGS & MODERATION (SCREENSHOT 3: PLATFORM) ==================== -->
+  <div *ngIf="activeTab === 'audit'" class="admin-section fade-in">
+    <div class="eco-card table-card">
+      <div class="chart-header">
+        <div>
+          <h3><i class="bi bi-shield-shaded text-primary"></i> System Moderation & Audit Trails</h3>
+          <p class="subtitle">Chronological ledger of administrative operations and governance actions.</p>
+        </div>
+        <span class="badge badge-emerald">Real-time Logging</span>
+      </div>
+
+      <div class="audit-timeline">
+        <div class="audit-item" *ngFor="let log of auditLogs">
+          <div class="audit-icon" [ngClass]="'audit-' + log.status.toLowerCase()">
+            <i class="bi" [ngClass]="log.status === 'Success' ? 'bi-check-circle-fill' : (log.status === 'Warning' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill')"></i>
+          </div>
+          <div class="audit-content">
+            <div class="audit-top">
+              <span class="audit-action">{{ log.action }}</span>
+              <span class="audit-time">{{ log.timestamp }}</span>
+            </div>
+            <div class="audit-target"><strong>Target:</strong> {{ log.target }} &bull; <small class="text-secondary">By {{ log.adminName }}</small></div>
+            <p class="audit-desc">{{ log.details }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CREATE / EDIT CHALLENGE MODAL (SCREENSHOT 1, 2, 3) ==================== -->
+<div *ngIf="showChallengeModal" class="modal-backdrop fade-in">
+  <div class="admin-modal-card large-modal">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <i class="bi bi-trophy-fill text-warning font-lg"></i>
+        <div>
+          <h3>{{ isEditingChallenge ? 'Edit Sustainability Challenge' : 'Create & Publish New Challenge' }}</h3>
+          <p class="subtitle">Set duration, target goal, reward points, and eco badge for users</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeChallengeModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-form-grid">
+        <!-- Challenge Title -->
+        <div class="form-group full-width">
+          <label>Challenge Title <span class="text-danger">*</span></label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="challengeForm.title" 
+            placeholder="e.g. 7-Day Low Carbon Challenge or Zero Waste Week">
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label>Sustainability Category</label>
+          <select class="form-control" [(ngModel)]="challengeForm.category">
+            <option value="PLASTIC_FREE_WEEK">Plastic-Free (Single-use Plastic Reduction)</option>
+            <option value="CYCLE_TO_WORK">Transportation (Cycle & Walk to Work)</option>
+            <option value="ENERGY_SAVING">Energy & Electricity Saving</option>
+            <option value="TREE_PLANTATION">Tree Plantation & Reforestation</option>
+            <option value="WATER_CONSERVATION">Water Usage Conservation</option>
+            <option value="ZERO_WASTE">Zero Waste & Landfill Diversion</option>
+            <option value="RECYCLING">Recycling & Circular Economy</option>
+          </select>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label>Publishing Lifecycle Status</label>
+          <select class="form-control" [(ngModel)]="challengeForm.status">
+            <option value="Published">Published (Live to all Users)</option>
+            <option value="Paused">Paused (Temporarily on hold)</option>
+            <option value="Draft">Draft (Admin eyes only)</option>
+          </select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" class="form-control" [(ngModel)]="challengeForm.startDate">
+        </div>
+
+        <!-- End Date (Duration) -->
+        <div class="form-group">
+          <label>End Date (Challenge Duration)</label>
+          <input type="date" class="form-control" [(ngModel)]="challengeForm.endDate">
+        </div>
+
+        <!-- Target Value -->
+        <div class="form-group">
+          <label>Target Value Goal <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" [(ngModel)]="challengeForm.targetValue" min="1" placeholder="e.g. 7">
+        </div>
+
+        <!-- Unit of Measure -->
+        <div class="form-group">
+          <label>Unit of Measure</label>
+          <input type="text" class="form-control" [(ngModel)]="challengeForm.unit" placeholder="e.g. days, kWh, kg, trees, trips">
+        </div>
+
+        <!-- Reward Points -->
+        <div class="form-group">
+          <label>Reward Points Awarded <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" [(ngModel)]="challengeForm.rewardPoints" min="10" step="10" placeholder="e.g. 100">
+        </div>
+
+        <!-- Assign Badge / Reward -->
+        <div class="form-group">
+          <label>Assign Badge / Award Title</label>
+          <input type="text" class="form-control" [(ngModel)]="challengeForm.badgeName" placeholder="e.g. Plastic Fighter, Hydro Hero, Eco Warrior">
+        </div>
+
+        <!-- Description -->
+        <div class="form-group full-width">
+          <label>Challenge Description</label>
+          <textarea 
+            class="form-control" 
+            rows="2" 
+            [(ngModel)]="challengeForm.description" 
+            placeholder="Describe what users need to do to complete this sustainability challenge..."></textarea>
+        </div>
+
+        <!-- Rules & Guidelines -->
+        <div class="form-group full-width">
+          <label>Rules & Validation Guidelines</label>
+          <textarea 
+            class="form-control" 
+            rows="2" 
+            [(ngModel)]="challengeForm.rules" 
+            placeholder="e.g. Avoid single use plastic bags, log daily activity, take public transit..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline-secondary" (click)="closeChallengeModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveChallenge()">
+        <i class="bi bi-check2-circle"></i> {{ isEditingChallenge ? 'Save & Update Challenge' : 'Publish Challenge' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VIEW PARTICIPANTS MODAL (SCREENSHOT 2) ==================== -->
+<div *ngIf="showParticipantsModal && selectedChallengeForParticipants" class="modal-backdrop fade-in">
+  <div class="admin-modal-card large-modal">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <i class="bi bi-people-fill text-emerald font-lg"></i>
+        <div>
+          <h3>Participants: {{ selectedChallengeForParticipants.title }}</h3>
+          <p class="subtitle">
+            {{ participantsList.length }} enrolled users &bull; Target: {{ selectedChallengeForParticipants.targetValue }} {{ selectedChallengeForParticipants.unit }} &bull; Reward: +{{ selectedChallengeForParticipants.rewardPoints }} pts
+          </p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeParticipantsModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Search & Filter within Participants -->
+      <div class="section-toolbar mb-3">
+        <div class="toolbar-left">
+          <div class="search-input-box">
+            <i class="bi bi-search"></i>
+            <input 
+              type="text" 
+              placeholder="Search participant by name or email..." 
+              [(ngModel)]="participantSearchQuery" 
+              class="form-control-search">
+          </div>
+          <div class="filter-chips">
+            <button class="chip" [class.active]="participantFilter === 'ALL'" (click)="participantFilter = 'ALL'">All ({{ participantsList.length }})</button>
+            <button class="chip chip-published" [class.active]="participantFilter === 'COMPLETED'" (click)="participantFilter = 'COMPLETED'">Completed (100%)</button>
+            <button class="chip chip-paused" [class.active]="participantFilter === 'IN_PROGRESS'" (click)="participantFilter = 'IN_PROGRESS'">In Progress</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Participants List Table -->
+      <div class="table-responsive">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Persona</th>
+              <th>Progress Track</th>
+              <th>Status</th>
+              <th>Points Awarded</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of filteredParticipants">
+              <td>
+                <div class="user-cell">
+                  <img [src]="p.avatar" [alt]="p.name" class="user-avatar-sm">
+                  <div>
+                    <div class="user-name-text">{{ p.name }}</div>
+                    <div class="user-email-text">{{ p.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="p.role === 'Organization' ? 'badge-amber' : 'badge-light'">
+                  {{ p.role }}
+                </span>
+              </td>
+              <td style="min-width: 180px;">
+                <div class="part-progress-wrap">
+                  <div class="progress-bar-container" style="height: 6px; margin-bottom: 4px;">
+                    <div 
+                      class="progress-bar" 
+                      [ngClass]="p.status === 'Completed' ? 'success-bar' : 'info-bar'" 
+                      [style.width.%]="getParticipantPercentage(p)"></div>
+                  </div>
+                  <small class="text-secondary font-xs">{{ p.currentProgress }} / {{ p.targetValue }} {{ p.unit }} ({{ getParticipantPercentage(p) }}%)</small>
+                </div>
+              </td>
+              <td>
+                <span 
+                  class="status-chip" 
+                  [ngClass]="p.status === 'Completed' ? 'badge-emerald' : 'badge-amber'">
+                  {{ p.status }}
+                </span>
+              </td>
+              <td>
+                <strong [style.color]="p.status === 'Completed' ? '#059669' : '#64748B'">
+                  {{ p.status === 'Completed' ? '+' + selectedChallengeForParticipants.rewardPoints + ' pts' : '0 pts' }}
+                </strong>
+              </td>
+              <td class="text-secondary">{{ p.joinedDate }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="closeParticipantsModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ADD USER ACCOUNT MODAL ==================== -->
+<div *ngIf="showAddUserModal" class="modal-backdrop fade-in">
+  <div class="admin-modal-card">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <i class="bi bi-person-plus-fill text-primary font-lg"></i>
+        <div>
+          <h3>Add / Register Platform User</h3>
+          <p class="subtitle">Manually provision individual, organization or admin account</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeAddUserModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group mb-3">
+        <label>Full Name</label>
+        <input type="text" class="form-control" [(ngModel)]="newUserForm.name" placeholder="e.g. Jane Doe">
+      </div>
+      <div class="form-group mb-3">
+        <label>Email Address</label>
+        <input type="email" class="form-control" [(ngModel)]="newUserForm.email" placeholder="jane@example.com">
+      </div>
+      <div class="form-group mb-3">
+        <label>Role</label>
+        <select class="form-control" [(ngModel)]="newUserForm.role">
+          <option value="ROLE_USER">Individual User (ROLE_USER)</option>
+          <option value="ROLE_ORGANIZATION">Organization Account (ROLE_ORGANIZATION)</option>
+          <option value="ROLE_ADMIN">System Administrator (ROLE_ADMIN)</option>
+        </select>
+      </div>
+      <div class="form-group mb-3">
+        <label>Initial Status</label>
+        <select class="form-control" [(ngModel)]="newUserForm.status">
+          <option value="Active">Active</option>
+          <option value="Verified">Verified</option>
+          <option value="Suspended">Suspended</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline-secondary" (click)="closeAddUserModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveNewUser()"><i class="bi bi-check2"></i> Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RECALIBRATE EMISSION FACTOR MODAL ==================== -->
+<div *ngIf="showFactorModal && editingFactor" class="modal-backdrop fade-in">
+  <div class="admin-modal-card">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <i class="bi bi-sliders text-emerald font-lg"></i>
+        <div>
+          <h3>Recalibrate Factor: {{ editingFactor.subCategory }}</h3>
+          <p class="subtitle">{{ editingFactor.category }} Carbon Baseline</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeFactorModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group mb-3">
+        <label>Factor Value (kg CO₂e)</label>
+        <input type="number" class="form-control" [(ngModel)]="factorForm.factor" step="0.01">
+      </div>
+      <div class="form-group mb-3">
+        <label>Unit</label>
+        <input type="text" class="form-control" [(ngModel)]="factorForm.unit">
+      </div>
+      <div class="form-group mb-3">
+        <label>Standard / Source</label>
+        <input type="text" class="form-control" [(ngModel)]="factorForm.source">
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline-secondary" (click)="closeFactorModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveFactorCalibration()"><i class="bi bi-check2"></i> Save Calibration</button>
+    </div>
+  </div>
+</div>

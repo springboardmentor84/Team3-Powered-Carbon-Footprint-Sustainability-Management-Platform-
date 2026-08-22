@@ -107,6 +107,10 @@ export class ActivityService {
     }
   ];
 
+  public getFallbackActivities(): ActivityRecord[] {
+    return [...this.fallbackActivities];
+  }
+
   private cachedActivities: ActivityRecord[] | null = null;
 
   public async getCategories(): Promise<ActivityCategory[]> {

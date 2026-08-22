@@ -79,5 +79,12 @@ public class Challenge {
         if (challengeType == null) {
             challengeType = ChallengeType.WEEKLY;
         }
+        if (creatorName == null || creatorName.isBlank()) {
+            if (createdBy != null && createdBy.getFullName() != null) {
+                creatorName = createdBy.getFullName();
+            } else {
+                creatorName = "Alex Rivers (EcoTrack Admin)";
+            }
+        }
     }
 }

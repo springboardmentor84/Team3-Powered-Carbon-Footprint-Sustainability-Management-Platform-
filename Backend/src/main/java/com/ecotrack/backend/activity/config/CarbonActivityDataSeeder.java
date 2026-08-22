@@ -1,13 +1,17 @@
 package com.ecotrack.backend.activity.config;
 
+import com.ecotrack.backend.activity.entity.CarbonActivity;
 import com.ecotrack.backend.activity.entity.CarbonActivityCategory;
 import com.ecotrack.backend.activity.entity.CarbonEmissionFactor;
 import com.ecotrack.backend.activity.repository.CarbonActivityCategoryRepository;
+import com.ecotrack.backend.activity.repository.CarbonActivityRepository;
 import com.ecotrack.backend.activity.repository.CarbonEmissionFactorRepository;
 import com.ecotrack.backend.entity.Challenge;
 import com.ecotrack.backend.entity.ChallengeType;
 import com.ecotrack.backend.entity.User;
+import com.ecotrack.backend.entity.UserChallengeProgress;
 import com.ecotrack.backend.repository.ChallengeRepository;
+import com.ecotrack.backend.repository.UserChallengeProgressRepository;
 import com.ecotrack.backend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -28,10 +33,44 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
     private final CarbonEmissionFactorRepository factorRepository;
     private final UserRepository userRepository;
     private final ChallengeRepository challengeRepository;
+    private final UserChallengeProgressRepository userChallengeProgressRepository;
+    private final CarbonActivityRepository carbonActivityRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
+        // 1. Seed demo and test users first
+        User demoUser = userRepository.findByEmail("demo@ecotrack.com")
+                .or(() -> userRepository.findByEmail("demo@gmail.com"))
+                .orElse(null);
+        if (demoUser == null) {
+            log.info("Seeding default demo user into PostgreSQL...");
+            demoUser = User.builder()
+                    .fullName("Alex Rivers")
+                    .email("demo@ecotrack.com")
+                    .password(passwordEncoder.encode("password123"))
+                    .role("ROLE_ADMIN")
+                    .rewardPoints(1240)
+                    .badgeName("Level 12 Explorer")
+                    .build();
+            demoUser = userRepository.save(demoUser);
+            log.info("Successfully seeded demo user: demo@ecotrack.com / password123");
+        }
+
+        if (!userRepository.existsByEmail("user@ecotrack.com")) {
+            User testUser = User.builder()
+                    .fullName("Yash Patel")
+                    .email("user@ecotrack.com")
+                    .password(passwordEncoder.encode("demo123"))
+                    .role("ROLE_USER")
+                    .rewardPoints(720)
+                    .badgeName("Eco Champion")
+                    .build();
+            userRepository.save(testUser);
+            log.info("Successfully seeded test user: user@ecotrack.com / demo123");
+        }
+
+        // 2. Seed 11 Carbon Activity Categories
         if (categoryRepository.count() == 0) {
             log.info("Seeding 11 Carbon Activity Categories into PostgreSQL...");
 
@@ -52,6 +91,7 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
             log.info("Successfully seeded {} categories.", categories.size());
         }
 
+        // 3. Seed Emission Factors
         if (factorRepository.count() == 0) {
             log.info("Seeding default Emission Factors for all 11 categories...");
 
@@ -96,8 +136,12 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
             log.info("Successfully seeded {} emission factors.", factors.size());
         }
 
+        final User finalDemoUser = demoUser;
+        final String creatorTitle = (finalDemoUser != null && finalDemoUser.getFullName() != null) ? finalDemoUser.getFullName() : "Alex Rivers";
+
+        // 4. Seed Community Challenges
         if (challengeRepository.count() == 0) {
-            log.info("Seeding default Community Challenges into PostgreSQL...");
+            log.info("Seeding default Community Challenges into PostgreSQL with creator details...");
             List<Challenge> challenges = List.of(
                     Challenge.builder()
                             .title("Plastic-Free Week")
@@ -112,6 +156,8 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                             .endDate(LocalDate.now().plusDays(7))
                             .rules("Avoid single-use plastic bags, use reusable water bottles, and purchase unpackaged fresh produce.")
                             .active(true)
+                            .createdBy(finalDemoUser)
+                            .creatorName(creatorTitle)
                             .build(),
                     Challenge.builder()
                             .title("Cycle to Work")
@@ -126,6 +172,8 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                             .endDate(LocalDate.now().plusDays(10))
                             .rules("Track your cycling commute trips. Walking or public transport can count towards non-motorized travel.")
                             .active(true)
+                            .createdBy(finalDemoUser)
+                            .creatorName(creatorTitle)
                             .build(),
                     Challenge.builder()
                             .title("Energy Saving Challenge")
@@ -140,6 +188,8 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                             .endDate(LocalDate.now().plusDays(14))
                             .rules("Unplug standby electronics, switch to LED lighting, and minimize air conditioning usage.")
                             .active(true)
+                            .createdBy(finalDemoUser)
+                            .creatorName(creatorTitle)
                             .build(),
                     Challenge.builder()
                             .title("Tree Plantation Drive")
@@ -154,6 +204,8 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                             .endDate(LocalDate.now().plusDays(30))
                             .rules("Plant saplings in community parks, gardens, or participate in authorized local planting drives.")
                             .active(true)
+                            .createdBy(finalDemoUser)
+                            .creatorName(creatorTitle)
                             .build(),
                     Challenge.builder()
                             .title("Water Conservation Week")
@@ -168,6 +220,8 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                             .endDate(LocalDate.now().plusDays(7))
                             .rules("Take shorter showers, fix leaking taps, and reuse greywater for garden plants.")
                             .active(true)
+                            .createdBy(finalDemoUser)
+                            .creatorName(creatorTitle)
                             .build(),
                     Challenge.builder()
                             .title("Zero Waste Challenge")
@@ -182,35 +236,155 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
                             .endDate(LocalDate.now().plusDays(14))
                             .rules("Separate organic waste for compost, clean dry recyclables, and avoid landfill trash.")
                             .active(true)
+                            .createdBy(finalDemoUser)
+                            .creatorName(creatorTitle)
                             .build()
             );
             challengeRepository.saveAll(challenges);
-            log.info("Successfully seeded {} community challenges.", challenges.size());
+            log.info("Successfully seeded {} community challenges with creator {}.", challenges.size(), creatorTitle);
+        } else {
+            // Retroactively update existing challenges where creator_name or created_by_user_id was null
+            challengeRepository.findAll().forEach(ch -> {
+                boolean needsUpdate = false;
+                if (ch.getCreatorName() == null || ch.getCreatorName().isBlank()) {
+                    ch.setCreatorName(creatorTitle);
+                    needsUpdate = true;
+                }
+                if (ch.getCreatedBy() == null && finalDemoUser != null) {
+                    ch.setCreatedBy(finalDemoUser);
+                    needsUpdate = true;
+                }
+                if (needsUpdate) {
+                    challengeRepository.save(ch);
+                }
+            });
         }
 
-        if (!userRepository.existsByEmail("demo@ecotrack.com")) {
-            log.info("Seeding default demo user into PostgreSQL...");
-            User demoUser = User.builder()
-                    .fullName("Alex Rivers")
-                    .email("demo@ecotrack.com")
-                    .password(passwordEncoder.encode("password123"))
-                    .rewardPoints(1240)
-                    .badgeName("Level 12 Explorer")
-                    .build();
-            userRepository.save(demoUser);
-            log.info("Successfully seeded demo user: demo@ecotrack.com / password123");
+        // 5. Seed user_challenge_progress if empty
+        if (userChallengeProgressRepository.count() == 0 && finalDemoUser != null) {
+            log.info("Seeding default User Challenge Progress into PostgreSQL...");
+            List<Challenge> existingChallenges = challengeRepository.findAll();
+            if (!existingChallenges.isEmpty()) {
+                Challenge ch1 = existingChallenges.get(0); // Plastic-Free Week
+                UserChallengeProgress prog1 = UserChallengeProgress.builder()
+                        .user(finalDemoUser)
+                        .challenge(ch1)
+                        .currentProgress(4)
+                        .status("In Progress")
+                        .joinedAt(LocalDateTime.now().minusDays(3))
+                        .badgeEarned("None")
+                        .build();
+                userChallengeProgressRepository.save(prog1);
+
+                if (existingChallenges.size() > 2) {
+                    Challenge ch3 = existingChallenges.get(2); // Energy Saving
+                    UserChallengeProgress prog3 = UserChallengeProgress.builder()
+                            .user(finalDemoUser)
+                            .challenge(ch3)
+                            .currentProgress(ch3.getTargetValue() != null ? ch3.getTargetValue() : 20)
+                            .status("Completed")
+                            .rewardPointsEarned(ch3.getRewardPoints() != null ? ch3.getRewardPoints() : 120)
+                            .joinedAt(LocalDateTime.now().minusDays(6))
+                            .completedAt(LocalDateTime.now().minusDays(1))
+                            .badgeEarned(ch3.getBadgeName() != null ? ch3.getBadgeName() : "Grid Saver")
+                            .build();
+                    userChallengeProgressRepository.save(prog3);
+                }
+                log.info("Successfully seeded user challenge progress records into PostgreSQL.");
+            }
         }
 
-        if (!userRepository.existsByEmail("user@ecotrack.com")) {
-            User testUser = User.builder()
-                    .fullName("Yash Patel")
-                    .email("user@ecotrack.com")
-                    .password(passwordEncoder.encode("demo123"))
-                    .rewardPoints(720)
-                    .badgeName("Eco Champion")
-                    .build();
-            userRepository.save(testUser);
-            log.info("Successfully seeded test user: user@ecotrack.com / demo123");
+        // 6. Seed initial Carbon Activities if empty
+        if (carbonActivityRepository.count() == 0 && finalDemoUser != null) {
+            log.info("Seeding initial carbon activities into PostgreSQL for demo user...");
+            List<CarbonActivity> acts = List.of(
+                    CarbonActivity.builder()
+                            .user(finalDemoUser)
+                            .categoryCode("TRANSPORTATION")
+                            .subCategory("CAR_PETROL")
+                            .activityName("Commute to office (Sedan)")
+                            .quantity(new BigDecimal("14.0"))
+                            .unit("miles")
+                            .calculatedCo2(new BigDecimal("4.90"))
+                            .emissionFactorUsed(new BigDecimal("0.35"))
+                            .activityDate(LocalDate.now())
+                            .isOffset(false)
+                            .deleted(false)
+                            .createdBy(finalDemoUser.getEmail())
+                            .build(),
+                    CarbonActivity.builder()
+                            .user(finalDemoUser)
+                            .categoryCode("ELECTRICITY")
+                            .subCategory("GRID_POWER")
+                            .activityName("Home Electricity Usage")
+                            .quantity(new BigDecimal("12.0"))
+                            .unit("kWh")
+                            .calculatedCo2(new BigDecimal("4.68"))
+                            .emissionFactorUsed(new BigDecimal("0.39"))
+                            .activityDate(LocalDate.now())
+                            .isOffset(false)
+                            .deleted(false)
+                            .createdBy(finalDemoUser.getEmail())
+                            .build(),
+                    CarbonActivity.builder()
+                            .user(finalDemoUser)
+                            .categoryCode("FOOD_CONSUMPTION")
+                            .subCategory("VEGETARIAN")
+                            .activityName("Plant-forward Lunch")
+                            .quantity(new BigDecimal("2.0"))
+                            .unit("meals")
+                            .calculatedCo2(new BigDecimal("1.60"))
+                            .emissionFactorUsed(new BigDecimal("0.80"))
+                            .activityDate(LocalDate.now().minusDays(1))
+                            .isOffset(false)
+                            .deleted(false)
+                            .createdBy(finalDemoUser.getEmail())
+                            .build(),
+                    CarbonActivity.builder()
+                            .user(finalDemoUser)
+                            .categoryCode("WASTE_MANAGEMENT")
+                            .subCategory("PLASTIC")
+                            .activityName("Recycled Clean Packaging")
+                            .quantity(new BigDecimal("3.0"))
+                            .unit("kg")
+                            .calculatedCo2(new BigDecimal("6.30"))
+                            .emissionFactorUsed(new BigDecimal("2.10"))
+                            .activityDate(LocalDate.now().minusDays(2))
+                            .isOffset(false)
+                            .deleted(false)
+                            .createdBy(finalDemoUser.getEmail())
+                            .build(),
+                    CarbonActivity.builder()
+                            .user(finalDemoUser)
+                            .categoryCode("TREE_PLANTATION")
+                            .subCategory("TREE_PLANTED")
+                            .activityName("Planted Oak Saplings")
+                            .quantity(new BigDecimal("2.0"))
+                            .unit("trees")
+                            .calculatedCo2(new BigDecimal("44.00"))
+                            .emissionFactorUsed(new BigDecimal("22.00"))
+                            .activityDate(LocalDate.now().minusDays(3))
+                            .isOffset(true)
+                            .deleted(false)
+                            .createdBy(finalDemoUser.getEmail())
+                            .build(),
+                    CarbonActivity.builder()
+                            .user(finalDemoUser)
+                            .categoryCode("RENEWABLE_ENERGY")
+                            .subCategory("SOLAR_KWH")
+                            .activityName("Rooftop Solar Electricity")
+                            .quantity(new BigDecimal("20.0"))
+                            .unit("kWh")
+                            .calculatedCo2(new BigDecimal("7.00"))
+                            .emissionFactorUsed(new BigDecimal("0.35"))
+                            .activityDate(LocalDate.now().minusDays(4))
+                            .isOffset(true)
+                            .deleted(false)
+                            .createdBy(finalDemoUser.getEmail())
+                            .build()
+            );
+            carbonActivityRepository.saveAll(acts);
+            log.info("Successfully seeded {} carbon activities into PostgreSQL.", acts.size());
         }
     }
 

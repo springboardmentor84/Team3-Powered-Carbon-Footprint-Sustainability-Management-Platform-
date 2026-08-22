@@ -53,6 +53,7 @@ public class UserChallengeProgress {
     private LocalDateTime joinedAt;
 
     @PrePersist
+    @PreUpdate
     public void prePersist() {
         if (joinedAt == null) {
             joinedAt = LocalDateTime.now();
@@ -62,6 +63,15 @@ public class UserChallengeProgress {
         }
         if (currentProgress == null) {
             currentProgress = 0;
+        }
+        if (completedAt == null) {
+            completedAt = LocalDateTime.now();
+        }
+        if (rewardPointsEarned == null) {
+            rewardPointsEarned = 0;
+        }
+        if (badgeEarned == null) {
+            badgeEarned = "None";
         }
     }
 }
