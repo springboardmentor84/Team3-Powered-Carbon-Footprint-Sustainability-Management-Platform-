@@ -63,7 +63,6 @@ class ChallengeServiceImplTest {
 
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(challengeRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(challenge));
-        when(userChallengeProgressRepository.existsByUserIdAndChallengeId(1L, 10L)).thenReturn(false);
         when(userRepository.save(user)).thenReturn(user);
 
         ChallengeCompletionResponse response = challengeService.completeChallenge(

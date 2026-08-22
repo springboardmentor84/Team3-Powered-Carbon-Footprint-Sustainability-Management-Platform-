@@ -61,6 +61,13 @@ public class Challenge {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id", nullable = true)
+    private User createdBy;
+
+    @Column(name = "creator_name", nullable = true)
+    private String creatorName;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

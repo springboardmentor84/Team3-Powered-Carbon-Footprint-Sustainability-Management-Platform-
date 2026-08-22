@@ -34,4 +34,9 @@ public class ChallengeResponse {
     private Integer currentProgress;
     private String status;
     private Long participantCount;
+
+    // Creator Context fields
+    private Long createdByUserId;
+    private String creatorName;
+    private Boolean isCreatedByCurrentUser;
 }

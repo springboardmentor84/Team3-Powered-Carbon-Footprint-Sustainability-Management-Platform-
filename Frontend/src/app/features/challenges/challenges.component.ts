@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChallengesService, Challenge, LeaderboardUser } from './challenges.service';
@@ -12,6 +12,7 @@ import { ChallengesService, Challenge, LeaderboardUser } from './challenges.serv
 })
 export class ChallengesComponent implements OnInit {
   private challengesService = inject(ChallengesService);
+  private cdr = inject(ChangeDetectorRef);
 
   public challenges: Challenge[] = [];
   public leaderboard: LeaderboardUser[] = [];
@@ -21,6 +22,9 @@ export class ChallengesComponent implements OnInit {
   public activeDrives: Challenge[] = [];
   public availableDrives: Challenge[] = [];
   public completedDrives: Challenge[] = [];
+
+  // Quick Tab Selection ('ALL' | 'ACTIVE' | 'AVAILABLE' | 'COMPLETED')
+  public activeTab: 'ALL' | 'ACTIVE' | 'AVAILABLE' | 'COMPLETED' = 'ALL';
 
   // Filter and Search
   public searchQuery = '';
@@ -67,25 +71,47 @@ export class ChallengesComponent implements OnInit {
   public showDetailsModal = false;
   public selectedChallengeDetails: Challenge | null = null;
 
-  async ngOnInit() {
-    await this.loadData();
+  ngOnInit() {
+    // 1. Instant 0ms render from synchronous cache
+    this.challenges = this.challengesService.getCachedChallenges();
+    this.leaderboard = this.challengesService.getCachedLeaderboard();
+    this.updateFilteredLists();
+    this.cdr.detectChanges();
+
+    // 2. Background sync without blocking the UI
+    this.loadData();
   }
 
   public async loadData() {
-    this.isLoading = true;
     try {
-      this.challenges = await this.challengesService.getChallenges();
-      this.leaderboard = await this.challengesService.getLeaderboard();
+      const [challenges, leaderboard] = await Promise.all([
+        this.challengesService.getChallenges(),
+        this.challengesService.getLeaderboard()
+      ]);
+      if (challenges && challenges.length > 0) {
+        this.challenges = challenges;
+      }
+      if (leaderboard && leaderboard.length > 0) {
+        this.leaderboard = leaderboard;
+      }
       this.updateFilteredLists();
+      this.cdr.detectChanges();
     } catch (err) {
-      console.error('Failed to load challenges:', err);
-      this.showToast('Unable to fetch challenges', 'error');
-    } finally {
-      this.isLoading = false;
+      console.error('Failed to load challenges in background:', err);
     }
   }
 
-  // Efficient filter list updater (called only on data load or search/filter change)
+  public setTab(tab: 'ALL' | 'ACTIVE' | 'AVAILABLE' | 'COMPLETED') {
+    this.activeTab = tab;
+    if (tab === 'ALL') this.filterStatus = 'ALL';
+    else if (tab === 'ACTIVE') this.filterStatus = 'JOINED';
+    else if (tab === 'AVAILABLE') this.filterStatus = 'ACTIVE';
+    else if (tab === 'COMPLETED') this.filterStatus = 'COMPLETED';
+    this.updateFilteredLists();
+    this.cdr.detectChanges();
+  }
+
+  // Efficient filter list updater
   public updateFilteredLists() {
     const search = this.searchQuery.trim().toLowerCase();
     const cat = this.filterCategory;
@@ -118,17 +144,26 @@ export class ChallengesComponent implements OnInit {
   }
 
   public onFilterChange() {
+    if (this.filterStatus === 'ALL') this.activeTab = 'ALL';
+    else if (this.filterStatus === 'JOINED') this.activeTab = 'ACTIVE';
+    else if (this.filterStatus === 'ACTIVE') this.activeTab = 'AVAILABLE';
+    else if (this.filterStatus === 'COMPLETED') this.activeTab = 'COMPLETED';
+
     this.updateFilteredLists();
+    this.cdr.detectChanges();
   }
 
   public showToast(message: string, type: 'success' | 'error' = 'success') {
     this.toastMessage = message;
     this.toastType = type;
+    this.cdr.detectChanges();
+
     if (this.toastTimer) {
       clearTimeout(this.toastTimer);
     }
     this.toastTimer = setTimeout(() => {
       this.toastMessage = null;
+      this.cdr.detectChanges();
     }, 4000);
   }
 
@@ -210,7 +245,7 @@ export class ChallengesComponent implements OnInit {
     }
   }
 
-  // --- Action: Join Challenge ---
+  // --- Action: Join Challenge (Instant Optimistic UI) ---
   public async onJoinChallenge(ch: Challenge) {
     if (ch.joined) {
       this.showToast('You have already joined this challenge', 'success');
@@ -218,36 +253,45 @@ export class ChallengesComponent implements OnInit {
     }
 
     this.isJoiningId = ch.id;
-    try {
-      const updated = await this.challengesService.joinChallenge(ch.id);
-      ch.joined = true;
-      ch.status = updated.status || 'In Progress';
-      ch.currentProgress = updated.currentProgress || 0;
-      ch.participantCount = (ch.participantCount || 0) + 1;
 
-      // Update local lists immediately for instantaneous UI transition
-      this.updateFilteredLists();
-      this.showToast('Successfully joined the challenge.', 'success');
+    // Instant local mutation
+    ch.joined = true;
+    ch.status = 'In Progress';
+    ch.currentProgress = ch.currentProgress || 0;
+    ch.participantCount = (ch.participantCount || 0) + 1;
+
+    // Persist joined state immediately
+    this.challengesService.markChallengeJoinedInMap(ch.id, ch.currentProgress || 0, 'In Progress');
+    this.challengesService.saveStoredChallenges(this.challenges);
+
+    // Instantly update lists and trigger change detection
+    this.updateFilteredLists();
+    this.showToast('Successfully joined the challenge! 🎉', 'success');
+    this.cdr.detectChanges();
+
+    try {
+      await this.challengesService.joinChallenge(ch.id);
     } catch (err) {
       console.error('Join error:', err);
-      this.showToast('Failed to join challenge', 'error');
     } finally {
-      this.isJoiningId = null; // Instantly turn off button loading spinner!
+      this.isJoiningId = null;
+      this.challengesService.saveStoredChallenges(this.challenges);
+      this.updateFilteredLists();
+      this.cdr.detectChanges();
     }
-
-    // Refresh background data
-    this.loadData();
   }
 
   // --- Action: Open Details Modal ---
   public openDetailsModal(ch: Challenge) {
     this.selectedChallengeDetails = ch;
     this.showDetailsModal = true;
+    this.cdr.detectChanges();
   }
 
   public closeDetailsModal() {
     this.selectedChallengeDetails = null;
     this.showDetailsModal = false;
+    this.cdr.detectChanges();
   }
 
   // --- Create & Edit Modal Controls ---
@@ -264,6 +308,7 @@ export class ChallengesComponent implements OnInit {
     this.formRewardPoints = 100;
     this.formRules = 'Avoid single-use plastics and adopt sustainable daily practices.';
     this.showCreateEditModal = true;
+    this.cdr.detectChanges();
   }
 
   public openEditModal(ch: Challenge) {
@@ -279,17 +324,19 @@ export class ChallengesComponent implements OnInit {
     this.formRewardPoints = ch.rewardPoints || 100;
     this.formRules = ch.rules || '';
     this.showCreateEditModal = true;
+    this.cdr.detectChanges();
   }
 
   public closeCreateEditModal() {
     this.showCreateEditModal = false;
     this.isEditMode = false;
     this.editingChallengeId = null;
+    this.cdr.detectChanges();
   }
 
   public async onSubmitChallengeForm() {
     if (!this.formTitle.trim()) {
-      this.showToast('Please enter a challenge name', 'error');
+      this.showToast('Please enter a challenge title', 'error');
       return;
     }
     if (this.formTargetValue <= 0) {
@@ -298,6 +345,8 @@ export class ChallengesComponent implements OnInit {
     }
 
     this.isSubmitting = true;
+    this.cdr.detectChanges();
+
     const challengeData: Partial<Challenge> = {
       title: this.formTitle.trim(),
       category: this.formCategory,
@@ -312,22 +361,27 @@ export class ChallengesComponent implements OnInit {
 
     try {
       if (this.isEditMode && this.editingChallengeId) {
-        await this.challengesService.updateChallenge(this.editingChallengeId, challengeData);
-        this.showToast('Challenge updated successfully', 'success');
+        const updated = await this.challengesService.updateChallenge(this.editingChallengeId, challengeData);
+        const idx = this.challenges.findIndex(c => c.id === this.editingChallengeId);
+        if (idx !== -1) {
+          this.challenges[idx] = { ...this.challenges[idx], ...updated };
+        }
+        this.showToast('Challenge updated successfully ✨', 'success');
       } else {
-        await this.challengesService.createChallenge(challengeData);
-        this.showToast('Challenge created successfully', 'success');
+        const created = await this.challengesService.createChallenge(challengeData);
+        this.challenges.unshift(created);
+        this.showToast('Challenge created successfully 🎉', 'success');
       }
       this.closeCreateEditModal();
+      this.updateFilteredLists();
+      this.cdr.detectChanges();
     } catch (err) {
       console.error('Challenge submit error:', err);
       this.showToast(this.isEditMode ? 'Failed to update challenge' : 'Failed to create challenge', 'error');
     } finally {
-      this.isSubmitting = false; // Instantly turn off button loading spinner!
+      this.isSubmitting = false;
+      this.cdr.detectChanges();
     }
-
-    // Refresh background data
-    this.loadData();
   }
 
   // --- Update Progress Modal Controls ---
@@ -335,67 +389,80 @@ export class ChallengesComponent implements OnInit {
     this.progressChallenge = ch;
     this.newProgressValue = ch.currentProgress || 0;
     this.showProgressModal = true;
+    this.cdr.detectChanges();
   }
 
   public closeProgressModal() {
     this.progressChallenge = null;
     this.showProgressModal = false;
+    this.cdr.detectChanges();
   }
 
   public async onSaveProgress() {
     if (!this.progressChallenge) return;
 
     this.isUpdatingProgress = true;
+    this.cdr.detectChanges();
+
     const target = this.progressChallenge.targetValue || 1;
     const isNowCompleted = this.newProgressValue >= target && this.progressChallenge.status !== 'Completed';
 
     try {
       const updated = await this.challengesService.updateProgress(this.progressChallenge.id, this.newProgressValue);
+      const idx = this.challenges.findIndex(c => c.id === this.progressChallenge!.id);
+      if (idx !== -1) {
+        this.challenges[idx] = { ...this.challenges[idx], ...updated };
+      }
       this.closeProgressModal();
 
       if (isNowCompleted || updated.status === 'Completed') {
-        this.showToast(`🎉 Challenge completed! You earned ${this.progressChallenge.rewardPoints} Eco Points.`, 'success');
+        this.showToast(`🎉 Challenge completed! You earned +${this.progressChallenge.rewardPoints} Eco Points.`, 'success');
       } else {
-        this.showToast('Challenge progress updated successfully', 'success');
+        this.showToast('Challenge progress updated successfully ✨', 'success');
       }
+      this.leaderboard = this.challengesService.getCachedLeaderboard();
+      this.updateFilteredLists();
+      this.cdr.detectChanges();
     } catch (err) {
       console.error('Progress update error:', err);
       this.showToast('Failed to update progress', 'error');
     } finally {
-      this.isUpdatingProgress = false; // Instantly turn off button loading spinner!
+      this.isUpdatingProgress = false;
+      this.cdr.detectChanges();
     }
-
-    // Refresh background data to sync points & re-sort leaderboard rankings
-    this.loadData();
   }
 
   // --- Delete Confirmation Controls ---
   public openDeleteConfirm(ch: Challenge) {
     this.challengeToDelete = ch;
     this.showDeleteConfirm = true;
+    this.cdr.detectChanges();
   }
 
   public closeDeleteConfirm() {
     this.challengeToDelete = null;
     this.showDeleteConfirm = false;
+    this.cdr.detectChanges();
   }
 
   public async confirmDelete() {
     if (!this.challengeToDelete) return;
 
-    this.isDeletingId = this.challengeToDelete.id;
+    const delId = this.challengeToDelete.id;
+    this.isDeletingId = delId;
+    this.challenges = this.challenges.filter(c => c.id !== delId);
+    this.updateFilteredLists();
+    this.closeDeleteConfirm();
+    this.showToast('Challenge deleted successfully', 'success');
+    this.cdr.detectChanges();
+
     try {
-      await this.challengesService.deleteChallenge(this.challengeToDelete.id);
-      this.showToast('Challenge deleted successfully', 'success');
-      this.closeDeleteConfirm();
+      await this.challengesService.deleteChallenge(delId);
     } catch (err) {
       console.error('Delete error:', err);
-      this.showToast('Failed to delete challenge', 'error');
     } finally {
-      this.isDeletingId = null; // Instantly turn off button loading spinner!
+      this.isDeletingId = null;
+      this.cdr.detectChanges();
     }
-
-    // Refresh background data
-    this.loadData();
   }
 }

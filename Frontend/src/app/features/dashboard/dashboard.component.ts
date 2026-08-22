@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { DashboardService } from './dashboard.service';
 import { ActivityService, ActivityCategory, ActivityRecord, CarbonSummary } from '../carbon/activity.service';
 import { GoalService } from '../goals/goal.service';
+import { ChallengesService, Challenge } from '../challenges/challenges.service';
 
 interface Champion {
   rank: number;
@@ -35,8 +36,14 @@ export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private activityService = inject(ActivityService);
   private goalService = inject(GoalService);
+  private challengesService = inject(ChallengesService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  // Challenges Tracking for Dashboard
+  public joinedChallenges: Challenge[] = [];
+  public completedChallengesCount = 0;
+  public totalChallengePoints = 0;
 
   public currentMode: 'individual' | 'organization' | 'admin' = 'individual';
   public userRole: string = 'ROLE_USER';
@@ -183,9 +190,41 @@ export class DashboardComponent implements OnInit {
   async ngOnInit() {
     this.loadUserRole();
     this.categories = await this.activityService.getCategories();
+    this.loadChallengesData();
     await this.loadDashboardData();
     this.cdr.markForCheck();
     this.cdr.detectChanges();
+  }
+
+  public loadChallengesData() {
+    try {
+      const all = this.challengesService.getCachedChallenges();
+      this.joinedChallenges = all.filter(c => c.joined && c.status !== 'Completed');
+      const completed = all.filter(c => c.status === 'Completed');
+      this.completedChallengesCount = completed.length;
+      this.totalChallengePoints = completed.reduce((acc, c) => acc + (c.rewardPoints || 0), 0);
+
+      this.challengesService.getChallenges().then(remote => {
+        if (remote && remote.length > 0) {
+          this.joinedChallenges = remote.filter(c => c.joined && c.status !== 'Completed');
+          const comp = remote.filter(c => c.status === 'Completed');
+          this.completedChallengesCount = comp.length;
+          this.totalChallengePoints = comp.reduce((acc, c) => acc + (c.rewardPoints || 0), 0);
+          this.cdr.detectChanges();
+        }
+      });
+    } catch (err) {
+      console.warn('Challenges load error:', err);
+    }
+  }
+
+  public navigateToChallenges() {
+    this.router.navigate(['/challenges']);
+  }
+
+  public getChallengeProgressPercentage(ch: Challenge): number {
+    if (!ch.targetValue || ch.targetValue <= 0) return 0;
+    return Math.min(100, Math.round(((ch.currentProgress || 0) / ch.targetValue) * 100));
   }
 
   public async loadDashboardData() {

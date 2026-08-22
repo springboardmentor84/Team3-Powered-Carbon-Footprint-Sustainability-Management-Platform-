@@ -43,6 +43,8 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public ChallengeResponse createChallenge(ChallengeRequest request, String authenticatedEmail) {
+        User user = findUserByEmailNullable(authenticatedEmail);
+
         Challenge challenge = Challenge.builder()
                 .title(request.getTitle())
                 .category(request.getCategory() != null ? request.getCategory() : "PLASTIC_FREE_WEEK")
@@ -56,10 +58,11 @@ public class ChallengeServiceImpl implements ChallengeService {
                 .badgeName("Eco Warrior")
                 .challengeType(ChallengeType.WEEKLY)
                 .active(true)
+                .createdBy(user)
+                .creatorName(user != null ? user.getFullName() : "EcoTrack Community")
                 .build();
 
         Challenge saved = challengeRepository.save(challenge);
-        User user = findUserByEmailNullable(authenticatedEmail);
         return mapToResponse(saved, user);
     }
 
@@ -292,6 +295,11 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         long participantCount = userChallengeProgressRepository.countByChallengeId(challenge.getId());
 
+        Long createdByUserId = challenge.getCreatedBy() != null ? challenge.getCreatedBy().getId() : null;
+        String creator = challenge.getCreatorName() != null ? challenge.getCreatorName()
+                : (challenge.getCreatedBy() != null ? challenge.getCreatedBy().getFullName() : "EcoTrack Community");
+        boolean isCreatedByCurrentUser = user != null && createdByUserId != null && user.getId().equals(createdByUserId);
+
         return ChallengeResponse.builder()
                 .id(challenge.getId())
                 .title(challenge.getTitle())
@@ -311,6 +319,9 @@ public class ChallengeServiceImpl implements ChallengeService {
                 .currentProgress(currentProgress)
                 .status(status)
                 .participantCount(participantCount)
+                .createdByUserId(createdByUserId)
+                .creatorName(creator)
+                .isCreatedByCurrentUser(isCreatedByCurrentUser)
                 .build();
     }
 

@@ -1339,3 +1339,96 @@
   background: #FEE2E2;
   color: #EF4444;
 }
+
+/* Community Challenges Dashboard Card Styles */
+.challenges-dash-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.header-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon-title i {
+  font-size: 1.3rem;
+}
+
+.dash-challenges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dash-challenge-item {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-background, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.dash-challenge-item:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.dash-ch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-ch-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dash-ch-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.dash-ch-points {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.dash-ch-progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--color-border, #e2e8f0);
+  overflow: hidden;
+}
+
+.dash-ch-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  transition: width 0.4s ease;
+}
+
+.dash-ch-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 600;
+}
+
+.dash-ch-pct {
+  color: #10b981;
+  font-weight: 700;
+}

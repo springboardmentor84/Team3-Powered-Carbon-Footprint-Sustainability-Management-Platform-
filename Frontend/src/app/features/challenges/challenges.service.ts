@@ -21,6 +21,11 @@ export interface Challenge {
   currentProgress?: number;
   status?: 'Not Started' | 'In Progress' | 'Completed' | 'Expired';
   participantCount?: number;
+
+  // Creator context
+  creatorName?: string;
+  createdByUserId?: number;
+  isCreatedByCurrentUser?: boolean;
 }
 
 export interface LeaderboardUser {
@@ -156,21 +161,99 @@ export class ChallengesService {
     { rank: 5, fullName: 'You (Current User)', rewardPoints: 720, badgeName: 'Silver', challengesCompleted: 4, isCurrentUser: true }
   ];
 
-  private getStoredChallenges(): Challenge[] {
-    const raw = localStorage.getItem('ecotrack_challenges');
+  private getJoinedMap(): Record<number, { joined: boolean; currentProgress: number; status: string }> {
+    if (typeof window === 'undefined') return {};
+    const raw = localStorage.getItem('ecotrack_joined_map');
     if (!raw) {
-      localStorage.setItem('ecotrack_challenges', JSON.stringify(this.defaultFallbackChallenges));
-      return this.defaultFallbackChallenges;
+      // Default seed initial joined map
+      const initialMap: Record<number, { joined: boolean; currentProgress: number; status: string }> = {
+        1: { joined: true, currentProgress: 4, status: 'In Progress' },
+        3: { joined: true, currentProgress: 20, status: 'Completed' }
+      };
+      localStorage.setItem('ecotrack_joined_map', JSON.stringify(initialMap));
+      return initialMap;
     }
     try {
       return JSON.parse(raw);
     } catch {
-      return this.defaultFallbackChallenges;
+      return {};
     }
   }
 
-  private saveStoredChallenges(challenges: Challenge[]): void {
-    localStorage.setItem('ecotrack_challenges', JSON.stringify(challenges));
+  public saveJoinedMap(map: Record<number, { joined: boolean; currentProgress: number; status: string }>): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ecotrack_joined_map', JSON.stringify(map));
+    }
+  }
+
+  public markChallengeJoinedInMap(id: number, progress: number = 0, status: string = 'In Progress'): void {
+    const map = this.getJoinedMap();
+    map[id] = { joined: true, currentProgress: progress, status };
+    this.saveJoinedMap(map);
+  }
+
+  public mergeWithJoinedMap(challenges: Challenge[]): Challenge[] {
+    const map = this.getJoinedMap();
+    return challenges.map(ch => {
+      const entry = map[ch.id];
+      if (entry) {
+        return {
+          ...ch,
+          joined: true,
+          currentProgress: Math.max(ch.currentProgress || 0, entry.currentProgress || 0),
+          status: (ch.status === 'Completed' || entry.status === 'Completed') 
+            ? 'Completed' 
+            : (entry.status || ch.status || 'In Progress' as any)
+        };
+      }
+      return ch;
+    });
+  }
+
+  public getCachedChallenges(): Challenge[] {
+    return this.getStoredChallenges();
+  }
+
+  public getCachedLeaderboard(): LeaderboardUser[] {
+    if (typeof window === 'undefined') return this.sortLeaderboard(this.defaultFallbackLeaderboard);
+    const raw = localStorage.getItem('ecotrack_leaderboard');
+    if (!raw) {
+      return this.sortLeaderboard(this.defaultFallbackLeaderboard);
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return this.sortLeaderboard(this.defaultFallbackLeaderboard);
+    }
+  }
+
+  private saveStoredLeaderboard(list: LeaderboardUser[]): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ecotrack_leaderboard', JSON.stringify(list));
+    }
+  }
+
+  private getStoredChallenges(): Challenge[] {
+    if (typeof window === 'undefined') return this.defaultFallbackChallenges;
+    const raw = localStorage.getItem('ecotrack_challenges');
+    if (!raw) {
+      const merged = this.mergeWithJoinedMap(this.defaultFallbackChallenges);
+      localStorage.setItem('ecotrack_challenges', JSON.stringify(merged));
+      return merged;
+    }
+    try {
+      const parsed: Challenge[] = JSON.parse(raw);
+      return this.mergeWithJoinedMap(parsed);
+    } catch {
+      return this.mergeWithJoinedMap(this.defaultFallbackChallenges);
+    }
+  }
+
+  public saveStoredChallenges(challenges: Challenge[]): void {
+    if (typeof window !== 'undefined') {
+      const merged = this.mergeWithJoinedMap(challenges);
+      localStorage.setItem('ecotrack_challenges', JSON.stringify(merged));
+    }
   }
 
   public async getChallenges(): Promise<Challenge[]> {
@@ -179,54 +262,78 @@ export class ChallengesService {
         this.http.get(this.apiUrl).pipe(timeout(this.HTTP_TIMEOUT_MS))
       );
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-        this.saveStoredChallenges(res.data);
-        return res.data;
+        const merged = this.mergeWithJoinedMap(res.data);
+        const map = this.getJoinedMap();
+        merged.forEach(c => {
+          if (c.joined) {
+            map[c.id] = { joined: true, currentProgress: c.currentProgress || 0, status: c.status || 'In Progress' };
+          }
+        });
+        this.saveJoinedMap(map);
+        this.saveStoredChallenges(merged);
+        return merged;
       }
       return this.getStoredChallenges();
     } catch (err) {
-      console.warn(`API getChallenges timed out or failed (2s limit), using instant fallback:`, err);
       return this.getStoredChallenges();
     }
   }
 
   public async createChallenge(data: Partial<Challenge>): Promise<Challenge> {
+    const list = this.getStoredChallenges();
+    const newId = Date.now();
+    const newChallenge: Challenge = {
+      id: newId,
+      title: data.title || 'New Sustainability Challenge',
+      category: data.category || 'PLASTIC_FREE_WEEK',
+      description: data.description || 'Challenge description',
+      targetValue: data.targetValue || 7,
+      unit: data.unit || 'days',
+      rewardPoints: data.rewardPoints || 100,
+      badgeName: 'Eco Defender',
+      startDate: data.startDate || new Date().toISOString().split('T')[0],
+      endDate: data.endDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      rules: data.rules || 'Follow eco guidelines.',
+      active: true,
+      joined: false,
+      currentProgress: 0,
+      status: 'Not Started',
+      participantCount: 1
+    };
+
+    // Save locally first for 0ms lag
+    list.unshift(newChallenge);
+    this.saveStoredChallenges(list);
+
     try {
       const res: any = await firstValueFrom(
         this.http.post(this.apiUrl, data).pipe(timeout(this.HTTP_TIMEOUT_MS))
       );
       if (res && res.success && res.data) {
+        const updatedList = this.getStoredChallenges();
+        const idx = updatedList.findIndex(c => c.id === newId);
+        if (idx !== -1) {
+          updatedList[idx] = { ...newChallenge, ...res.data };
+          this.saveStoredChallenges(updatedList);
+        }
         return res.data;
       }
-      throw new Error('Invalid backend response');
     } catch (err) {
-      console.warn(`API createChallenge timed out or failed (2s limit), creating locally:`, err);
-      const list = this.getStoredChallenges();
-      const newId = Date.now();
-      const newChallenge: Challenge = {
-        id: newId,
-        title: data.title || 'New Sustainability Challenge',
-        category: data.category || 'PLASTIC_FREE_WEEK',
-        description: data.description || 'Challenge description',
-        targetValue: data.targetValue || 7,
-        unit: data.unit || 'days',
-        rewardPoints: data.rewardPoints || 100,
-        badgeName: 'Eco Defender',
-        startDate: data.startDate || new Date().toISOString().split('T')[0],
-        endDate: data.endDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-        rules: data.rules || 'Follow eco guidelines.',
-        active: true,
-        joined: false,
-        currentProgress: 0,
-        status: 'Not Started',
-        participantCount: 1
-      };
-      list.unshift(newChallenge);
-      this.saveStoredChallenges(list);
-      return newChallenge;
+      console.warn(`Backend API createChallenge synced locally:`, err);
     }
+    return newChallenge;
   }
 
   public async updateChallenge(id: number, data: Partial<Challenge>): Promise<Challenge> {
+    const list = this.getStoredChallenges();
+    const idx = list.findIndex(c => c.id === id);
+    let updatedCh = list[idx] || (data as Challenge);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...data };
+      this.saveStoredChallenges(list);
+      updatedCh = list[idx];
+    }
+
     try {
       const res: any = await firstValueFrom(
         this.http.put(`${this.apiUrl}/${id}`, data).pipe(timeout(this.HTTP_TIMEOUT_MS))
@@ -234,34 +341,38 @@ export class ChallengesService {
       if (res && res.success && res.data) {
         return res.data;
       }
-      throw new Error('Invalid backend response');
     } catch (err) {
-      console.warn(`API updateChallenge timed out or failed (2s limit), updating locally:`, err);
-      const list = this.getStoredChallenges();
-      const idx = list.findIndex(c => c.id === id);
-      if (idx !== -1) {
-        list[idx] = { ...list[idx], ...data };
-        this.saveStoredChallenges(list);
-        return list[idx];
-      }
-      throw err;
+      console.warn(`Backend API updateChallenge synced locally:`, err);
     }
+    return updatedCh;
   }
 
   public async deleteChallenge(id: number): Promise<void> {
+    let list = this.getStoredChallenges();
+    list = list.filter(c => c.id !== id);
+    this.saveStoredChallenges(list);
+
     try {
       await firstValueFrom(
         this.http.delete(`${this.apiUrl}/${id}`).pipe(timeout(this.HTTP_TIMEOUT_MS))
       );
     } catch (err) {
-      console.warn(`API deleteChallenge timed out or failed (2s limit), deleting locally:`, err);
-      let list = this.getStoredChallenges();
-      list = list.filter(c => c.id !== id);
-      this.saveStoredChallenges(list);
+      console.warn(`Backend API deleteChallenge synced locally:`, err);
     }
   }
 
   public async joinChallenge(id: number): Promise<Challenge> {
+    this.markChallengeJoinedInMap(id, 0, 'In Progress');
+    const list = this.getStoredChallenges();
+    const ch = list.find(c => c.id === id);
+    if (ch) {
+      ch.joined = true;
+      ch.status = 'In Progress';
+      ch.currentProgress = ch.currentProgress || 0;
+      ch.participantCount = (ch.participantCount || 0) + 1;
+      this.saveStoredChallenges(list);
+    }
+
     try {
       const res: any = await firstValueFrom(
         this.http.post(`${this.apiUrl}/${id}/join`, {}).pipe(timeout(this.HTTP_TIMEOUT_MS))
@@ -269,24 +380,40 @@ export class ChallengesService {
       if (res && res.success && res.data) {
         return res.data;
       }
-      throw new Error('Invalid response');
     } catch (err) {
-      console.warn(`API joinChallenge timed out or failed (2s limit), marking locally:`, err);
-      const list = this.getStoredChallenges();
-      const ch = list.find(c => c.id === id);
-      if (ch) {
-        ch.joined = true;
-        ch.status = 'In Progress';
-        ch.currentProgress = 0;
-        ch.participantCount = (ch.participantCount || 0) + 1;
-        this.saveStoredChallenges(list);
-        return ch;
-      }
-      throw err;
+      console.warn(`Backend API joinChallenge synced locally:`, err);
     }
+    return ch || ({} as Challenge);
   }
 
   public async updateProgress(id: number, currentProgress: number): Promise<Challenge> {
+    const list = this.getStoredChallenges();
+    const ch = list.find(c => c.id === id);
+    let finalStatus = 'In Progress';
+
+    if (ch) {
+      ch.currentProgress = currentProgress;
+      const target = ch.targetValue || 1;
+
+      if (currentProgress >= target && ch.status !== 'Completed') {
+        ch.status = 'Completed';
+        finalStatus = 'Completed';
+        const lb = this.getCachedLeaderboard();
+        const userLb = lb.find(u => u.isCurrentUser);
+        if (userLb) {
+          userLb.rewardPoints += ch.rewardPoints;
+          userLb.challengesCompleted = (userLb.challengesCompleted || 0) + 1;
+          this.saveStoredLeaderboard(this.sortLeaderboard(lb));
+        }
+      } else if (currentProgress > 0 && ch.status !== 'Completed') {
+        ch.status = 'In Progress';
+        finalStatus = 'In Progress';
+      }
+      this.saveStoredChallenges(list);
+    }
+
+    this.markChallengeJoinedInMap(id, currentProgress, finalStatus);
+
     try {
       const res: any = await firstValueFrom(
         this.http.put(`${this.apiUrl}/${id}/progress`, { currentProgress }).pipe(timeout(this.HTTP_TIMEOUT_MS))
@@ -294,30 +421,10 @@ export class ChallengesService {
       if (res && res.success && res.data) {
         return res.data;
       }
-      throw new Error('Invalid response');
     } catch (err) {
-      console.warn(`API updateProgress timed out or failed (2s limit), updating locally:`, err);
-      const list = this.getStoredChallenges();
-      const ch = list.find(c => c.id === id);
-      if (ch) {
-        ch.currentProgress = currentProgress;
-        const target = ch.targetValue || 1;
-
-        if (currentProgress >= target && ch.status !== 'Completed') {
-          ch.status = 'Completed';
-          const lb = this.defaultFallbackLeaderboard.find(u => u.isCurrentUser);
-          if (lb) {
-            lb.rewardPoints += ch.rewardPoints;
-            lb.challengesCompleted += 1;
-          }
-        } else if (currentProgress > 0) {
-          ch.status = 'In Progress';
-        }
-        this.saveStoredChallenges(list);
-        return ch;
-      }
-      throw err;
+      console.warn(`Backend API updateProgress synced locally:`, err);
     }
+    return ch || ({} as Challenge);
   }
 
   public async getLeaderboard(): Promise<LeaderboardUser[]> {
@@ -326,12 +433,13 @@ export class ChallengesService {
         this.http.get(`${this.apiUrl}/leaderboard`).pipe(timeout(this.HTTP_TIMEOUT_MS))
       );
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-        return res.data;
+        const sorted = this.sortLeaderboard(res.data);
+        this.saveStoredLeaderboard(sorted);
+        return sorted;
       }
-      return this.sortLeaderboard(this.defaultFallbackLeaderboard);
+      return this.getCachedLeaderboard();
     } catch (err) {
-      console.warn(`API getLeaderboard timed out or failed (2s limit), using fallback leaderboard:`, err);
-      return this.sortLeaderboard(this.defaultFallbackLeaderboard);
+      return this.getCachedLeaderboard();
     }
   }
 

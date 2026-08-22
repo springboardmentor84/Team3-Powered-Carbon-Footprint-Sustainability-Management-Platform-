@@ -366,27 +366,56 @@
       </div>
     </div>
 
-    <!-- Bottom Row: Recent Activities & Eco Insights -->
+    <!-- Bottom Row: Community Challenges, Recent Activities & Eco Insights -->
     <div class="dashboard-bottom-grid">
-      <!-- Eco Insights Banner Card -->
-      <div class="eco-card insights-card">
-        <div class="insights-content">
-          <div class="insight-icon-wrapper">
-            <i class="bi bi-lightbulb-fill"></i>
+      <!-- Active Community Challenges & Drives Card -->
+      <div class="eco-card challenges-dash-card">
+        <div class="activities-header">
+          <div class="header-icon-title">
+            <i class="bi bi-trophy-fill text-warning"></i>
+            <div>
+              <h3>Active Community Drives</h3>
+              <p class="font-xs text-secondary">{{ joinedChallenges.length }} Joined &bull; {{ completedChallengesCount }} Completed (+{{ totalChallengePoints }} pts)</p>
+            </div>
           </div>
-          <div class="insight-text-wrapper">
-            <h4>Eco Insights</h4>
-            <p>Your transport emissions peaked on Tuesday. Switching to public transit could save you <strong>4.5kg CO₂</strong> next week.</p>
+          <button class="btn btn-text-link" (click)="navigateToChallenges()">Explore All Drives <i class="bi bi-chevron-right"></i></button>
+        </div>
+
+        <div class="dash-challenges-list">
+          <div class="dash-challenge-item" *ngFor="let ch of joinedChallenges.slice(0, 3)">
+            <div class="dash-ch-info">
+              <div class="dash-ch-title-row">
+                <span class="dash-ch-title">{{ ch.title }}</span>
+                <span class="dash-ch-points">+{{ ch.rewardPoints }} pts</span>
+              </div>
+              <div class="dash-ch-progress-bar">
+                <div class="dash-ch-fill" [style.width.%]="getChallengeProgressPercentage(ch)"></div>
+              </div>
+              <div class="dash-ch-meta">
+                <span>{{ ch.currentProgress || 0 }} / {{ ch.targetValue }} {{ ch.unit }}</span>
+                <span class="dash-ch-pct">{{ getChallengeProgressPercentage(ch) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="joinedChallenges.length === 0" class="empty-state" style="padding: 1.2rem; text-align: center; color: #64748B;">
+            <p><i class="bi bi-compass text-primary"></i> No active drives joined yet.</p>
+            <button class="btn btn-outline-primary btn-sm mt-2" (click)="navigateToChallenges()">Join a Challenge</button>
           </div>
         </div>
-        <button class="btn btn-text btn-view-plan" (click)="navigateToCarbon()">OPEN TRACKER <i class="bi bi-chevron-right"></i></button>
       </div>
 
       <!-- Recent Activities Log -->
       <div class="eco-card activities-card">
         <div class="activities-header">
-          <h3>Recent Activities</h3>
-          <button class="btn btn-text-link" (click)="navigateToCarbon()">View All Records</button>
+          <div class="header-icon-title">
+            <i class="bi bi-clock-history text-primary"></i>
+            <div>
+              <h3>Recent Activities</h3>
+              <p class="font-xs text-secondary">Latest logged carbon events</p>
+            </div>
+          </div>
+          <button class="btn btn-text-link" (click)="navigateToCarbon()">View All Records <i class="bi bi-chevron-right"></i></button>
         </div>
         <div class="activity-list">
           <div class="activity-item" *ngFor="let act of indivActivities">
