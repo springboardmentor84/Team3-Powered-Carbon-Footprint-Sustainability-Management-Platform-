@@ -6,6 +6,10 @@ import com.ecotrack.backend.activity.entity.CarbonEmissionFactor;
 import com.ecotrack.backend.activity.repository.CarbonActivityCategoryRepository;
 import com.ecotrack.backend.activity.repository.CarbonActivityRepository;
 import com.ecotrack.backend.activity.repository.CarbonEmissionFactorRepository;
+import com.ecotrack.backend.activity.repository.CarbonOffsetRepository;
+import com.ecotrack.backend.activity.entity.CarbonOffset;
+import com.ecotrack.backend.entity.CarbonEmission;
+import com.ecotrack.backend.repository.CarbonEmissionRepository;
 import com.ecotrack.backend.entity.Challenge;
 import com.ecotrack.backend.entity.ChallengeType;
 import com.ecotrack.backend.entity.User;
@@ -35,6 +39,8 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
     private final ChallengeRepository challengeRepository;
     private final UserChallengeProgressRepository userChallengeProgressRepository;
     private final CarbonActivityRepository carbonActivityRepository;
+    private final CarbonOffsetRepository offsetRepository;
+    private final CarbonEmissionRepository carbonEmissionRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
@@ -385,6 +391,42 @@ public class CarbonActivityDataSeeder implements CommandLineRunner {
             );
             carbonActivityRepository.saveAll(acts);
             log.info("Successfully seeded {} carbon activities into PostgreSQL.", acts.size());
+        }
+
+        // Seed Carbon Offsets
+        if (offsetRepository.count() == 0 && finalDemoUser != null) {
+            List<CarbonOffset> offsets = List.of(
+                    CarbonOffset.builder()
+                            .user(finalDemoUser)
+                            .sourceCategory("TREE_PLANTATION")
+                            .offsetAmountCo2(new BigDecimal("44.00"))
+                            .dateLogged(LocalDate.now().minusDays(3))
+                            .notes("Planted Oak Saplings")
+                            .build(),
+                    CarbonOffset.builder()
+                            .user(finalDemoUser)
+                            .sourceCategory("RENEWABLE_ENERGY")
+                            .offsetAmountCo2(new BigDecimal("7.00"))
+                            .dateLogged(LocalDate.now().minusDays(4))
+                            .notes("Rooftop Solar Electricity")
+                            .build()
+            );
+            offsetRepository.saveAll(offsets);
+            log.info("Successfully seeded Carbon Offsets.");
+        }
+
+        // Seed Carbon Emissions
+        if (carbonEmissionRepository.count() == 0 && finalDemoUser != null) {
+            CarbonEmission emission = CarbonEmission.builder()
+                    .user(finalDemoUser)
+                    .transportationEmission(new BigDecimal("4.90"))
+                    .electricityEmission(new BigDecimal("4.68"))
+                    .foodEmission(new BigDecimal("1.60"))
+                    .wasteEmission(new BigDecimal("6.30"))
+                    .totalEmission(new BigDecimal("17.48"))
+                    .build();
+            carbonEmissionRepository.save(emission);
+            log.info("Successfully seeded Carbon Emissions.");
         }
     }
 
