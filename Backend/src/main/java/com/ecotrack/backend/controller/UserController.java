@@ -4,6 +4,7 @@ import com.ecotrack.backend.dto.ApiResponse;
 import com.ecotrack.backend.dto.GoogleLoginRequest;
 import com.ecotrack.backend.dto.LoginRequest;
 import com.ecotrack.backend.dto.LoginResponse;
+import com.ecotrack.backend.dto.UserProfileDTO;
 import com.ecotrack.backend.dto.UserRegistrationRequest;
 import com.ecotrack.backend.entity.User;
 import com.ecotrack.backend.service.UserService;
@@ -12,7 +13,12 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,20 +36,14 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> registerUser(@RequestBody UserRegistrationRequest request) {
         User savedUser = userService.registerUser(request);
-        
-        // Naya ApiResponse format
         ApiResponse<User> response = new ApiResponse<>(true, "User registered successfully", savedUser);
-        
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse loginData = userService.loginUser(request);
-        
-        // Naya ApiResponse format
         ApiResponse<LoginResponse> response = new ApiResponse<>(true, "Login successful", loginData);
-        
         return ResponseEntity.ok(response);
     }
 
@@ -78,15 +78,15 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<java.util.List<User>>> getAllUsers() {
-        java.util.List<User> users = userService.getAllUsers();
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(new ApiResponse<>(true, "Users fetched successfully", users));
     }
 
     @PutMapping("/{id}/role")
     public ResponseEntity<ApiResponse<User>> updateUserRole(
             @PathVariable Long id, 
-            @RequestBody java.util.Map<String, String> body) {
+            @RequestBody Map<String, String> body) {
         String role = body.getOrDefault("role", "ROLE_USER");
         User updated = userService.updateUserRole(id, role);
         return ResponseEntity.ok(new ApiResponse<>(true, "User role updated successfully", updated));
@@ -99,18 +99,35 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<User>> getProfile(org.springframework.security.core.Authentication authentication) {
-        String email = (authentication != null && authentication.getName() != null) ? authentication.getName() : "demo@ecotrack.com";
-        User user = userService.getUserProfile(email);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Profile fetched successfully", user));
+    public ResponseEntity<ApiResponse<UserProfileDTO>> getProfile() {
+        String authenticatedEmail = getAuthenticatedEmail();
+        UserProfileDTO profile = userService.getUserProfile(authenticatedEmail);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User profile fetched successfully", profile));
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<User>> updateProfile(
-            @RequestBody com.ecotrack.backend.dto.UserProfileUpdateRequest request,
-            org.springframework.security.core.Authentication authentication) {
-        String email = (authentication != null && authentication.getName() != null && !authentication.getName().isBlank()) ? authentication.getName() : request.getEmail();
-        User updated = userService.updateUserProfile(email, request);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Profile updated successfully in database", updated));
+    public ResponseEntity<ApiResponse<UserProfileDTO>> updateProfile(@RequestBody UserProfileDTO dto) {
+        String authenticatedEmail = getAuthenticatedEmail();
+        if ((authenticatedEmail == null || authenticatedEmail.isBlank()) && dto.getEmail() != null) {
+            authenticatedEmail = dto.getEmail();
+        }
+        UserProfileDTO updated = userService.updateUserProfile(authenticatedEmail, dto);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User profile updated successfully", updated));
+    }
+
+    @PostMapping("/profile/picture")
+    public ResponseEntity<ApiResponse<UserProfileDTO>> updateProfilePicture(@RequestBody Map<String, String> body) {
+        String authenticatedEmail = getAuthenticatedEmail();
+        String profileImage = body.get("profileImage");
+        UserProfileDTO updated = userService.updateProfilePicture(authenticatedEmail, profileImage);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Profile picture updated successfully", updated));
+    }
+
+    private String getAuthenticatedEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+            return auth.getName();
+        }
+        return null;
     }
 }

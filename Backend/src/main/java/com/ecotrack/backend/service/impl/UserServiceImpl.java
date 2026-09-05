@@ -3,6 +3,7 @@ package com.ecotrack.backend.service.impl;
 import com.ecotrack.backend.dto.GoogleLoginRequest;
 import com.ecotrack.backend.dto.LoginRequest;
 import com.ecotrack.backend.dto.LoginResponse;
+import com.ecotrack.backend.dto.UserProfileDTO;
 import com.ecotrack.backend.dto.UserRegistrationRequest;
 import com.ecotrack.backend.entity.User;
 import com.ecotrack.backend.exception.EmailAlreadyExistsException;
@@ -19,6 +20,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
 import java.util.Map;
 import java.util.HashMap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -49,8 +53,6 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException("Email already exists");
         }
 
-        // Ensure public registration only creates ROLE_USER or ROLE_ORGANIZATION.
-        // ROLE_ADMIN can only be granted by an existing administrator via the Admin Governance Panel.
         String assignedRole = "ROLE_USER";
         if ("ROLE_ORGANIZATION".equalsIgnoreCase(request.getRole())) {
             assignedRole = "ROLE_ORGANIZATION";
@@ -176,7 +178,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public java.util.List<User> getAllUsers() {
+    public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
@@ -196,45 +198,45 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserProfile(String email) {
-        String targetEmail = (email != null && !email.isBlank()) ? email : "demo@ecotrack.com";
-        return userRepository.findByEmail(targetEmail)
-                .or(() -> {
-                    if ("demo@gmail.com".equalsIgnoreCase(targetEmail)) {
-                        return userRepository.findByEmail("demo@ecotrack.com");
-                    } else if ("demo@ecotrack.com".equalsIgnoreCase(targetEmail)) {
-                        return userRepository.findByEmail("demo@gmail.com");
-                    }
-                    return java.util.Optional.empty();
-                })
-                .orElseGet(() -> userRepository.findAll().stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("User not found: " + targetEmail)));
+    public UserProfileDTO getUserProfile(String authenticatedEmail) {
+        User user = findUserByEmail(authenticatedEmail);
+        return mapToUserProfileDTO(user);
     }
 
     @Override
     @Transactional
-    public User updateUserProfile(String email, com.ecotrack.backend.dto.UserProfileUpdateRequest request) {
-        User user = getUserProfile(email);
+    public UserProfileDTO updateUserProfile(String authenticatedEmail, UserProfileDTO dto) {
+        User user = findUserByEmail(authenticatedEmail);
 
-        if (request.getFullName() != null && !request.getFullName().isBlank()) {
-            user.setFullName(request.getFullName());
+        if (dto.getFullName() != null && !dto.getFullName().isBlank()) {
+            user.setFullName(dto.getFullName().trim());
         }
-        if (request.getLocation() != null) {
-            user.setLocation(request.getLocation());
-        }
-        if (request.getEnvironmentalInterests() != null) {
-            user.setEnvironmentalInterests(request.getEnvironmentalInterests());
-        }
-        if (request.getLifestyleConfig() != null) {
-            user.setLifestyleConfig(request.getLifestyleConfig());
-        }
-        // Always update profileImage if explicitly provided (even empty string to clear it)
-        if (request.getProfileImage() != null) {
-            user.setProfileImage(request.getProfileImage().isEmpty() ? null : request.getProfileImage());
-        }
+        if (dto.getPhoneNumber() != null) user.setPhoneNumber(dto.getPhoneNumber().trim());
+        if (dto.getDateOfBirth() != null) user.setDateOfBirth(dto.getDateOfBirth().trim());
+        if (dto.getGender() != null) user.setGender(dto.getGender().trim());
+        if (dto.getBio() != null) user.setBio(dto.getBio().trim());
+        if (dto.getOrganization() != null) user.setOrganization(dto.getOrganization().trim());
+        if (dto.getEmployeeId() != null) user.setEmployeeId(dto.getEmployeeId().trim());
+        if (dto.getLocation() != null) user.setLocation(dto.getLocation().trim());
+        if (dto.getProfileImage() != null) user.setProfileImage(dto.getProfileImage().trim());
+        if (dto.getEnvironmentalInterests() != null) user.setEnvironmentalInterests(dto.getEnvironmentalInterests().trim());
+        if (dto.getSustainabilityPreferences() != null) user.setSustainabilityPreferences(dto.getSustainabilityPreferences().trim());
+        if (dto.getPersonalGoals() != null) user.setPersonalGoals(dto.getPersonalGoals().trim());
+        if (dto.getLifestyleConfig() != null) user.setLifestyleConfig(dto.getLifestyleConfig().trim());
 
-        User savedUser = userRepository.save(user);
-        userRepository.flush(); // Ensure immediate commit to database
-        return savedUser;
+        User updated = userRepository.save(user);
+        userRepository.flush();
+        return mapToUserProfileDTO(updated);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileDTO updateProfilePicture(String authenticatedEmail, String profileImage) {
+        User user = findUserByEmail(authenticatedEmail);
+        user.setProfileImage(profileImage != null ? profileImage.trim() : null);
+        User updated = userRepository.save(user);
+        userRepository.flush();
+        return mapToUserProfileDTO(updated);
     }
 
     private static class ResetEntry {
@@ -355,5 +357,97 @@ public class UserServiceImpl implements UserService {
         user.setAuthProvider("LOCAL"); // Allow local password login
         userRepository.save(user);
         userRepository.flush();
+    }
+
+    private User findUserByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return userRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        }
+        return userRepository.findByEmail(email)
+                .or(() -> {
+                    if ("demo@gmail.com".equalsIgnoreCase(email)) {
+                        return userRepository.findByEmail("demo@ecotrack.com");
+                    } else if ("demo@ecotrack.com".equalsIgnoreCase(email)) {
+                        return userRepository.findByEmail("demo@gmail.com");
+                    }
+                    return userRepository.findAll().stream().findFirst();
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+    }
+
+    private UserProfileDTO mapToUserProfileDTO(User user) {
+        List<String> missing = new ArrayList<>();
+        int completedSections = 0;
+        int totalSections = 6;
+
+        // 1. Basic Info (Full Name, Email, Phone)
+        if (user.getFullName() != null && !user.getFullName().isBlank() &&
+            user.getEmail() != null && !user.getEmail().isBlank() &&
+            user.getPhoneNumber() != null && !user.getPhoneNumber().isBlank()) {
+            completedSections++;
+        } else {
+            missing.add("Basic Information (Phone number or details missing)");
+        }
+
+        // 2. Profile Picture
+        if (user.getProfileImage() != null && !user.getProfileImage().isBlank()) {
+            completedSections++;
+        } else {
+            missing.add("Profile Picture");
+        }
+
+        // 3. Location
+        if (user.getLocation() != null && !user.getLocation().isBlank()) {
+            completedSections++;
+        } else {
+            missing.add("Location");
+        }
+
+        // 4. Environmental Interests
+        if (user.getEnvironmentalInterests() != null && !user.getEnvironmentalInterests().isBlank()) {
+            completedSections++;
+        } else {
+            missing.add("Environmental Interests");
+        }
+
+        // 5. Personal Sustainability Goals
+        if (user.getPersonalGoals() != null && !user.getPersonalGoals().isBlank()) {
+            completedSections++;
+        } else {
+            missing.add("Personal Sustainability Goals");
+        }
+
+        // 6. Lifestyle Configuration
+        if (user.getLifestyleConfig() != null && !user.getLifestyleConfig().isBlank()) {
+            completedSections++;
+        } else {
+            missing.add("Lifestyle Configuration");
+        }
+
+        int percentage = Math.min(100, Math.round(((float) completedSections / totalSections) * 100));
+
+        return UserProfileDTO.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .dateOfBirth(user.getDateOfBirth())
+                .gender(user.getGender())
+                .bio(user.getBio())
+                .organization(user.getOrganization())
+                .employeeId(user.getEmployeeId())
+                .location(user.getLocation())
+                .profileImage(user.getProfileImage())
+                .role(user.getRole())
+                .rewardPoints(user.getRewardPoints())
+                .badgeName(user.getBadgeName())
+                .environmentalInterests(user.getEnvironmentalInterests())
+                .sustainabilityPreferences(user.getSustainabilityPreferences())
+                .personalGoals(user.getPersonalGoals())
+                .lifestyleConfig(user.getLifestyleConfig())
+                .completionPercentage(percentage)
+                .missingFields(missing)
+                .build();
     }
 }

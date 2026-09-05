@@ -1,8 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { LayoutService } from '../../services/layout.service';
-
 import { AuthService } from '../../../features/auth/auth.service';
 
 interface NavItem {
@@ -21,6 +20,9 @@ interface NavItem {
 export class SidebarComponent {
   public layoutService = inject(LayoutService);
   public authService = inject(AuthService);
+  private router = inject(Router);
+
+  public sidebarImageError = false;
 
   public navItems: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'bi-grid-1x2' },
@@ -31,4 +33,17 @@ export class SidebarComponent {
     { label: 'Reports', route: '/reports', icon: 'bi-file-earmark-bar-graph' },
     { label: 'Profile', route: '/profile', icon: 'bi-person' }
   ];
+
+  public getUserInitials(name?: string): string {
+    if (!name || !name.trim()) return 'E';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+
+  public navigateTo(route: string): void {
+    this.router.navigate([route]);
+  }
 }

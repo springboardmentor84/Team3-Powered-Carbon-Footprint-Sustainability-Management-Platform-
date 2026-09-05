@@ -158,7 +158,7 @@ export class ChallengesService {
     { rank: 2, fullName: 'Alex Rivers', rewardPoints: 1840, badgeName: 'Gold', challengesCompleted: 10, isCurrentUser: false, profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=120&auto=format&fit=crop' },
     { rank: 3, fullName: 'Michael Torres', rewardPoints: 1250, badgeName: 'Gold', challengesCompleted: 7, isCurrentUser: false, profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=120&auto=format&fit=crop' },
     { rank: 4, fullName: 'Priya Sharma', rewardPoints: 980, badgeName: 'Silver', challengesCompleted: 5, isCurrentUser: false, profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop' },
-    { rank: 5, fullName: 'You (Current User)', rewardPoints: 720, badgeName: 'Silver', challengesCompleted: 4, isCurrentUser: true }
+    { rank: 5, fullName: 'Alex Rivers', rewardPoints: 720, badgeName: 'Silver', challengesCompleted: 4, isCurrentUser: true }
   ];
 
   private getUserStorageKey(baseKey: string): string {

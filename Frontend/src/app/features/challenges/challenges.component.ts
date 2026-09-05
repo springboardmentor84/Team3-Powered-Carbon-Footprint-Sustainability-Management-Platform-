@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChallengesService, Challenge, LeaderboardUser } from './challenges.service';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-challenges',
@@ -12,6 +13,7 @@ import { ChallengesService, Challenge, LeaderboardUser } from './challenges.serv
 })
 export class ChallengesComponent implements OnInit {
   private challengesService = inject(ChallengesService);
+  public authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   public challenges: Challenge[] = [];
@@ -74,12 +76,32 @@ export class ChallengesComponent implements OnInit {
   ngOnInit() {
     // 1. Instant 0ms render from synchronous cache
     this.challenges = this.challengesService.getCachedChallenges();
-    this.leaderboard = this.challengesService.getCachedLeaderboard();
+    this.leaderboard = this.formatLeaderboard(this.challengesService.getCachedLeaderboard());
     this.updateFilteredLists();
     this.cdr.detectChanges();
 
     // 2. Background sync without blocking the UI
     this.loadData();
+  }
+
+  public formatLeaderboard(list: LeaderboardUser[]): LeaderboardUser[] {
+    if (!list) return [];
+    const user = this.authService.currentUser();
+    const currentUserName = user?.fullName || user?.name || 'Alex Rivers';
+    const currentUserImg = user?.profileImage;
+
+    return list.map(item => {
+      const isSelf = item.isCurrentUser || item.fullName.toLowerCase().includes('you');
+      if (isSelf) {
+        return {
+          ...item,
+          fullName: currentUserName,
+          profileImage: currentUserImg || item.profileImage,
+          isCurrentUser: true
+        };
+      }
+      return item;
+    });
   }
 
   public async loadData() {
@@ -92,7 +114,7 @@ export class ChallengesComponent implements OnInit {
         this.challenges = challenges;
       }
       if (leaderboard && leaderboard.length > 0) {
-        this.leaderboard = leaderboard;
+        this.leaderboard = this.formatLeaderboard(leaderboard);
       }
       this.updateFilteredLists();
       this.cdr.detectChanges();

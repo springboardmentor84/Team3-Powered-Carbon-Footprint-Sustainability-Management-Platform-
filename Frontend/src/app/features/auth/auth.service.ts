@@ -276,6 +276,18 @@ export class AuthService {
     }
   }
 
+  public updateCurrentUser(updatedUserObj: any) {
+    const current = this.currentUser() || {};
+    const merged = { ...current, ...updatedUserObj };
+    if (!merged.name && merged.fullName) {
+      merged.name = merged.fullName;
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ecotrack_user', JSON.stringify(merged));
+    }
+    this.currentUser.set(merged);
+  }
+
   public logout() {
     localStorage.removeItem('ecotrack_token');
     localStorage.removeItem('ecotrack_user');

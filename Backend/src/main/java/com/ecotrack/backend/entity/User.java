@@ -52,4 +52,28 @@ public class User {
 
     @Column(columnDefinition = "TEXT")
     private String profileImage;
+
+    @Column
+    private String phoneNumber;
+
+    @Column
+    private String dateOfBirth;
+
+    @Column
+    private String gender;
+
+    @Column(length = 1000)
+    private String bio;
+
+    @Column
+    private String organization;
+
+    @Column
+    private String employeeId;
+
+    @Column(length = 1000)
+    private String personalGoals;
+
+    @Column(length = 1000)
+    private String sustainabilityPreferences;
 }

@@ -47,7 +47,7 @@
     </ul>
   </nav>
 
-  <!-- Sidebar Footer: Calculate Impact & User Profile (as seen in mockup) -->
+  <!-- Sidebar Footer: Calculate Impact & User Profile Widget -->
   <div class="sidebar-footer" [class.collapsed-footer]="layoutService.sidebarCollapsed()">
     <!-- Calculate Impact Button -->
     <a 
@@ -64,27 +64,34 @@
       <i class="bi bi-calculator"></i>
     </a>
 
-    <!-- XP / Level Indicator (Matching Screenshot 4 sidebar) -->
+    <!-- XP / Level Indicator -->
     <div class="level-indicator" *ngIf="!layoutService.sidebarCollapsed()">
       <div class="level-header">
-        <span class="level-badge">LEVEL 12 EXPLORER</span>
+        <span class="level-badge">{{ (authService.currentUser()?.badgeName || 'Gold Achiever') | uppercase }}</span>
       </div>
       <div class="progress-bar-container">
         <div class="progress-bar success-bar" style="width: 58%"></div>
       </div>
-      <p class="level-desc">1,240 XP to next rank</p>
+      <p class="level-desc">{{ authService.currentUser()?.rewardPoints || 1240 }} Eco Points</p>
     </div>
 
-    <!-- User Profile Widget -->
-    <div class="sidebar-user-widget">
+    <!-- User Profile Widget (Reuses Single Source of Truth) -->
+    <div class="sidebar-user-widget" (click)="navigateTo('/profile')" title="View & Edit Profile">
       <div class="user-avatar-wrapper">
         <img 
-          [src]="authService.currentUser()?.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'" 
-          [alt]="(authService.currentUser()?.name || 'User') + ' Avatar'" 
-          class="user-avatar" />
+          *ngIf="authService.currentUser()?.profileImage && !sidebarImageError" 
+          [src]="authService.currentUser()?.profileImage" 
+          [alt]="authService.currentUser()?.fullName || authService.currentUser()?.name || 'User Avatar'" 
+          class="user-avatar"
+          (error)="sidebarImageError = true" 
+        />
+        <div *ngIf="!authService.currentUser()?.profileImage || sidebarImageError" class="user-avatar-initials">
+          {{ getUserInitials(authService.currentUser()?.fullName || authService.currentUser()?.name) }}
+        </div>
       </div>
+
       <div class="user-meta" *ngIf="!layoutService.sidebarCollapsed()">
-        <span class="user-fullname">{{ authService.currentUser()?.name || authService.currentUser()?.fullName || 'Alex Rivers' }}</span>
+        <span class="user-fullname">{{ authService.currentUser()?.fullName || authService.currentUser()?.name || 'Eco User' }}</span>
         <span class="user-title">{{ authService.currentUser()?.role === 'ROLE_ORGANIZATION' ? 'Corporate ESG Lead' : (authService.currentUser()?.role === 'ROLE_ADMIN' ? 'System Administrator' : 'Sustainability Lead') }}</span>
       </div>
     </div>
@@ -92,7 +99,7 @@
     <!-- Quick Links (Settings / Support) -->
     <div class="sidebar-quick-links" *ngIf="!layoutService.sidebarCollapsed()">
       <a [routerLink]="['/profile']" class="quick-link-item"><i class="bi bi-gear"></i> Settings</a>
-      <a href="#" class="quick-link-item"><i class="bi bi-question-circle"></i> Support</a>
+      <a [routerLink]="['/about']" class="quick-link-item"><i class="bi bi-question-circle"></i> About & Support</a>
     </div>
   </div>
 </aside>

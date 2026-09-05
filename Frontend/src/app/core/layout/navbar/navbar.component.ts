@@ -45,6 +45,7 @@ export class NavbarComponent {
   // Dropdown States
   public showNotificationsDropdown: boolean = false;
   public showProfileDropdown: boolean = false;
+  public navImageError: boolean = false;
 
   // Notifications Data
   public notifications: AppNotification[] = [

@@ -1,118 +1,338 @@
-<!-- Toast Notification Popup -->
-<div class="toast-popup" [class.toast-show]="toast.show" [class.toast-success]="toast.type === 'success'" [class.toast-error]="toast.type === 'error'" [class.toast-info]="toast.type === 'info'">
-  <i class="bi" [ngClass]="toast.type === 'success' ? 'bi-check-circle-fill' : toast.type === 'error' ? 'bi-x-circle-fill' : 'bi-info-circle-fill'"></i>
-  <span>{{ toast.message }}</span>
-</div>
-
 <div class="fade-in-section">
-  <div class="profile-header">
-    <h1>User Profile Management</h1>
-    <p class="subtitle text-secondary">Manage your credentials, profile picture, sustainability preferences, and badges.</p>
+  <!-- TOP HEADER -->
+  <div class="profile-top-header mb-4">
+    <div class="title-meta">
+      <h1>User Profile Management</h1>
+      <p class="subtitle text-secondary">Manage your credentials, sustainability preferences, personal goals, and lifestyle settings.</p>
+    </div>
+  </div>
+
+  <!-- FIXED BOTTOM-RIGHT TOAST NOTIFICATION -->
+  <div *ngIf="toastMessage" class="toast-alert" [ngClass]="toastType">
+    <i class="bi" [ngClass]="toastType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+    <span>{{ toastMessage }}</span>
+    <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
   </div>
 
   <div class="profile-layout-grid">
-    <!-- Left Column: User details forms -->
+    <!-- LEFT MAIN COLUMN -->
     <div class="profile-main-area">
-      <div class="eco-card form-card">
-        <h3>Account Information</h3>
-        <form (submit)="onSaveSettings(); $event.preventDefault();" class="profile-form">
 
-          <!-- Avatar Upload Widget -->
-          <div class="avatar-edit-widget">
-            <div class="avatar-preview-container">
-              <img [src]="profileImage || defaultAvatarUrl" class="avatar-lg" alt="User Avatar" (error)="profileImage = ''" />
+      <!-- 1. PROFILE HEADER CARD & AVATAR UPLOAD -->
+      <div class="eco-card header-avatar-card mb-4">
+        <div class="avatar-header-flex">
+          <!-- Avatar Preview / Fallback Initials Box -->
+          <div class="avatar-container-box">
+            <img 
+              *ngIf="profileImage && !hasImageError" 
+              [src]="profileImage" 
+              [alt]="fullName" 
+              class="avatar-image-lg"
+              (error)="hasImageError = true"
+            />
+            <div *ngIf="!profileImage || hasImageError" class="avatar-initials-lg">
+              {{ fullName.charAt(0).toUpperCase() || 'U' }}
             </div>
-            <div class="avatar-actions">
-              <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
-              <button type="button" class="btn btn-outline-light btn-change-avatar" (click)="fileInput.click()">
-                <i class="bi bi-camera"></i> Change Picture
+            <div *ngIf="isUploadingPicture" class="avatar-spinner-overlay">
+              <i class="bi bi-arrow-repeat spin-icon text-white font-lg"></i>
+            </div>
+          </div>
+
+          <!-- User Quick Meta & Controls -->
+          <div class="avatar-meta-box">
+            <h2 class="user-name-title">{{ fullName || 'Eco User' }}</h2>
+            <p class="user-email-text"><i class="bi bi-envelope"></i> {{ email }}</p>
+            <div class="user-badges-pills">
+              <span class="role-pill">{{ organization || 'EcoTrack Initiative' }}</span>
+              <span class="badge-pill"><i class="bi bi-award-fill text-warning"></i> {{ authService.currentUser()?.badgeName || 'Gold Achiever' }}</span>
+            </div>
+
+            <!-- Upload / Replace / Remove Buttons -->
+            <div class="avatar-action-btns mt-3">
+              <label for="avatar-file-input" class="btn btn-outline-primary btn-sm avatar-upload-btn">
+                <i class="bi bi-camera-fill"></i> Upload Photo
+              </label>
+              <input 
+                type="file" 
+                id="avatar-file-input" 
+                (change)="onFileSelected($event)" 
+                accept="image/png, image/jpeg, image/webp, image/gif"
+                class="hidden-file-input" 
+              />
+
+              <button 
+                *ngIf="profileImage" 
+                type="button" 
+                class="btn btn-outline-danger btn-sm avatar-remove-btn" 
+                (click)="removeProfilePicture()"
+              >
+                <i class="bi bi-trash"></i> Remove
               </button>
-              <span class="font-xs text-secondary d-block mt-1">Supports JPG, PNG (max 10MB) — auto-compressed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. DYNAMIC PROFILE COMPLETION CARD -->
+      <div class="eco-card completion-card mb-4">
+        <div class="completion-header">
+          <div>
+            <h3>Profile Completion – <strong>{{ completionPercentage }}%</strong></h3>
+            <p class="font-sm text-secondary">Calculated from stored profile sections and preferences.</p>
+          </div>
+          <span class="pct-badge" [class.complete]="completionPercentage === 100">{{ completionPercentage }}%</span>
+        </div>
+
+        <div class="completion-track">
+          <div class="completion-bar-fill" [style.width.%]="completionPercentage"></div>
+        </div>
+
+        <div class="completion-checklist mt-3">
+          <div class="check-item" [class.done]="fullName && email && phoneNumber">
+            <i class="bi" [ngClass]="fullName && email && phoneNumber ? 'bi-check-circle-fill text-success' : 'bi-circle text-secondary'"></i>
+            <span>Basic Information</span>
+          </div>
+
+          <div class="check-item" [class.done]="profileImage && !hasImageError">
+            <i class="bi" [ngClass]="profileImage && !hasImageError ? 'bi-check-circle-fill text-success' : 'bi-circle text-secondary'"></i>
+            <span>Profile Picture</span>
+          </div>
+
+          <div class="check-item" [class.done]="location">
+            <i class="bi" [ngClass]="location ? 'bi-check-circle-fill text-success' : 'bi-circle text-secondary'"></i>
+            <span>Location</span>
+          </div>
+
+          <div class="check-item" [class.done]="environmentalInterests.length > 0">
+            <i class="bi" [ngClass]="environmentalInterests.length > 0 ? 'bi-check-circle-fill text-success' : 'bi-circle text-secondary'"></i>
+            <span>Environmental Interests</span>
+          </div>
+
+          <div class="check-item" [class.done]="personalGoals.length > 0">
+            <i class="bi" [ngClass]="personalGoals.length > 0 ? 'bi-check-circle-fill text-success' : 'bi-circle text-secondary'"></i>
+            <span>Sustainability Goals</span>
+          </div>
+
+          <div class="check-item" [class.done]="commuteMode && dietPreference">
+            <i class="bi" [ngClass]="commuteMode && dietPreference ? 'bi-check-circle-fill text-success' : 'bi-circle text-secondary'"></i>
+            <span>Lifestyle Configuration</span>
+          </div>
+        </div>
+
+        <div *ngIf="missingFields.length > 0" class="missing-fields-note mt-2">
+          <i class="bi bi-info-circle text-warning"></i>
+          <span>Missing details: {{ missingFields.join(', ') }}</span>
+        </div>
+      </div>
+
+      <!-- 3. PERSONAL INFORMATION & LOCATION FORM CARD -->
+      <div class="eco-card form-card mb-4">
+        <h3><i class="bi bi-person-lines-fill text-primary"></i> Personal Information & Location</h3>
+        <form (submit)="onSaveProfile(); $event.preventDefault();" class="profile-form mt-3">
+          <div class="form-row-2">
+            <div class="form-item">
+              <label for="fullName">Full Name *</label>
+              <input type="text" id="fullName" [(ngModel)]="fullName" name="fullName" required placeholder="e.g., Full name" />
+            </div>
+
+            <div class="form-item">
+              <label for="email">Email Address *</label>
+              <input type="email" id="email" [(ngModel)]="email" name="email" required placeholder="e.g., name@example.com" />
             </div>
           </div>
 
-          <div class="form-row-2">
+          <div class="form-row-3 mt-3">
             <div class="form-item">
-              <label for="fullname">Full Name</label>
-              <input type="text" id="fullname" [(ngModel)]="fullname" name="fullname" placeholder="e.g. Alex Rivers" required />
+              <label for="phoneNumber">Phone Number</label>
+              <input type="tel" id="phoneNumber" [(ngModel)]="phoneNumber" name="phoneNumber" placeholder="e.g., +91 12345 67890" />
             </div>
-            <div class="form-item">
-              <label for="email">Corporate Email</label>
-              <input type="email" id="email" [(ngModel)]="email" name="email" readonly />
-            </div>
-          </div>
 
-          <div class="form-row-2">
             <div class="form-item">
-              <label for="role">Corporate Role</label>
-              <input type="text" id="role" [(ngModel)]="role" name="role" readonly />
+              <label for="dateOfBirth">Date of Birth</label>
+              <input type="date" id="dateOfBirth" [(ngModel)]="dateOfBirth" name="dateOfBirth" />
             </div>
-            <div class="form-item">
-              <label for="location">Location / Office</label>
-              <input type="text" id="location" [(ngModel)]="location" name="location" placeholder="e.g. California, USA" />
-            </div>
-          </div>
 
-          <h3>Lifestyle Configuration</h3>
-          <div class="form-row-2">
             <div class="form-item">
-              <label for="commute">Primary Commute Mode</label>
-              <select id="commute" [(ngModel)]="commuteMode" name="commuteMode">
-                <option value="sedan">Petrol Sedan / SUV</option>
-                <option value="ev">Electric Vehicle (EV)</option>
-                <option value="transit">Public Transit</option>
+              <label for="gender">Gender</label>
+              <select id="gender" [(ngModel)]="gender" name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Prefer not to say">Prefer not to say</option>
               </select>
             </div>
+          </div>
+
+          <div class="form-row-2 mt-3">
             <div class="form-item">
-              <label for="diet">Diet Preference</label>
-              <select id="diet" [(ngModel)]="dietPreference" name="dietPreference">
-                <option value="meat">Meat / High-carbon</option>
-                <option value="vegetarian">Vegetarian</option>
-                <option value="vegan">Vegan / Plant-based</option>
-              </select>
+              <label for="organization">College / Organization</label>
+              <input type="text" id="organization" [(ngModel)]="organization" name="organization" placeholder="e.g., The Apollo University" />
+            </div>
+
+            <div class="form-item">
+              <label for="employeeId">Student / Employee ID</label>
+              <input type="text" id="employeeId" [(ngModel)]="employeeId" name="employeeId" placeholder="e.g., TAU2026CSE001" />
             </div>
           </div>
 
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary save-btn" [disabled]="isSaving" id="save-profile-btn">
-              <i class="bi" [ngClass]="isSaving ? 'bi-arrow-repeat animate-spin' : 'bi-save'"></i>
-              {{ isSaving ? 'Saving to Database...' : 'Save Changes' }}
-            </button>
+          <!-- Location Management Section -->
+          <div class="form-item mt-3">
+            <label for="location"><i class="bi bi-geo-alt-fill text-danger"></i> Office Location / Region</label>
+            <input type="text" id="location" [(ngModel)]="location" name="location" placeholder="e.g., Bengaluru, Karnataka" />
+          </div>
+
+          <div class="form-item mt-3">
+            <label for="bio">Short Bio</label>
+            <textarea id="bio" [(ngModel)]="bio" name="bio" rows="2" placeholder="e.g., Passionate about technology and sustainable living."></textarea>
           </div>
         </form>
       </div>
-    </div>
 
-    <!-- Right Column: Preferences Checklist & Badges -->
-    <div class="profile-side-area">
-      <!-- Environmental Interests Card -->
-      <div class="eco-card side-widget-card">
-        <h3>Environmental Interests</h3>
-        <p class="font-sm text-secondary" style="margin-bottom: 16px;">Select interests to filter challenges and dashboard logs.</p>
-        <div class="interests-list">
-          <label class="checkbox-label" *ngFor="let item of interests">
-            <input type="checkbox" [(ngModel)]="item.selected" [id]="'interest-' + item.id" />
-            <span>{{ item.name }}</span>
+      <!-- 4. PERSONAL SUSTAINABILITY GOALS SECTION -->
+      <div class="eco-card form-card mb-4">
+        <h3><i class="bi bi-bullseye text-primary"></i> Personal Sustainability Goals</h3>
+        <p class="font-sm text-secondary mb-3">Select the personal targets integrated with your EcoTrack challenge progress.</p>
+
+        <div class="goals-checkbox-grid">
+          <label class="goal-checkbox-card" *ngFor="let g of personalGoals" [class.selected]="g.selected">
+            <input type="checkbox" [(ngModel)]="g.selected" (change)="recalculateCompletion()" />
+            <span>{{ g.label }}</span>
           </label>
         </div>
       </div>
 
-      <!-- Badges Card -->
+      <!-- 5. LIFESTYLE CONFIGURATION SECTION -->
+      <div class="eco-card form-card mb-4">
+        <h3><i class="bi bi-sliders text-primary"></i> Lifestyle Configuration</h3>
+        <p class="font-sm text-secondary mb-3">Configure relevant parameters used for carbon activity emission calculations.</p>
+
+        <div class="form-row-2">
+          <div class="form-item">
+            <label for="commuteMode">Primary Transportation</label>
+            <select id="commuteMode" [(ngModel)]="commuteMode" name="commuteMode">
+              <option value="transit">Public Transit (Bus / Metro)</option>
+              <option value="ev">Electric Vehicle (EV)</option>
+              <option value="sedan">Petrol Sedan / SUV</option>
+              <option value="cycle">Bicycle / Walking</option>
+            </select>
+          </div>
+
+          <div class="form-item">
+            <label for="energyPreference">Energy Usage Preference</label>
+            <select id="energyPreference" [(ngModel)]="energyPreference" name="energyPreference">
+              <option value="renewable">Solar / Wind Energy Tariff</option>
+              <option value="solar">Rooftop Solar Installed</option>
+              <option value="grid">Standard Grid Electricity</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2 mt-3">
+          <div class="form-item">
+            <label for="dietPreference">Dietary Preference</label>
+            <select id="dietPreference" [(ngModel)]="dietPreference" name="dietPreference">
+              <option value="vegetarian">Vegetarian</option>
+              <option value="vegan">Vegan / Plant-based</option>
+              <option value="meat">Meat / High-Carbon Diet</option>
+            </select>
+          </div>
+
+          <div class="form-item">
+            <label for="recyclingHabit">Recycling & Composting Habit</label>
+            <select id="recyclingHabit" [(ngModel)]="recyclingHabit" name="recyclingHabit">
+              <option value="always">Always Separate Waste & Compost</option>
+              <option value="sometimes">Occasional Recycling</option>
+              <option value="rarely">Minimal Waste Sorting</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVE CHANGES ACTION BAR -->
+      <div class="profile-save-bar">
+        <button 
+          type="button" 
+          class="btn btn-primary btn-lg save-main-btn" 
+          (click)="onSaveProfile()"
+          [disabled]="isSubmitting"
+        >
+          <i *ngIf="isSubmitting" class="bi bi-arrow-repeat spin-icon"></i>
+          <i *ngIf="!isSubmitting" class="bi bi-check-circle-fill"></i>
+          {{ isSubmitting ? 'Saving Profile...' : 'Save Changes' }}
+        </button>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR COLUMN -->
+    <div class="profile-side-area">
+
+      <!-- 6. SUSTAINABILITY PREFERENCES & INTERESTS -->
+      <div class="eco-card side-widget-card mb-4">
+        <h3><i class="bi bi-heart-fill text-danger"></i> Sustainability Preferences</h3>
+        <p class="font-xs text-secondary mb-3">Select the 10 sustainability interest categories you care about.</p>
+
+        <div class="preferences-chips-grid">
+          <div 
+            class="pref-chip" 
+            *ngFor="let pref of sustainabilityPreferences" 
+            [class.active]="pref.selected"
+            (click)="togglePreference(pref)"
+          >
+            <i class="bi" [ngClass]="pref.selected ? 'bi-check-circle-fill' : 'bi-plus-circle'"></i>
+            <span>{{ pref.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. ENVIRONMENTAL INTERESTS CHIPS -->
+      <div class="eco-card side-widget-card mb-4">
+        <h3><i class="bi bi-tags-fill text-primary"></i> Environmental Interests</h3>
+        <p class="font-xs text-secondary mb-2">Display and manage active environmental focus tags.</p>
+
+        <div class="active-interests-tags mb-3">
+          <span class="interest-tag" *ngFor="let item of environmentalInterests">
+            {{ item }}
+            <button type="button" class="tag-remove-btn" (click)="removeInterest(item)">&times;</button>
+          </span>
+          <p *ngIf="environmentalInterests.length === 0" class="text-secondary font-xs italic">No environmental interests selected yet.</p>
+        </div>
+
+        <div class="add-interest-input-group">
+          <input 
+            type="text" 
+            [(ngModel)]="newInterestInput" 
+            placeholder="Add new interest tag..." 
+            (keyup.enter)="addInterest()"
+          />
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addInterest()">Add</button>
+        </div>
+      </div>
+
+      <!-- BADGES & ACHIEVEMENTS WIDGET -->
       <div class="eco-card side-widget-card">
-        <h3>Sustainability Badges</h3>
-        <p class="font-sm text-secondary" style="margin-bottom: 20px;">Review your gamified milestones and achievements.</p>
-        <div class="badges-list">
-          <div class="badge-row" *ngFor="let b of badges" [class.locked-badge-row]="!b.unlocked">
-            <div class="badge-icon-circle">
-              <i class="bi" [ngClass]="b.icon"></i>
+        <h3><i class="bi bi-trophy-fill text-warning"></i> Achieved Milestones</h3>
+        <p class="font-xs text-secondary mb-3">Review your earned gamification badges.</p>
+
+        <div class="badges-mini-list">
+          <div class="mini-badge-item">
+            <div class="badge-icon-box gold"><i class="bi bi-trophy-fill"></i></div>
+            <div class="badge-text-meta">
+              <strong>Gold Achiever</strong>
+              <small>Earned 1,240 Eco Points</small>
             </div>
-            <div class="badge-info-details">
-              <h4>{{ b.name }}</h4>
-              <p>{{ b.desc }}</p>
+          </div>
+
+          <div class="mini-badge-item">
+            <div class="badge-icon-box platinum"><i class="bi bi-gem"></i></div>
+            <div class="badge-text-meta">
+              <strong>Zero Waster</strong>
+              <small>Completed Community Challenge</small>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
