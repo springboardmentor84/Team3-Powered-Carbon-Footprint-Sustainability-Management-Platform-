@@ -362,6 +362,46 @@ export class ChallengesService {
     }
   }
 
+  public async deleteProgress(id: number): Promise<Challenge> {
+    const list = this.getStoredChallenges();
+    const ch = list.find(c => c.id === id);
+    if (ch) {
+      ch.joined = false;
+      ch.currentProgress = 0;
+      ch.status = 'Not Started';
+      this.saveStoredChallenges(list);
+    }
+
+    try {
+      const res: any = await firstValueFrom(
+        this.http.delete<any>(`${this.apiUrl}/${id}/progress`).pipe(timeout(this.HTTP_TIMEOUT_MS))
+      );
+      if (res && res.success && res.data) {
+        return res.data;
+      }
+    } catch (err) {
+      console.warn(`Backend API deleteProgress synced locally:`, err);
+    }
+    return ch || {
+      id,
+      title: 'Reset Challenge',
+      category: 'PLASTIC_FREE_WEEK',
+      description: 'Reset challenge progress.',
+      rewardPoints: 100,
+      badgeName: 'Eco Warrior',
+      targetValue: 7,
+      unit: 'days',
+      rules: 'Rules',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      active: true,
+      joined: false,
+      currentProgress: 0,
+      status: 'Not Started',
+      participantCount: 0
+    };
+  }
+
   public async joinChallenge(id: number): Promise<Challenge> {
     this.markChallengeJoinedInMap(id, 0, 'In Progress');
     const list = this.getStoredChallenges();

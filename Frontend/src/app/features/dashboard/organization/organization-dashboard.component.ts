@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { jsPDF } from 'jspdf';
 
 interface Champion {
   rank: number;
@@ -51,6 +52,97 @@ export class OrganizationDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.cdr.detectChanges();
+  }
+
+  public exportESGReportPDF() {
+    try {
+      const doc = new jsPDF();
+      const dateStr = new Date().toLocaleDateString();
+      const fileDate = new Date().toISOString().split('T')[0];
+
+      // Page Header Banner
+      doc.setFillColor(16, 185, 129); // Emerald Green
+      doc.rect(0, 0, 210, 28, 'F');
+
+      doc.setFontSize(18);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EcoTrack - Corporate ESG & Sustainability Report', 14, 18);
+
+      // Document Metadata
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generated Date: ${dateStr}`, 14, 38);
+      doc.text(`Organization: EcoTrack Corporate Partner Initiative`, 14, 44);
+      doc.text(`Report Type: Corporate ESG Emission Summary (Scope 1, 2 & 3)`, 14, 50);
+
+      // Horizontal Separator
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.line(14, 54, 196, 54);
+
+      // Section 1: Executive Carbon Summary
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.text('1. Executive Carbon Summary & Metrics', 14, 64);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(51, 65, 85);
+      doc.text('• Total Corporate Emissions: 12,450 tCO2e (-4.2% YoY Reduction)', 20, 74);
+      doc.text('• Carbon Offset Target Goal: 65% Completed (On Track)', 20, 82);
+      doc.text('• Active Green Initiatives: 14 Environmental Projects', 20, 90);
+      doc.text('• Corporate Renewable Energy Ratio: 42% (+8% Quarter Increase)', 20, 98);
+
+      // Section 2: Department Emission Distribution
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.text('2. Department Emission Distribution (Scope 1, 2 & 3)', 14, 112);
+
+      let yPos = 122;
+      this.departmentBreakdown.forEach((dept) => {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(51, 65, 85);
+        doc.text(`• ${dept.name}: ${dept.percentage}% of overall corporate emissions`, 20, yPos);
+        yPos += 8;
+      });
+
+      // Section 3: Department Eco Champions
+      yPos += 6;
+      doc.setFontSize(13);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.text('3. Internal Department Sustainability Champions', 14, yPos);
+
+      yPos += 10;
+      this.orgChampions.forEach((champ) => {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(51, 65, 85);
+        doc.text(`• Rank #${champ.rank}: ${champ.name} (${champ.dept}) — +${champ.points} Eco Points`, 20, yPos);
+        yPos += 8;
+      });
+
+      // Footer
+      doc.setDrawColor(226, 232, 240);
+      doc.line(14, 270, 196, 270);
+      doc.setFontSize(9);
+      doc.setTextColor(148, 163, 184);
+      doc.text('EcoTrack Environmental Management Platform — Official Corporate ESG Export', 14, 278);
+
+      // Save PDF file in browser
+      const fileName = `EcoTrack_Corporate_ESG_Report_${fileDate}.pdf`;
+      doc.save(fileName);
+
+      this.showToast(`Successfully downloaded ${fileName}`, 'success');
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      this.showToast('Failed to generate PDF report. Please try again.', 'error');
+    }
   }
 
   public showOrgTooltip(point: any, index: number) {

@@ -65,6 +65,13 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Challenge progress updated successfully", challenge));
     }
 
+    @DeleteMapping("/{id}/progress")
+    public ResponseEntity<ApiResponse<ChallengeResponse>> deleteProgress(@PathVariable Long id) {
+        String authenticatedEmail = getAuthenticatedEmail();
+        ChallengeResponse challenge = challengeService.deleteProgress(id, authenticatedEmail);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Challenge progress reset successfully", challenge));
+    }
+
     @GetMapping("/daily")
     public ResponseEntity<ApiResponse<List<ChallengeResponse>>> getDailyChallenges() {
         String authenticatedEmail = getAuthenticatedEmail();

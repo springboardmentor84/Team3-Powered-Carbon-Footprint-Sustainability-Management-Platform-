@@ -10,7 +10,7 @@
     </div>
 
     <div class="header-actions-group">
-      <button class="btn btn-primary create-challenge-top-btn" (click)="openCreateModal()">
+      <button *ngIf="isAdminUser()" class="btn btn-primary create-challenge-top-btn" (click)="openCreateModal()">
         <i class="bi bi-plus-circle-fill"></i>
         <span>Create Challenge</span>
       </button>
@@ -203,12 +203,22 @@
 
             <!-- Card Footer Actions -->
             <div class="ch-card-footer">
-              <div class="main-action-buttons">
+              <div class="main-action-buttons d-flex align-items-center gap-2">
                 <button 
                   class="btn btn-primary btn-sm progress-action-btn"
                   (click)="openProgressModal(ch)"
                 >
                   <i class="bi bi-plus-circle"></i> Log Progress
+                </button>
+
+                <button 
+                  type="button" 
+                  class="btn btn-outline-danger btn-sm reset-progress-btn"
+                  (click)="onDeleteProgress(ch)"
+                  [disabled]="isDeletingId === ch.id"
+                  title="Reset your participation & progress for this challenge"
+                >
+                  <i class="bi bi-arrow-counterclockwise"></i> Reset Progress
                 </button>
               </div>
 
@@ -217,10 +227,10 @@
                 <button type="button" class="btn-icon view-btn" (click)="openDetailsModal(ch)" title="View Details">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button type="button" class="btn-icon edit-btn" (click)="openEditModal(ch)" title="Edit Challenge">
+                <button *ngIf="isAdminUser()" type="button" class="btn-icon edit-btn" (click)="openEditModal(ch)" title="Edit Challenge">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(ch)" title="Delete Challenge">
+                <button *ngIf="isAdminUser()" type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(ch)" title="Delete Challenge">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>

@@ -107,6 +107,21 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     @Transactional
+    public ChallengeResponse deleteProgress(Long id, String authenticatedEmail) {
+        User user = findUserByEmail(authenticatedEmail);
+        Challenge challenge = challengeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Challenge not found with id: " + id));
+
+        Optional<UserChallengeProgress> progOpt = userChallengeProgressRepository.findByUserIdAndChallengeId(user.getId(), challenge.getId());
+        if (progOpt.isPresent()) {
+            userChallengeProgressRepository.delete(progOpt.get());
+        }
+
+        return mapToResponse(challenge, user);
+    }
+
+    @Override
+    @Transactional
     public ChallengeResponse joinChallenge(Long id, String authenticatedEmail) {
         User user = findUserByEmail(authenticatedEmail);
         Challenge challenge = challengeRepository.findById(id)

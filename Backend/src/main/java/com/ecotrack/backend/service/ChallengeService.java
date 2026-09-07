@@ -24,5 +24,7 @@ public interface ChallengeService {
 
     ChallengeCompletionResponse completeChallenge(ChallengeCompletionRequest request, String authenticatedEmail);
 
+    ChallengeResponse deleteProgress(Long id, String authenticatedEmail);
+
     List<LeaderboardResponse> getLeaderboard(String authenticatedEmail);
 }

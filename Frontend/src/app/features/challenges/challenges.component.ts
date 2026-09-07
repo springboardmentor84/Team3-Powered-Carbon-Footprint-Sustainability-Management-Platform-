@@ -175,6 +175,29 @@ export class ChallengesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  public isAdminUser(): boolean {
+    const user = this.authService.currentUser();
+    if (!user) return false;
+    const role = user.userRole || user.role || '';
+    return role.toUpperCase().includes('ADMIN') || role.toUpperCase().includes('ORGANIZATION');
+  }
+
+  public async onDeleteProgress(ch: Challenge) {
+    if (confirm(`Are you sure you want to reset your progress for "${ch.title}"? Your participation for this challenge will be reset.`)) {
+      this.isDeletingId = ch.id;
+      try {
+        await this.challengesService.deleteProgress(ch.id);
+        this.showToast(`Progress for "${ch.title}" has been reset.`, 'success');
+        await this.loadData();
+      } catch (err) {
+        console.error('Failed to reset progress:', err);
+        this.showToast('Failed to reset challenge progress.', 'error');
+      } finally {
+        this.isDeletingId = null;
+      }
+    }
+  }
+
   public showToast(message: string, type: 'success' | 'error' = 'success') {
     this.toastMessage = message;
     this.toastType = type;

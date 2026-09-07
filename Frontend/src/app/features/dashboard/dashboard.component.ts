@@ -38,19 +38,28 @@ export class DashboardComponent implements OnInit {
       if (userData) {
         try {
           const u = JSON.parse(userData);
-          this.userRole = u.userRole || u.role || 'ROLE_USER';
+          const r = (u.userRole || u.role || '').toUpperCase();
+          const email = (u.email || '').toLowerCase();
+
+          if (r.includes('ADMIN') || email.includes('admin')) {
+            this.userRole = 'ROLE_ADMIN';
+          } else if (r.includes('ORGANIZATION') || r.includes('ORG') || email.includes('org')) {
+            this.userRole = 'ROLE_ORGANIZATION';
+          } else {
+            this.userRole = r || 'ROLE_USER';
+          }
         } catch {
           this.userRole = 'ROLE_USER';
         }
       }
     }
 
-    if (this.userRole === 'ROLE_ORGANIZATION') {
-      this.currentMode = 'organization';
-      this.allowedModes = ['organization'];
-    } else if (this.userRole === 'ROLE_ADMIN') {
+    if (this.userRole === 'ROLE_ADMIN') {
       this.currentMode = 'admin';
       this.allowedModes = ['admin', 'organization', 'individual'];
+    } else if (this.userRole === 'ROLE_ORGANIZATION') {
+      this.currentMode = 'organization';
+      this.allowedModes = ['organization', 'individual'];
     } else {
       this.currentMode = 'individual';
       this.allowedModes = ['individual'];
