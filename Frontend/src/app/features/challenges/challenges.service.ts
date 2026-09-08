@@ -45,7 +45,7 @@ export interface LeaderboardUser {
 })
 export class ChallengesService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/challenges';
+  private apiUrl = 'https://feisty-recreation-production-c4e5.up.railway.app/api/challenges';
   private readonly HTTP_TIMEOUT_MS = 2000; // Strict 2-second HTTP timeout
 
   private defaultFallbackChallenges: Challenge[] = [

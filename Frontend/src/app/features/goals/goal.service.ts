@@ -21,7 +21,7 @@ export interface Goal {
 })
 export class GoalService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/goals';
+  private apiUrl = 'https://feisty-recreation-production-c4e5.up.railway.app/api/goals';
   private storageKey = 'ecotrack_goals';
 
   private cachedGoals: Goal[] | null = null;

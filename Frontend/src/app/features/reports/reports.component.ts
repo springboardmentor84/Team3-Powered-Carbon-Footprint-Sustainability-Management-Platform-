@@ -46,7 +46,7 @@ export class ReportsComponent {
       let reportData: any = null;
       try {
         const res: any = await firstValueFrom(
-          this.http.get(`http://localhost:8081/api/reports/summary?reportType=${this.reportType}&dateRange=${this.dateRange}`).pipe(timeout(1500))
+          this.http.get(`https://feisty-recreation-production-c4e5.up.railway.app/api/reports/summary?reportType=${this.reportType}&dateRange=${this.dateRange}`).pipe(timeout(1500))
         );
         if (res && res.success && res.data) {
           reportData = res.data;

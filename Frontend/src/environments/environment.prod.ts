@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '__RAILWAY_BACKEND_URL__/api'
+  apiBaseUrl: 'https://feisty-recreation-production-c4e5.up.railway.app/api'
 };

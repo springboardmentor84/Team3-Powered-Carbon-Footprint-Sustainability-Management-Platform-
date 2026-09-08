@@ -17,7 +17,7 @@ export interface AIRecommendation {
 })
 export class AIService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/ai';
+  private apiUrl = 'https://feisty-recreation-production-c4e5.up.railway.app/api/ai';
 
   private fallbackRecommendations: AIRecommendation[] = [
     {

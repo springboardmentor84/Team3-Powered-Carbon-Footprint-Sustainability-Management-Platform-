@@ -65,7 +65,7 @@ export class AdminDashboardComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
 
-  private readonly API_BASE = 'http://localhost:8081/api';
+  private readonly API_BASE = 'https://feisty-recreation-production-c4e5.up.railway.app/api';
 
   // Active Admin Sub-Tab
   public activeTab: 'challenges' | 'users' | 'factors' | 'audit' = 'challenges';

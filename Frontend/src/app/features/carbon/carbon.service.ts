@@ -22,7 +22,7 @@ export interface CarbonEmissionRecord {
 })
 export class CarbonService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/emissions';
+  private apiUrl = 'https://feisty-recreation-production-c4e5.up.railway.app/api/emissions';
 
   // Demo fallback logs in case backend is offline
   private fallbackLogs: CarbonEmissionRecord[] = [
