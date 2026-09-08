@@ -52,12 +52,39 @@ body, body.light-theme {
   --color-active-overlay: rgba(46, 125, 50, 0.1);
 }
 
-/* Always enforce White/Light Background Design Aesthetic (Screenshot-inspired) */
-
+/* Dark Theme Variables */
+body.dark-theme {
+  --color-background: #0f172a;    /* Slate 900 */
+  --color-background-rgb: 15, 23, 42;
+  --color-card: #1e293b;          /* Slate 800 */
+  --color-card-rgb: 30, 41, 59;
+  --color-text-primary: #f8fafc;  /* Slate 50 */
+  --color-text-secondary: #94a3b8;/* Slate 400 */
+  --color-text-muted: #64748b;    /* Slate 500 */
+  --color-border: #334155;        /* Slate 700 */
+  --color-border-hover: #475569;  /* Slate 600 */
+  
+  /* Shadows & Glass */
+  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(30, 41, 59, 0.85);
+  --glass-border: rgba(51, 65, 85, 0.8);
+  --sidebar-bg: #1e293b;
+  
+  /* Interactive Overlays */
+  --color-hover-overlay: rgba(255, 255, 255, 0.05);
+  --color-active-overlay: rgba(255, 255, 255, 0.1);
+}
 
 /* --- 2. BASE STYLES & RESET --- */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
@@ -263,5 +290,113 @@ button, input, select, textarea {
   .show-only-mobile {
     display: none !important;
   }
+}
+
+/* --- 6. THEME-AWARE BUTTONS & FORM CONTROLS --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff !important;
+}
+
+.btn-primary:hover {
+  background-color: #235e26;
+  border-color: #235e26;
+  color: #ffffff !important;
+}
+
+.btn-outline-secondary, .btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.btn-outline-secondary:hover, .btn-secondary:hover {
+  background-color: var(--color-hover-overlay);
+  border-color: var(--color-border-hover);
+  color: var(--color-primary);
+}
+
+.btn-outline-primary {
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary);
+  color: #ffffff !important;
+}
+
+.btn-outline-light {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.btn-outline-light:hover {
+  background-color: var(--color-hover-overlay);
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
+.btn-outline-danger {
+  background-color: transparent;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--color-error);
+  color: #ffffff !important;
+}
+
+.btn-outline-warning {
+  background-color: transparent;
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+}
+
+.btn-outline-warning:hover {
+  background-color: var(--color-warning);
+  color: #ffffff !important;
+}
+
+.btn-outline-success {
+  background-color: transparent;
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+.btn-outline-success:hover {
+  background-color: var(--color-success);
+  color: #ffffff !important;
+}
+
+input.form-control, select.form-select, textarea.form-control {
+  background-color: var(--color-card);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 

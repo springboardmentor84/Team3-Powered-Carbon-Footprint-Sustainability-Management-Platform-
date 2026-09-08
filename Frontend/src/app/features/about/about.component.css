@@ -11,7 +11,9 @@
   position: relative;
   width: 100%;
   min-height: 100vh;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 60%),
               radial-gradient(circle at 90% 80%, rgba(5, 150, 105, 0.05) 0%, transparent 60%);
 }
@@ -30,7 +32,7 @@
 
 .glow-bg-spot-2 {
   position: absolute;
-  bottom: -150px;
+  bottom: 0;
   right: -150px;
   width: 700px;
   height: 700px;
@@ -402,6 +404,7 @@
 /* Footer - Full Width */
 .about-footer {
   width: 100%;
+  margin-top: auto;
   padding: 2.5rem 5rem;
   border-top: 1px solid #e2e8f0;
   color: #64748b;

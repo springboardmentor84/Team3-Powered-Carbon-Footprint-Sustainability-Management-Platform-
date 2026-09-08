@@ -5,116 +5,172 @@
 
   <!-- Full Width Header Navigation Navbar -->
   <header class="landing-header">
-    <div class="brand">
-      <img src="logo.png" alt="EcoTrack Logo" class="brand-logo" />
-      <span class="brand-name">EcoTrack</span>
-    </div>
+    <div class="header-inner landing-section-container">
+      <div class="brand">
+        <img src="logo.png" alt="EcoTrack Logo" class="brand-logo" />
+        <span class="brand-name">EcoTrack</span>
+      </div>
 
-    <!-- Navigation Links: ONLY Home & About Us as requested -->
-    <nav class="landing-nav hide-on-mobile">
-      <a [routerLink]="['/']" class="nav-item active">Home</a>
-      <a [routerLink]="['/about']" class="nav-item">About Us</a>
-    </nav>
+      <!-- Navigation Links: ONLY Home & About Us as requested -->
+      <nav class="landing-nav hide-on-mobile">
+        <a [routerLink]="['/']" class="nav-item active">Home</a>
+        <a [routerLink]="['/about']" class="nav-item">About Us</a>
+      </nav>
 
-    <div class="auth-buttons">
-      <a [routerLink]="['/auth/login']" class="btn btn-text">Log In</a>
-      <a [routerLink]="['/auth/register']" class="btn btn-primary btn-pill">Get Started</a>
+      <div class="auth-buttons">
+        <a [routerLink]="['/auth/login']" class="btn btn-text">Log In</a>
+        <a [routerLink]="['/auth/register']" class="btn btn-primary btn-pill">Get Started</a>
+      </div>
     </div>
   </header>
 
   <!-- Full Screen Hero Section -->
   <section class="hero-section">
-    <div class="hero-content">
-      <!-- Feature Tag Badge -->
-      <div class="feature-badge">
-        <span class="badge-icon"><i class="bi bi-sparkles"></i></span>
-        <span class="badge-text">New: AI-Powered Carbon Insights v2.0</span>
+    <div class="hero-container landing-section-container">
+      <div class="hero-content">
+        <!-- Feature Tag Badge -->
+        <div class="feature-badge">
+          <span class="badge-icon"><i class="bi bi-sparkles"></i></span>
+          <span class="badge-text">New: AI-Powered Carbon Insights v2.0</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="hero-title">
+          Track Your Carbon Footprint. <br />
+          <span class="text-gradient">Reduce Your Environmental Impact with AI.</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-desc">
+          A full-stack sustainability management platform that helps individuals and organizations
+          monitor, analyze, and reduce their carbon footprint through smart activity tracking and
+          AI-driven recommendations.
+        </p>
+
+        <!-- Action Buttons -->
+        <div class="cta-group">
+          <a [routerLink]="['/auth/register']" class="btn btn-large btn-primary btn-pill shadow-glow">
+            Start Tracking Now <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
       </div>
 
-      <!-- Headline -->
-      <h1 class="hero-title">
-        Track Your Carbon Footprint. <br />
-        <span class="text-gradient">Reduce Your Environmental Impact with AI.</span>
-      </h1>
-
-      <!-- Subtitle -->
-      <p class="hero-desc">
-        A full-stack sustainability management platform that helps individuals and organizations
-        monitor, analyze, and reduce their carbon footprint through smart activity tracking and
-        AI-driven recommendations.
-      </p>
-
-      <!-- Action Buttons -->
-      <div class="cta-group">
-        <a [routerLink]="['/auth/register']" class="btn btn-large btn-primary btn-pill shadow-glow">
-          Start Tracking Now <i class="bi bi-arrow-right"></i>
-        </a>
-        <a [routerLink]="['/auth/login']" class="btn btn-large btn-outline btn-pill">
-          View Live Demo
-        </a>
-      </div>
-    </div>
-
-    <!-- High-Resolution Blue Earth Visual (Clean, isolated, floating) -->
-    <div class="hero-visual">
-      <div class="earth-wrapper">
-        <img src="earth.png" class="floating-earth-img" alt="3D Blue Earth Globe" />
-        <div class="earth-glow"></div>
+      <!-- High-Resolution Blue Earth Visual (Clean, isolated, floating) -->
+      <div class="hero-visual">
+        <div class="earth-wrapper">
+          <img src="earth.png" class="floating-earth-img" alt="3D Blue Earth Globe" />
+          <div class="earth-glow"></div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Full Screen Key Performance Metrics Banner -->
+  <!-- Key Performance Metrics Banner -->
   <section class="stats-section">
-    <div class="stats-grid">
-      <div class="stat-item" *ngFor="let stat of stats">
-        <h2 class="stat-value text-gradient">{{ stat.value }}</h2>
-        <p class="stat-label">{{ stat.label }}</p>
+    <div class="landing-section-container">
+      <div class="stats-grid">
+        <div class="stat-item" *ngFor="let stat of stats">
+          <h2 class="stat-value text-gradient">{{ stat.value }}</h2>
+          <p class="stat-label">{{ stat.label }}</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Full Screen 11 Carbon Categories Grid -->
+  <!-- 11 Carbon Categories Grid -->
   <section class="categories-section">
-    <div class="section-header text-center">
-      <span class="section-badge">11 Sustainability Categories</span>
-      <h2 class="section-title">Comprehensive Footprint Management</h2>
-      <p class="section-subtitle">Track every aspect of your daily activities with high-precision emission factors.</p>
-    </div>
+    <div class="landing-section-container">
+      <div class="section-header text-center">
+        <span class="section-badge">11 Sustainability Categories</span>
+        <h2 class="section-title">Comprehensive Footprint Management</h2>
+        <p class="section-subtitle">Track every aspect of your daily activities with high-precision emission factors.</p>
+      </div>
 
-    <div class="categories-grid">
-      <div class="category-card" *ngFor="let cat of trackingCategories">
-        <div class="cat-icon-box">
-          <i class="bi" [ngClass]="cat.icon"></i>
-        </div>
-        <div class="cat-info">
-          <span class="cat-tag">{{ cat.count }}</span>
-          <h3 class="cat-name">{{ cat.name }}</h3>
-          <p class="cat-desc">{{ cat.desc }}</p>
+      <div class="categories-grid">
+        <div class="category-card" *ngFor="let cat of trackingCategories">
+          <div class="cat-icon-box">
+            <i class="bi" [ngClass]="cat.icon"></i>
+          </div>
+          <div class="cat-info">
+            <span class="cat-tag">{{ cat.count }}</span>
+            <h3 class="cat-name">{{ cat.name }}</h3>
+            <p class="cat-desc">{{ cat.desc }}</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Full Screen Footer -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <img src="logo.png" alt="EcoTrack Logo" class="footer-logo" />
-        <span class="footer-brand-name">EcoTrack</span>
-        <p class="footer-tagline">AI-Powered Carbon Footprint & Sustainability Management Platform</p>
-      </div>
-
-      <div class="footer-links">
-        <a [routerLink]="['/']">Home</a>
-        <a [routerLink]="['/about']">About Us</a>
-        <a [routerLink]="['/auth/register']">Register</a>
-        <a [routerLink]="['/auth/login']">Login</a>
+  <!-- Bottom CTA Banner Section -->
+  <section class="cta-section">
+    <div class="landing-section-container">
+      <div class="cta-card">
+        <div class="cta-content">
+          <span class="cta-badge"><i class="bi bi-tree"></i> Join the Sustainability Movement</span>
+          <h2 class="cta-title">Ready to Reduce Your Carbon Footprint?</h2>
+          <p class="cta-desc">Start tracking your daily emissions today and receive personalized AI recommendations to achieve net-zero impact.</p>
+        </div>
+        <div class="cta-actions">
+          <a [routerLink]="['/auth/register']" class="btn btn-large btn-primary btn-pill shadow-glow">
+            Get Started Free <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="footer-bottom">
-      <p>© 2026 EcoTrack Inc. All Rights Reserved. Empowering Net-Zero Action.</p>
+  <!-- Restructured 4-Column Footer -->
+  <footer class="footer">
+    <div class="landing-section-container">
+      <div class="footer-grid">
+        <!-- Column 1: Branding & Bio -->
+        <div class="footer-col footer-brand-col">
+          <div class="brand">
+            <img src="logo.png" alt="EcoTrack Logo" class="footer-logo" />
+            <span class="footer-brand-name">EcoTrack</span>
+          </div>
+          <p class="footer-tagline">
+            AI-Powered Carbon Footprint & Sustainability Management Platform empowering individuals and organizations toward net-zero.
+          </p>
+        </div>
+
+        <!-- Column 2: Quick Links -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Quick Links</h4>
+          <ul class="footer-links-list">
+            <li><a [routerLink]="['/']">Home</a></li>
+            <li><a [routerLink]="['/about']">About Us</a></li>
+            <li><a [routerLink]="['/auth/login']">Login</a></li>
+            <li><a [routerLink]="['/auth/register']">Register</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Sustainability Features -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Features</h4>
+          <ul class="footer-links-list">
+            <li><a [routerLink]="['/auth/login']">Carbon Tracking</a></li>
+            <li><a [routerLink]="['/auth/login']">AI Recommendations</a></li>
+            <li><a [routerLink]="['/auth/login']">Eco Challenges</a></li>
+            <li><a [routerLink]="['/auth/login']">Net-Zero Analytics</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4: Get Started -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Get Started</h4>
+          <ul class="footer-links-list">
+            <li><a [routerLink]="['/auth/register']">Track Your Carbon Footprint</a></li>
+            <li><a [routerLink]="['/auth/register']">Set Sustainability Goals</a></li>
+            <li><a [routerLink]="['/auth/register']">Join Eco Challenges</a></li>
+            <li><a [routerLink]="['/auth/register']">Get AI Recommendations</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 EcoTrack Inc. All Rights Reserved. Empowering Net-Zero Action.</p>
+      </div>
     </div>
   </footer>
 </div>

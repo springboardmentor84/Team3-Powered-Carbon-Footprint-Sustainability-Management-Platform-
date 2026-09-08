@@ -39,21 +39,38 @@ export class LayoutService {
     if (!this.isBrowser) return;
 
     const savedTheme = localStorage.getItem('ecotrack_theme') as 'light' | 'dark' | null;
+    let initialTheme: 'light' | 'dark' = 'light';
+
     if (savedTheme === 'light' || savedTheme === 'dark') {
-      this.theme.set(savedTheme);
-      return;
+      initialTheme = savedTheme;
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      initialTheme = prefersDark ? 'dark' : 'light';
     }
 
-    // Default to system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    this.theme.set(prefersDark ? 'dark' : 'light');
+    this.theme.set(initialTheme);
+    this.applyThemeToDOM(initialTheme);
 
     // Watch for system preference changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (!localStorage.getItem('ecotrack_theme')) {
-        this.theme.set(e.matches ? 'dark' : 'light');
+        const newTheme = e.matches ? 'dark' : 'light';
+        this.theme.set(newTheme);
+        this.applyThemeToDOM(newTheme);
       }
     });
+  }
+
+  private applyThemeToDOM(theme: 'light' | 'dark'): void {
+    if (!this.isBrowser) return;
+    const body = document.body;
+    if (theme === 'dark') {
+      body.classList.add('dark-theme');
+      body.classList.remove('light-theme');
+    } else {
+      body.classList.add('light-theme');
+      body.classList.remove('dark-theme');
+    }
   }
 
   public toggleTheme(): void {

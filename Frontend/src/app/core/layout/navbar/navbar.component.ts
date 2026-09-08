@@ -106,33 +106,42 @@ export class NavbarComponent {
     { type: 'goal', title: 'Switch 50% Commutes to EV or Cycle', subtitle: 'Transport Goal • Target: 50 miles', icon: 'bi-bicycle', route: '/goals', badgeText: 'Goal' }
   ];
 
-  get unreadNotificationsCount(): number {
-    return this.notifications.filter(n => !n.read).length;
+  public unreadNotificationsCount: number = 0;
+  public filteredSearchResults: SearchItem[] = [];
+
+  public updateUnreadCount(): void {
+    this.unreadNotificationsCount = this.notifications.filter(n => !n.read).length;
   }
 
   public onSearchFocus(): void {
     if (this.searchQuery.trim().length > 0) {
+      this.updateFilteredResults();
       this.showSearchDropdown = true;
     }
   }
 
   public onSearchInput(): void {
+    this.updateFilteredResults();
     this.showSearchDropdown = this.searchQuery.trim().length > 0;
   }
 
   public clearSearch(): void {
     this.searchQuery = '';
+    this.filteredSearchResults = [];
     this.showSearchDropdown = false;
   }
 
-  public getFilteredResults(): SearchItem[] {
+  public updateFilteredResults(): void {
     const q = this.searchQuery.trim().toLowerCase();
-    if (!q) return [];
-    return this.searchItemsIndex.filter(item =>
+    if (!q) {
+      this.filteredSearchResults = [];
+      return;
+    }
+    this.filteredSearchResults = this.searchItemsIndex.filter(item =>
       item.title.toLowerCase().includes(q) ||
       item.subtitle.toLowerCase().includes(q) ||
       item.type.toLowerCase().includes(q)
-    ).slice(0, 8); // Limit to top 8 matching results
+    ).slice(0, 8);
   }
 
   public selectResult(item: SearchItem): void {
