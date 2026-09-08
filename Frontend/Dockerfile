@@ -4,11 +4,11 @@ WORKDIR /app
 
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source and build for production
 COPY . .
-RUN npm run build -- --configuration production
+RUN npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
