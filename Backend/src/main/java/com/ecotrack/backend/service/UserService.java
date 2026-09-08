@@ -16,4 +16,8 @@ public interface UserService {
     User updateUserRole(Long id, String role);
 
     void deleteUser(Long id);
+
+    User getUserProfile(String email);
+
+    User updateUserProfile(String email, com.ecotrack.backend.dto.UserProfileUpdateRequest request);
 }

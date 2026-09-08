@@ -79,13 +79,13 @@
     <div class="sidebar-user-widget">
       <div class="user-avatar-wrapper">
         <img 
-          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" 
-          alt="Alex Rivers Avatar" 
+          [src]="authService.currentUser()?.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'" 
+          [alt]="(authService.currentUser()?.name || 'User') + ' Avatar'" 
           class="user-avatar" />
       </div>
       <div class="user-meta" *ngIf="!layoutService.sidebarCollapsed()">
-        <span class="user-fullname">Alex Rivers</span>
-        <span class="user-title">Sustainability Lead</span>
+        <span class="user-fullname">{{ authService.currentUser()?.name || authService.currentUser()?.fullName || 'Alex Rivers' }}</span>
+        <span class="user-title">{{ authService.currentUser()?.role === 'ROLE_ORGANIZATION' ? 'Corporate ESG Lead' : (authService.currentUser()?.role === 'ROLE_ADMIN' ? 'System Administrator' : 'Sustainability Lead') }}</span>
       </div>
     </div>
 

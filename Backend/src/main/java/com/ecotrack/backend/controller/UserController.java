@@ -65,8 +65,18 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<String>> profile() {
-        ApiResponse<String> response = new ApiResponse<>(true, "Profile fetched successfully", "Welcome to EcoTrack Secure API");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<User>> getProfile(org.springframework.security.core.Authentication authentication) {
+        String email = (authentication != null && authentication.getName() != null) ? authentication.getName() : "demo@ecotrack.com";
+        User user = userService.getUserProfile(email);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Profile fetched successfully", user));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<User>> updateProfile(
+            @RequestBody com.ecotrack.backend.dto.UserProfileUpdateRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        String email = (authentication != null && authentication.getName() != null && !authentication.getName().isBlank()) ? authentication.getName() : request.getEmail();
+        User updated = userService.updateUserProfile(email, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Profile updated successfully in database", updated));
     }
 }

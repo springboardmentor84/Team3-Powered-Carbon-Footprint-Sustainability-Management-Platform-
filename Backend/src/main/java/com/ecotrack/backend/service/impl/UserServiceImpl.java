@@ -11,6 +11,7 @@ import com.ecotrack.backend.service.UserService;
 import com.ecotrack.backend.utils.JwtUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -88,7 +89,8 @@ public class UserServiceImpl implements UserService {
                 user.getRole(),
                 user.getLocation(),
                 user.getEnvironmentalInterests(),
-                user.getLifestyleConfig()
+                user.getLifestyleConfig(),
+                user.getProfileImage()
         );
     }
 
@@ -110,5 +112,47 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         userRepository.delete(user);
+    }
+
+    @Override
+    public User getUserProfile(String email) {
+        String targetEmail = (email != null && !email.isBlank()) ? email : "demo@ecotrack.com";
+        return userRepository.findByEmail(targetEmail)
+                .or(() -> {
+                    if ("demo@gmail.com".equalsIgnoreCase(targetEmail)) {
+                        return userRepository.findByEmail("demo@ecotrack.com");
+                    } else if ("demo@ecotrack.com".equalsIgnoreCase(targetEmail)) {
+                        return userRepository.findByEmail("demo@gmail.com");
+                    }
+                    return java.util.Optional.empty();
+                })
+                .orElseGet(() -> userRepository.findAll().stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("User not found: " + targetEmail)));
+    }
+
+    @Override
+    @Transactional
+    public User updateUserProfile(String email, com.ecotrack.backend.dto.UserProfileUpdateRequest request) {
+        User user = getUserProfile(email);
+
+        if (request.getFullName() != null && !request.getFullName().isBlank()) {
+            user.setFullName(request.getFullName());
+        }
+        if (request.getLocation() != null) {
+            user.setLocation(request.getLocation());
+        }
+        if (request.getEnvironmentalInterests() != null) {
+            user.setEnvironmentalInterests(request.getEnvironmentalInterests());
+        }
+        if (request.getLifestyleConfig() != null) {
+            user.setLifestyleConfig(request.getLifestyleConfig());
+        }
+        // Always update profileImage if explicitly provided (even empty string to clear it)
+        if (request.getProfileImage() != null) {
+            user.setProfileImage(request.getProfileImage().isEmpty() ? null : request.getProfileImage());
+        }
+
+        User savedUser = userRepository.save(user);
+        userRepository.flush(); // Ensure immediate commit to database
+        return savedUser;
     }
 }

@@ -1,7 +1,13 @@
+<!-- Toast Notification Popup -->
+<div class="toast-popup" [class.toast-show]="toast.show" [class.toast-success]="toast.type === 'success'" [class.toast-error]="toast.type === 'error'" [class.toast-info]="toast.type === 'info'">
+  <i class="bi" [ngClass]="toast.type === 'success' ? 'bi-check-circle-fill' : toast.type === 'error' ? 'bi-x-circle-fill' : 'bi-info-circle-fill'"></i>
+  <span>{{ toast.message }}</span>
+</div>
+
 <div class="fade-in-section">
   <div class="profile-header">
     <h1>User Profile Management</h1>
-    <p class="subtitle text-secondary">Manage your corporate credentials, sustainability preferences, and view achieved badges.</p>
+    <p class="subtitle text-secondary">Manage your credentials, profile picture, sustainability preferences, and badges.</p>
   </div>
 
   <div class="profile-layout-grid">
@@ -10,30 +16,40 @@
       <div class="eco-card form-card">
         <h3>Account Information</h3>
         <form (submit)="onSaveSettings(); $event.preventDefault();" class="profile-form">
+
+          <!-- Avatar Upload Widget -->
           <div class="avatar-edit-widget">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" class="avatar-lg" alt="Avatar" />
-            <button type="button" class="btn btn-outline-light btn-change-avatar">Change Picture</button>
+            <div class="avatar-preview-container">
+              <img [src]="profileImage || defaultAvatarUrl" class="avatar-lg" alt="User Avatar" (error)="profileImage = ''" />
+            </div>
+            <div class="avatar-actions">
+              <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
+              <button type="button" class="btn btn-outline-light btn-change-avatar" (click)="fileInput.click()">
+                <i class="bi bi-camera"></i> Change Picture
+              </button>
+              <span class="font-xs text-secondary d-block mt-1">Supports JPG, PNG (max 10MB) — auto-compressed</span>
+            </div>
           </div>
 
           <div class="form-row-2">
             <div class="form-item">
               <label for="fullname">Full Name</label>
-              <input type="text" id="fullname" [(ngModel)]="fullname" name="fullname" />
+              <input type="text" id="fullname" [(ngModel)]="fullname" name="fullname" placeholder="e.g. Alex Rivers" required />
             </div>
             <div class="form-item">
               <label for="email">Corporate Email</label>
-              <input type="email" id="email" [(ngModel)]="email" name="email" />
+              <input type="email" id="email" [(ngModel)]="email" name="email" readonly />
             </div>
           </div>
 
           <div class="form-row-2">
             <div class="form-item">
               <label for="role">Corporate Role</label>
-              <input type="text" id="role" [(ngModel)]="role" name="role" />
+              <input type="text" id="role" [(ngModel)]="role" name="role" readonly />
             </div>
             <div class="form-item">
-              <label for="location">Location Office</label>
-              <input type="text" id="location" [(ngModel)]="location" name="location" />
+              <label for="location">Location / Office</label>
+              <input type="text" id="location" [(ngModel)]="location" name="location" placeholder="e.g. California, USA" />
             </div>
           </div>
 
@@ -58,8 +74,10 @@
           </div>
 
           <div class="form-actions">
-            <span class="success-message-text" *ngIf="message">{{ message }}</span>
-            <button type="submit" class="btn btn-primary save-btn">Save Changes</button>
+            <button type="submit" class="btn btn-primary save-btn" [disabled]="isSaving" id="save-profile-btn">
+              <i class="bi" [ngClass]="isSaving ? 'bi-arrow-repeat animate-spin' : 'bi-save'"></i>
+              {{ isSaving ? 'Saving to Database...' : 'Save Changes' }}
+            </button>
           </div>
         </form>
       </div>
@@ -67,13 +85,13 @@
 
     <!-- Right Column: Preferences Checklist & Badges -->
     <div class="profile-side-area">
-      <!-- Preferences Interests Card -->
+      <!-- Environmental Interests Card -->
       <div class="eco-card side-widget-card">
         <h3>Environmental Interests</h3>
-        <p class="font-sm text-secondary" style="margin-bottom: 16px;">Select interest categories to filter challenges and dashboard logs.</p>
+        <p class="font-sm text-secondary" style="margin-bottom: 16px;">Select interests to filter challenges and dashboard logs.</p>
         <div class="interests-list">
           <label class="checkbox-label" *ngFor="let item of interests">
-            <input type="checkbox" [(ngModel)]="item.selected" />
+            <input type="checkbox" [(ngModel)]="item.selected" [id]="'interest-' + item.id" />
             <span>{{ item.name }}</span>
           </label>
         </div>

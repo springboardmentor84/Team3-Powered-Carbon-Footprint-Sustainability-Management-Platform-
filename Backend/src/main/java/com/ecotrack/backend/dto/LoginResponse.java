@@ -20,4 +20,5 @@ public class LoginResponse {
     private String location;
     private String environmentalInterests;
     private String lifestyleConfig;
+    private String profileImage;
 }

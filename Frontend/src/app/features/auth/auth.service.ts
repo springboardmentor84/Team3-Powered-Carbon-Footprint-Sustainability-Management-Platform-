@@ -29,11 +29,45 @@ export class AuthService {
           const parsed = JSON.parse(user);
           this.isAuthenticated.set(true);
           this.currentUser.set(parsed);
+          // Sync DB fields on session restore (background, does not block)
+          this.syncProfileFromDatabase();
         } catch {
           this.isAuthenticated.set(false);
           this.currentUser.set(null);
         }
       }
+    }
+  }
+
+  /**
+   * Syncs non-image profile fields from the backend into the signal and localStorage.
+   * profileImage is LOCAL-ONLY and is always preserved from the current local value.
+   */
+  public async syncProfileFromDatabase(): Promise<void> {
+    try {
+      const dbProfile = await this.getUserProfile();
+      if (dbProfile && (dbProfile.email || dbProfile.fullName)) {
+        const current = this.currentUser() || {};
+        const updated = {
+          ...current,
+          id:                     dbProfile.id                     || current.id,
+          name:                   dbProfile.fullName               || current.name     || current.fullName,
+          fullName:               dbProfile.fullName               || current.fullName || current.name,
+          email:                  dbProfile.email                  || current.email,
+          role:                   dbProfile.role                   || current.role,
+          rewardPoints:           dbProfile.rewardPoints           !== undefined ? dbProfile.rewardPoints           : current.rewardPoints,
+          badgeName:              dbProfile.badgeName              || current.badgeName,
+          location:               dbProfile.location               !== undefined ? dbProfile.location               : current.location,
+          environmentalInterests: dbProfile.environmentalInterests !== undefined ? dbProfile.environmentalInterests : current.environmentalInterests,
+          lifestyleConfig:        dbProfile.lifestyleConfig        !== undefined ? dbProfile.lifestyleConfig        : current.lifestyleConfig,
+          // profileImage is local-only — always preserve what is in localStorage
+          profileImage: current.profileImage || ''
+        };
+        localStorage.setItem('ecotrack_user', JSON.stringify(updated));
+        this.currentUser.set(updated);
+      }
+    } catch {
+      // Background sync — silently ignore network errors
     }
   }
 
@@ -49,23 +83,23 @@ export class AuthService {
       if (res && res.success && res.data) {
         const loginData = res.data;
         let resolvedName = loginData.fullName || loginData.name;
-        if (!resolvedName || resolvedName === 'demo' || resolvedName === 'Demo') {
-          if (email.toLowerCase().includes('demo') || email.toLowerCase().includes('alex')) {
-            resolvedName = 'Alex Rivers';
-          } else {
-            resolvedName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
-          }
+        if (!resolvedName) {
+          resolvedName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
         }
 
         const userObj = {
-          id: loginData.id || 1,
-          name: resolvedName,
-          fullName: resolvedName,
-          email: loginData.email || email,
-          userRole: loginData.role || 'ROLE_USER',
-          role: loginData.role || 'ROLE_USER',
-          rewardPoints: loginData.rewardPoints || 1240,
-          badgeName: loginData.badgeName || 'Level 12 Explorer'
+          id:                     loginData.id                     || 1,
+          name:                   resolvedName,
+          fullName:               resolvedName,
+          email:                  loginData.email                  || email,
+          userRole:               loginData.role                   || 'ROLE_USER',
+          role:                   loginData.role                   || 'ROLE_USER',
+          rewardPoints:           loginData.rewardPoints           || 1240,
+          badgeName:              loginData.badgeName              || 'Level 12 Explorer',
+          location:               loginData.location               || '',
+          environmentalInterests: loginData.environmentalInterests || '',
+          lifestyleConfig:        loginData.lifestyleConfig        || '',
+          profileImage:           '' // profileImage is local-only, not loaded from DB on login
         };
 
         localStorage.setItem('ecotrack_token', loginData.token);
@@ -78,7 +112,6 @@ export class AuthService {
       }
     } catch (err: any) {
       console.warn('API login error, using local fallback:', err);
-      // Determine role from email for testing/demo fallback
       let fallbackRole = 'ROLE_USER';
       if (email.includes('org') || email.includes('corporate') || email.includes('green')) {
         fallbackRole = 'ROLE_ORGANIZATION';
@@ -95,14 +128,14 @@ export class AuthService {
 
       const fallbackToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI' + btoa(email) + 'In0';
       const mockUser = {
-        id: Math.abs(email.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 100)),
-        name: displayName,
-        fullName: displayName,
-        email: email,
-        userRole: fallbackRole,
-        role: fallbackRole,
+        id:           Math.abs(email.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 100)),
+        name:         displayName,
+        fullName:     displayName,
+        email:        email,
+        userRole:     fallbackRole,
+        role:         fallbackRole,
         rewardPoints: 1240,
-        badgeName: 'Level 12 Explorer'
+        badgeName:    'Level 12 Explorer'
       };
 
       localStorage.setItem('ecotrack_token', fallbackToken);
@@ -145,5 +178,73 @@ export class AuthService {
     this.currentUser.set(null);
     this.router.navigate(['/auth/login']);
   }
-}
 
+  public async getUserProfile(): Promise<any> {
+    try {
+      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/profile`));
+      if (res && res.success && res.data) {
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch profile from server:', err);
+    }
+    return this.currentUser();
+  }
+
+  /**
+   * Saves profile fields to the backend database.
+   * profileImage is intentionally excluded — it is stored in localStorage only.
+   *
+   * Step 1: Signal is updated IMMEDIATELY (before HTTP call) so navbar/sidebar
+   *         reflect the new name instantly without any page navigation.
+   * Step 2: HTTP PUT persists to DB — throws on failure so caller shows error toast.
+   */
+  public async updateUserProfile(payload: {
+    fullName?: string;
+    email?: string;
+    location?: string;
+    environmentalInterests?: string;
+    lifestyleConfig?: string;
+  }): Promise<any> {
+
+    // Step 1: Optimistic local update — navbar/sidebar update INSTANTLY
+    const current = this.currentUser() || {};
+    const localMerge = {
+      ...current,
+      name:                   payload.fullName               !== undefined ? payload.fullName               : current.name,
+      fullName:               payload.fullName               !== undefined ? payload.fullName               : current.fullName,
+      email:                  payload.email                  !== undefined ? payload.email                  : current.email,
+      location:               payload.location               !== undefined ? payload.location               : current.location,
+      environmentalInterests: payload.environmentalInterests !== undefined ? payload.environmentalInterests : current.environmentalInterests,
+      lifestyleConfig:        payload.lifestyleConfig        !== undefined ? payload.lifestyleConfig        : current.lifestyleConfig
+      // profileImage is preserved from spread of ...current — not explicitly set here
+    };
+    localStorage.setItem('ecotrack_user', JSON.stringify(localMerge));
+    this.currentUser.set(localMerge); // ← navbar/sidebar update instantly here
+
+    // Step 2: Persist to backend (throws on HTTP error → caller shows error toast)
+    const res: any = await firstValueFrom(this.http.put(`${this.apiUrl}/profile`, payload));
+    if (res && res.success && res.data) {
+      const dbUser = res.data;
+      const mergedUser = {
+        ...localMerge,
+        id:                     dbUser.id                     ?? current.id,
+        name:                   dbUser.fullName               || localMerge.name,
+        fullName:               dbUser.fullName               || localMerge.fullName,
+        email:                  dbUser.email                  || localMerge.email,
+        location:               dbUser.location               !== undefined ? dbUser.location               : localMerge.location,
+        environmentalInterests: dbUser.environmentalInterests !== undefined ? dbUser.environmentalInterests : localMerge.environmentalInterests,
+        lifestyleConfig:        dbUser.lifestyleConfig        !== undefined ? dbUser.lifestyleConfig        : localMerge.lifestyleConfig,
+        // Preserve local-only profileImage — never overwrite from DB response
+        profileImage: current.profileImage || '',
+        _savedToDb: true
+      };
+      localStorage.setItem('ecotrack_user', JSON.stringify(mergedUser));
+      this.currentUser.set(mergedUser);
+      return mergedUser;
+    }
+
+    // Backend responded but success=false — return optimistic local merge
+    return localMerge;
+  }
+}

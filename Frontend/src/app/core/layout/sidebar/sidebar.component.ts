@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LayoutService } from '../../services/layout.service';
 
+import { AuthService } from '../../../features/auth/auth.service';
+
 interface NavItem {
   label: string;
   route: string;
@@ -18,6 +20,7 @@ interface NavItem {
 })
 export class SidebarComponent {
   public layoutService = inject(LayoutService);
+  public authService = inject(AuthService);
 
   public navItems: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'bi-grid-1x2' },

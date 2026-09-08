@@ -1,4 +1,38 @@
+/* ===== Toast Notification ===== */
+.toast-popup {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  min-width: 280px;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  transform: translateY(-20px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  color: #fff;
+  background: #2e7d32;
+}
+.toast-popup.toast-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.toast-popup.toast-success { background: linear-gradient(135deg, #2e7d32, #43a047); }
+.toast-popup.toast-error   { background: linear-gradient(135deg, #b71c1c, #e53935); }
+.toast-popup.toast-info    { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+.toast-popup i { font-size: 1.3rem; flex-shrink: 0; }
+
 /* Profile Management Page CSS */
+
 
 .profile-header {
   margin-bottom: 28px;
@@ -6,7 +40,7 @@
 
 .profile-layout-grid {
   display: grid;
-  grid-template-cols: 2fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 24px;
 }
 
@@ -61,7 +95,7 @@
 
 .form-row-2 {
   display: grid;
-  grid-template-cols: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -206,13 +240,13 @@
 /* Responsive overrides */
 @media (max-width: 992px) {
   .profile-layout-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 576px) {
   .form-row-2 {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
   }
   .avatar-edit-widget {

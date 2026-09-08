@@ -40,12 +40,12 @@ public class User {
     @Column
     private String location;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String environmentalInterests;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String lifestyleConfig;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String profileImage;
 }
