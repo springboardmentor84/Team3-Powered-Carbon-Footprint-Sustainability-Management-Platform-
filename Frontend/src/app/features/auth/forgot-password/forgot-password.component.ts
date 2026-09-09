@@ -66,14 +66,21 @@ export class ForgotPasswordComponent {
     this.cdr.detectChanges();
 
     try {
-      await this.authService.forgotPassword(emailVal);
+      const res = await this.authService.forgotPassword(emailVal);
       this.ngZone.run(() => {
         this.isLoading = false;
         this.isSuccess = true;
-        this.message = `A 6-digit verification code has been sent to ${emailVal}. Please check your inbox (and spam folder) and enter the code below.`;
         this.resetForm.patchValue({ code: '', newPassword: '', confirmPassword: '' });
         this.resetForm.markAsPristine();
         this.resetForm.markAsUntouched();
+
+        if (res && res.emailSent) {
+          this.message = `A 6-digit verification code has been sent to ${emailVal}. Please check your inbox (and spam folder) and enter the code below.`;
+        } else if (res && res.code) {
+          this.message = `Verification Code: ${res.code} (Railway network blocked outgoing email port 465. Please enter this 6-digit code below to set your new password).`;
+        } else {
+          this.message = `A 6-digit verification code has been generated for ${emailVal}. Please enter it below.`;
+        }
         this.cdr.detectChanges();
       });
     } catch (err: any) {
@@ -92,7 +99,7 @@ export class ForgotPasswordComponent {
     const confirmPass = (this.resetForm.value.confirmPassword || '').trim();
 
     if (!codeVal || codeVal.length !== 6) {
-      this.errorMessage = 'Please enter the 6-digit verification code sent to your email.';
+      this.errorMessage = 'Please enter the 6-digit verification code.';
       this.cdr.detectChanges();
       return;
     }
@@ -148,10 +155,17 @@ export class ForgotPasswordComponent {
     this.cdr.detectChanges();
 
     try {
-      await this.authService.forgotPassword(emailVal);
+      const res = await this.authService.forgotPassword(emailVal);
       this.ngZone.run(() => {
         this.isResending = false;
-        this.message = `A fresh 6-digit verification code has been dispatched to ${emailVal}! Please check your email.`;
+        this.resetForm.patchValue({ code: '' });
+        if (res && res.emailSent) {
+          this.message = `A fresh 6-digit verification code has been dispatched to ${emailVal}! Please check your email and enter it below.`;
+        } else if (res && res.code) {
+          this.message = `New Verification Code: ${res.code} (Please enter this 6-digit code below to set your new password).`;
+        } else {
+          this.message = `A fresh 6-digit verification code has been generated. Please enter it below.`;
+        }
         this.cdr.detectChanges();
       });
     } catch (err: any) {

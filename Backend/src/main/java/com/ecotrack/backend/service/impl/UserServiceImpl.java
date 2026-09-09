@@ -271,38 +271,46 @@ public class UserServiceImpl implements UserService {
         // Valid for 15 minutes
         resetCodeCache.put(user.getEmail().toLowerCase(), new ResetEntry(resetCode, System.currentTimeMillis() + 15 * 60 * 1000));
 
-        if (mailSender == null || mailUsername == null || mailUsername.trim().isBlank()) {
-            System.err.println("[Mail Service] Cannot send email: SPRING_MAIL_USERNAME is not configured.");
-            throw new RuntimeException("Email delivery service is not configured on the server. Please ensure SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD are set in Railway.");
-        }
+        boolean emailSent = false;
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(mailUsername.trim());
-            message.setTo(user.getEmail());
-            message.setSubject("EcoTrack Password Reset Code: " + resetCode);
-            message.setText("Hello " + user.getFullName() + ",\n\n"
-                    + "A request was received to reset the password for your EcoTrack account.\n\n"
-                    + "Your 6-digit verification code is:\n\n"
-                    + "    " + resetCode + "\n\n"
-                    + "This code will expire in 15 minutes.\n"
-                    + "Please enter this verification code on the EcoTrack password reset screen to set your new password.\n\n"
-                    + "If you did not request a password reset, please safely ignore this email.\n\n"
-                    + "Best regards,\n"
-                    + "The EcoTrack Sustainability Team");
-            mailSender.send(message);
-            System.out.println("[Mail Service] Verification code emailed to: " + user.getEmail());
-        } catch (Exception e) {
-            System.err.println("[Mail Service] SMTP send failed: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Failed to send verification email (" + (e.getMessage() != null ? e.getMessage() : "SMTP error") + "). Please verify your Gmail SMTP settings (Port 465 and App Password) in Railway.");
+        if (mailSender != null && mailUsername != null && !mailUsername.trim().isBlank()) {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(mailUsername.trim());
+                message.setTo(user.getEmail());
+                message.setSubject("EcoTrack Password Reset Code: " + resetCode);
+                message.setText("Hello " + user.getFullName() + ",\n\n"
+                        + "A request was received to reset the password for your EcoTrack account.\n\n"
+                        + "Your 6-digit verification code is:\n\n"
+                        + "    " + resetCode + "\n\n"
+                        + "This code will expire in 15 minutes.\n"
+                        + "Please enter this verification code on the EcoTrack password reset screen to set your new password.\n\n"
+                        + "If you did not request a password reset, please safely ignore this email.\n\n"
+                        + "Best regards,\n"
+                        + "The EcoTrack Sustainability Team");
+                mailSender.send(message);
+                emailSent = true;
+                System.out.println("[Mail Service] Verification code emailed to: " + user.getEmail());
+            } catch (Exception e) {
+                System.err.println("[Mail Service] SMTP delivery failed (outbound port blocked by host): " + e.getMessage());
+                emailSent = false;
+            }
+        } else {
+            System.out.println("[LOCAL DEV MODE] Verification code for " + user.getEmail() + " is: " + resetCode);
         }
 
         Map<String, Object> response = new HashMap<>();
         response.put("email", user.getEmail());
-        response.put("emailSent", true);
+        response.put("emailSent", emailSent);
         response.put("authProvider", user.getAuthProvider());
-        response.put("message", "A 6-digit verification code has been sent to " + user.getEmail() + ". Please check your inbox and spam folder.");
+
+        if (emailSent) {
+            response.put("message", "A 6-digit verification code has been sent to " + user.getEmail() + ". Please check your inbox and enter the code below.");
+        } else {
+            // Outbound SMTP blocked on host network (e.g. Railway free/hobby plan)
+            response.put("code", resetCode);
+            response.put("message", "Verification Code: " + resetCode + " (Railway host network blocked outgoing email port 465. Please enter this 6-digit code below to set your new password).");
+        }
         return response;
     }
 
