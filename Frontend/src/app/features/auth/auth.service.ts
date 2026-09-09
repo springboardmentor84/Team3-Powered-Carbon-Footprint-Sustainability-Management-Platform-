@@ -10,7 +10,20 @@ import { environment } from '../../../environments/environment';
 export class AuthService {
   private router = inject(Router);
   private http = inject(HttpClient);
-  private apiUrl = environment?.apiBaseUrl ? `${environment.apiBaseUrl}/users` : 'https://feisty-recreation-production-c4e5.up.railway.app/api/users';
+
+  public get apiUrl(): string {
+    if (typeof window !== 'undefined') {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const runtimeUrl = (window as any).__env?.API_BASE_URL;
+      if (runtimeUrl && runtimeUrl.trim()) {
+        return `${runtimeUrl.trim().replace(/\/$/, '')}/users`;
+      }
+      if (!isLocal) {
+        return 'https://feisty-recreation-production-c4e5.up.railway.app/api/users';
+      }
+    }
+    return environment?.apiBaseUrl ? `${environment.apiBaseUrl}/users` : 'http://localhost:8081/api/users';
+  }
 
   // Signals for tracking auth state reactively
   public isAuthenticated = signal(false);
