@@ -20,6 +20,9 @@ public class UserController {
 
     private final UserService userService;
 
+    @org.springframework.beans.factory.annotation.Value("${google.client.id:}")
+    private String googleClientId;
+
     public UserController(UserService userService) {
         this.userService = userService;
     }
@@ -49,6 +52,13 @@ public class UserController {
         LoginResponse loginData = userService.googleLogin(request);
         ApiResponse<LoginResponse> response = new ApiResponse<>(true, "Google login successful", loginData);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/google-client-id")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> getGoogleClientId() {
+        java.util.Map<String, String> data = new java.util.HashMap<>();
+        data.put("clientId", googleClientId != null ? googleClientId.trim() : "");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Google Client ID retrieved", data));
     }
 
     @GetMapping

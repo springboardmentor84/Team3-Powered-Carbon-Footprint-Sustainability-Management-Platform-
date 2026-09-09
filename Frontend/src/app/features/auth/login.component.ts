@@ -37,33 +37,76 @@ export class LoginComponent implements OnInit {
   public isSuccess = false;
   public errorMessage = '';
 
+  private cachedClientId = '';
+
   ngOnInit(): void {
     this.initGoogleIdentity();
   }
 
   /**
+   * Multi-tier resolver for Google Client ID:
+   * 1. Check window.__env (Runtime Docker/Nginx container injection in Railway)
+   * 2. Check Angular environment.googleClientId (Local development via set-env.js)
+   * 3. Fetch from Spring Boot backend /api/users/google-client-id (Zero-build-config fallback)
+   */
+  public async getResolvedClientId(): Promise<string> {
+    if (this.cachedClientId) {
+      return this.cachedClientId;
+    }
+
+    // 1. Runtime injection via window.__env
+    if (typeof window !== 'undefined') {
+      const winEnv = (window as any).__env?.GOOGLE_CLIENT_ID;
+      if (winEnv && winEnv.trim()) {
+        this.cachedClientId = winEnv.trim();
+        return this.cachedClientId;
+      }
+    }
+
+    // 2. Angular compiled environment
+    if (environment.googleClientId && environment.googleClientId.trim()) {
+      this.cachedClientId = environment.googleClientId.trim();
+      return this.cachedClientId;
+    }
+
+    // 3. Dynamic backend fetch
+    try {
+      const backendId = await this.authService.getGoogleClientId();
+      if (backendId && backendId.trim()) {
+        this.cachedClientId = backendId.trim();
+        return this.cachedClientId;
+      }
+    } catch (e) {
+      console.warn('[Google OAuth] Could not fetch client ID from backend:', e);
+    }
+
+    return '';
+  }
+
+  /**
    * Initializes Google Identity Services if loaded and client ID is available
    */
-  private initGoogleIdentity(): void {
+  private async initGoogleIdentity(): Promise<void> {
     if (typeof window === 'undefined') return;
+
+    const clientId = await this.getResolvedClientId();
+    if (!clientId) return;
 
     // Retry briefly if script is loading asynchronously
     const checkGoogle = setInterval(() => {
       if (typeof google !== 'undefined' && google?.accounts?.id) {
         clearInterval(checkGoogle);
-        if (environment.googleClientId && environment.googleClientId.trim()) {
-          try {
-            google.accounts.id.initialize({
-              client_id: environment.googleClientId.trim(),
-              callback: (response: any) => {
-                this.ngZone.run(() => this.handleGoogleCredentialResponse(response));
-              },
-              auto_select: false,
-              cancel_on_tap_outside: true
-            });
-          } catch (e) {
-            console.warn('[Google OAuth] Init error:', e);
-          }
+        try {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (response: any) => {
+              this.ngZone.run(() => this.handleGoogleCredentialResponse(response));
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true
+          });
+        } catch (e) {
+          console.warn('[Google OAuth] Init error:', e);
         }
       }
     }, 300);
@@ -107,12 +150,12 @@ export class LoginComponent implements OnInit {
   /**
    * Handler for the "Sign in with Google" button click
    */
-  public signInWithGoogle(): void {
+  public async signInWithGoogle(): Promise<void> {
     this.errorMessage = '';
 
-    const clientId = environment.googleClientId?.trim();
+    const clientId = await this.getResolvedClientId();
     if (!clientId) {
-      this.errorMessage = 'Google Client ID is not configured. Please add GOOGLE_CLIENT_ID to frontend/.env file.';
+      this.errorMessage = 'Google Client ID is not configured on the server or in .env.';
       return;
     }
 
@@ -216,7 +259,7 @@ export class LoginComponent implements OnInit {
       setTimeout(() => {
         this.router.navigate(['/dashboard']);
       }, 1200);
-    }).catch((err: any) => {
+    }).catch((err) => {
       this.isGoogleLoading = false;
       this.errorMessage = typeof err === 'string' ? err : 'Google login failed.';
     });

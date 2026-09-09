@@ -203,6 +203,18 @@ export class AuthService {
     }
   }
 
+  public async getGoogleClientId(): Promise<string> {
+    try {
+      const res: any = await firstValueFrom(this.http.get(`${this.apiUrl}/google-client-id`));
+      if (res && res.success && res.data && res.data.clientId) {
+        return res.data.clientId;
+      }
+    } catch (e) {
+      console.warn('Could not fetch google client ID from backend:', e);
+    }
+    return '';
+  }
+
   public async register(registerData: {
     fullName: string;
     email: string;

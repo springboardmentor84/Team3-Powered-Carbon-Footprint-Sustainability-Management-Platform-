@@ -26,4 +26,4 @@ COPY --from=build /app/dist/eco-track-app/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "echo \"window.__env = { GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}', API_BASE_URL: '${PROD_API_BASE_URL:-https://feisty-recreation-production-c4e5.up.railway.app/api}' };\" > /usr/share/nginx/html/env-config.js && nginx -g 'daemon off;'"]
