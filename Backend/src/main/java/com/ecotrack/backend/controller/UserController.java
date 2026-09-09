@@ -1,6 +1,7 @@
 package com.ecotrack.backend.controller;
 
 import com.ecotrack.backend.dto.ApiResponse;
+import com.ecotrack.backend.dto.GoogleLoginRequest;
 import com.ecotrack.backend.dto.LoginRequest;
 import com.ecotrack.backend.dto.LoginResponse;
 import com.ecotrack.backend.dto.UserRegistrationRequest;
@@ -40,6 +41,13 @@ public class UserController {
         // Naya ApiResponse format
         ApiResponse<LoginResponse> response = new ApiResponse<>(true, "Login successful", loginData);
         
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<ApiResponse<LoginResponse>> googleLogin(@RequestBody GoogleLoginRequest request) {
+        LoginResponse loginData = userService.googleLogin(request);
+        ApiResponse<LoginResponse> response = new ApiResponse<>(true, "Google login successful", loginData);
         return ResponseEntity.ok(response);
     }
 

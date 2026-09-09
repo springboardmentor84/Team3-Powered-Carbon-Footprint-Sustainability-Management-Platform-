@@ -1,5 +1,6 @@
 package com.ecotrack.backend.service.impl;
 
+import com.ecotrack.backend.dto.GoogleLoginRequest;
 import com.ecotrack.backend.dto.LoginRequest;
 import com.ecotrack.backend.dto.LoginResponse;
 import com.ecotrack.backend.dto.UserRegistrationRequest;
@@ -81,6 +82,64 @@ public class UserServiceImpl implements UserService {
         return new LoginResponse(
                 token,
                 "Login Successful",
+                user.getEmail(),
+                user.getId(),
+                user.getFullName(),
+                user.getRewardPoints(),
+                user.getBadgeName(),
+                user.getRole(),
+                user.getLocation(),
+                user.getEnvironmentalInterests(),
+                user.getLifestyleConfig(),
+                user.getProfileImage()
+        );
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse googleLogin(GoogleLoginRequest request) {
+        String email = request.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Google account email is required.");
+        }
+
+        String fullName = request.getName();
+        if (fullName == null || fullName.isBlank()) {
+            fullName = email.split("@")[0];
+        }
+
+        final String finalFullName = fullName;
+        final String profilePic = request.getPicture();
+
+        // Check if user already exists
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
+            // Auto-provision user on first Google login
+            User newUser = User.builder()
+                    .email(email)
+                    .fullName(finalFullName)
+                    .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
+                    .role("ROLE_USER")
+                    .rewardPoints(100)
+                    .badgeName("Eco Pioneer")
+                    .profileImage(profilePic != null ? profilePic : "")
+                    .location("")
+                    .environmentalInterests("Sustainability, Carbon Neutrality")
+                    .lifestyleConfig("eco-conscious")
+                    .build();
+            return userRepository.save(newUser);
+        });
+
+        // Update profile picture if user doesn't have one
+        if ((user.getProfileImage() == null || user.getProfileImage().isBlank()) && profilePic != null && !profilePic.isBlank()) {
+            user.setProfileImage(profilePic);
+            userRepository.save(user);
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail());
+
+        return new LoginResponse(
+                token,
+                "Google Login Successful",
                 user.getEmail(),
                 user.getId(),
                 user.getFullName(),

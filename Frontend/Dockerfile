@@ -6,6 +6,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+# Build arguments for Railway / Docker production build
+ARG GOOGLE_CLIENT_ID
+ENV GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+ARG PROD_API_BASE_URL
+ENV PROD_API_BASE_URL=$PROD_API_BASE_URL
+
 # Copy source and build for production
 COPY . .
 RUN npm run build

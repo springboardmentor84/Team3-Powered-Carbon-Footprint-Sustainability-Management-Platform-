@@ -11,6 +11,8 @@ public interface UserService {
 
     LoginResponse loginUser(LoginRequest request);
 
+    LoginResponse googleLogin(com.ecotrack.backend.dto.GoogleLoginRequest request);
+
     java.util.List<User> getAllUsers();
 
     User updateUserRole(Long id, String role);

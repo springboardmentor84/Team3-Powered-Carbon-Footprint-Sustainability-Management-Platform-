@@ -58,19 +58,18 @@
         <h2>Welcome Back</h2>
 
         <p>Please enter your credentials to access the sustainability dashboard.</p>
-        
-        <div class="demo-badge-box" style="background: #ECFDF5; border: 1px solid #10B981; padding: 0.75rem 1rem; border-radius: 8px; margin-top: 0.75rem; font-size: 0.85rem; color: #065F46;">
-          <strong style="display: block; margin-bottom: 0.25rem;"><i class="bi bi-person-check-fill"></i> Default Demo Credentials:</strong>
-          <span>Email: <strong>demo&#64;ecotrack.com</strong> | Password: <strong>password123</strong></span>
-        </div>
       </div>
 
       <!-- Google Login -->
 
-      <button class="google-btn" (click)="onSSOLogin()">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
-
-        <span> Sign in with Google </span>
+      <button type="button" class="google-btn" (click)="signInWithGoogle()" [disabled]="isGoogleLoading || isLoading">
+        @if (isGoogleLoading) {
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="width: 1.1rem; height: 1.1rem; border: 2px solid #ccc; border-top-color: #10B981; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block;"></span>
+          <span> Connecting with Google... </span>
+        } @else {
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
+          <span> Sign in with Google </span>
+        }
       </button>
 
       <!-- Divider -->
