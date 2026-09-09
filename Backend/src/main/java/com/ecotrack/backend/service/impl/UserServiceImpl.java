@@ -19,7 +19,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -272,46 +271,38 @@ public class UserServiceImpl implements UserService {
         // Valid for 15 minutes
         resetCodeCache.put(user.getEmail().toLowerCase(), new ResetEntry(resetCode, System.currentTimeMillis() + 15 * 60 * 1000));
 
-        boolean emailSent = false;
+        if (mailSender == null || mailUsername == null || mailUsername.trim().isBlank()) {
+            System.err.println("[Mail Service] Cannot send email: SPRING_MAIL_USERNAME is not configured.");
+            throw new RuntimeException("Email delivery service is not configured on the server. Please ensure SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD are set in Railway.");
+        }
 
-        if (mailSender != null && mailUsername != null && !mailUsername.isBlank()) {
-            try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom(mailUsername);
-                message.setTo(user.getEmail());
-                message.setSubject("EcoTrack Password Reset Code: " + resetCode);
-                message.setText("Hello " + user.getFullName() + ",\n\n"
-                        + "A request was received to reset the password for your EcoTrack account.\n\n"
-                        + "Your 6-digit verification code is:\n\n"
-                        + "    " + resetCode + "\n\n"
-                        + "This code will expire in 15 minutes.\n"
-                        + "Please enter this verification code on the EcoTrack password reset screen to set your new password.\n\n"
-                        + "If you did not request a password reset, please safely ignore this email.\n\n"
-                        + "Best regards,\n"
-                        + "The EcoTrack Sustainability Team");
-                mailSender.send(message);
-                emailSent = true;
-                System.out.println("[Mail Service] Verification code emailed to: " + user.getEmail());
-            } catch (Exception e) {
-                System.err.println("[Mail Service] SMTP send failed: " + e.getMessage());
-                emailSent = false;
-            }
-        } else {
-            System.out.println("[LOCAL DEV MODE] Verification code for " + user.getEmail() + " is: " + resetCode);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(mailUsername.trim());
+            message.setTo(user.getEmail());
+            message.setSubject("EcoTrack Password Reset Code: " + resetCode);
+            message.setText("Hello " + user.getFullName() + ",\n\n"
+                    + "A request was received to reset the password for your EcoTrack account.\n\n"
+                    + "Your 6-digit verification code is:\n\n"
+                    + "    " + resetCode + "\n\n"
+                    + "This code will expire in 15 minutes.\n"
+                    + "Please enter this verification code on the EcoTrack password reset screen to set your new password.\n\n"
+                    + "If you did not request a password reset, please safely ignore this email.\n\n"
+                    + "Best regards,\n"
+                    + "The EcoTrack Sustainability Team");
+            mailSender.send(message);
+            System.out.println("[Mail Service] Verification code emailed to: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("[Mail Service] SMTP send failed: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to send verification email (" + (e.getMessage() != null ? e.getMessage() : "SMTP error") + "). Please verify your Gmail SMTP settings (Port 465 and App Password) in Railway.");
         }
 
         Map<String, Object> response = new HashMap<>();
         response.put("email", user.getEmail());
-        response.put("emailSent", emailSent);
+        response.put("emailSent", true);
         response.put("authProvider", user.getAuthProvider());
-
-        if (emailSent) {
-            response.put("message", "A 6-digit verification code has been sent to " + user.getEmail() + ". Please check your inbox and spam folder.");
-        } else {
-            // Provide the code so the user is never blocked by a mail delivery timeout
-            response.put("code", resetCode);
-            response.put("message", "Verification code generated: " + resetCode + " (Please enter this code below to set your new password).");
-        }
+        response.put("message", "A 6-digit verification code has been sent to " + user.getEmail() + ". Please check your inbox and spam folder.");
         return response;
     }
 

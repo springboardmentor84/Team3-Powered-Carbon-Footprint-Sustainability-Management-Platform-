@@ -66,24 +66,20 @@ export class ForgotPasswordComponent {
     this.cdr.detectChanges();
 
     try {
-      const res = await this.authService.forgotPassword(emailVal);
+      await this.authService.forgotPassword(emailVal);
       this.ngZone.run(() => {
         this.isLoading = false;
         this.isSuccess = true;
-        if (res && res.emailSent) {
-          this.message = `A 6-digit verification code has been emailed to ${emailVal}. Please check your inbox and spam folder.`;
-        } else if (res && res.code) {
-          this.message = `Verification code generated: ${res.code}. Please enter your new password below.`;
-          this.resetForm.patchValue({ code: res.code });
-        } else {
-          this.message = `A 6-digit verification code has been generated for ${emailVal}. Please check your email or enter it below.`;
-        }
+        this.message = `A 6-digit verification code has been sent to ${emailVal}. Please check your inbox (and spam folder) and enter the code below.`;
+        this.resetForm.patchValue({ code: '', newPassword: '', confirmPassword: '' });
+        this.resetForm.markAsPristine();
+        this.resetForm.markAsUntouched();
         this.cdr.detectChanges();
       });
     } catch (err: any) {
       this.ngZone.run(() => {
         this.isLoading = false;
-        this.errorMessage = typeof err === 'string' ? err : 'Unable to find an account with this email.';
+        this.errorMessage = typeof err === 'string' ? err : (err?.message || 'Unable to send verification code. Please check your email.');
         this.cdr.detectChanges();
       });
     }
