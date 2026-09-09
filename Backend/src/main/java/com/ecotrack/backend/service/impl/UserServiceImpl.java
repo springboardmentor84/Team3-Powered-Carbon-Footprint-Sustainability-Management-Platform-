@@ -293,8 +293,8 @@ public class UserServiceImpl implements UserService {
                 emailSent = true;
                 System.out.println("[Mail Service] Verification code emailed to: " + user.getEmail());
             } catch (Exception e) {
-                System.err.println("[Mail Service] Failed to send SMTP email: " + e.getMessage());
-                throw new RuntimeException("Could not send verification email. Please check your email configuration: " + e.getMessage());
+                System.err.println("[Mail Service] SMTP send failed: " + e.getMessage());
+                emailSent = false;
             }
         } else {
             System.out.println("[LOCAL DEV MODE] Verification code for " + user.getEmail() + " is: " + resetCode);
@@ -304,9 +304,14 @@ public class UserServiceImpl implements UserService {
         response.put("email", user.getEmail());
         response.put("emailSent", emailSent);
         response.put("authProvider", user.getAuthProvider());
-        response.put("message", emailSent
-                ? "A 6-digit verification code has been sent to " + user.getEmail() + ". Please check your inbox and spam folder."
-                : "A verification code has been generated for " + user.getEmail() + ". Please enter the 6-digit code to reset your password.");
+
+        if (emailSent) {
+            response.put("message", "A 6-digit verification code has been sent to " + user.getEmail() + ". Please check your inbox and spam folder.");
+        } else {
+            // Provide the code so the user is never blocked by a mail delivery timeout
+            response.put("code", resetCode);
+            response.put("message", "Verification code generated: " + resetCode + " (Please enter this code below to set your new password).");
+        }
         return response;
     }
 

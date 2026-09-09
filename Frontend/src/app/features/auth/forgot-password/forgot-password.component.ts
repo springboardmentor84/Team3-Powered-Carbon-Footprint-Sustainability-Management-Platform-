@@ -70,7 +70,14 @@ export class ForgotPasswordComponent {
       this.ngZone.run(() => {
         this.isLoading = false;
         this.isSuccess = true;
-        this.message = `A 6-digit verification code has been sent to ${emailVal}. Please check your inbox and spam folder.`;
+        if (res && res.emailSent) {
+          this.message = `A 6-digit verification code has been emailed to ${emailVal}. Please check your inbox and spam folder.`;
+        } else if (res && res.code) {
+          this.message = `Verification code generated: ${res.code}. Please enter your new password below.`;
+          this.resetForm.patchValue({ code: res.code });
+        } else {
+          this.message = `A 6-digit verification code has been generated for ${emailVal}. Please check your email or enter it below.`;
+        }
         this.cdr.detectChanges();
       });
     } catch (err: any) {
