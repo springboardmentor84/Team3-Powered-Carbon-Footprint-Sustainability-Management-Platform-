@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: ecotrack-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ecotrack_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      # Automatically initializes database schema and seed data on startup
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      # Persists PostgreSQL data in a docker volume
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
