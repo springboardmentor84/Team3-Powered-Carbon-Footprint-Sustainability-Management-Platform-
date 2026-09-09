@@ -87,7 +87,7 @@ export class AuthService {
 
   public async login(email: any, password: any): Promise<any> {
     if (!email || !password) {
-      return Promise.reject('Please fill in all credentials.');
+      return Promise.reject('Please enter both your email and password.');
     }
 
     try {
@@ -108,7 +108,7 @@ export class AuthService {
           email:                  loginData.email                  || email,
           userRole:               loginData.role                   || 'ROLE_USER',
           role:                   loginData.role                   || 'ROLE_USER',
-          rewardPoints:           loginData.rewardPoints           || 1240,
+          rewardPoints:           loginData.rewardPoints           !== undefined ? loginData.rewardPoints : 1240,
           badgeName:              loginData.badgeName              || 'Level 12 Explorer',
           location:               loginData.location               || '',
           environmentalInterests: loginData.environmentalInterests || '',
@@ -122,41 +122,27 @@ export class AuthService {
         this.currentUser.set(userObj);
         return userObj;
       } else {
-        return Promise.reject(res?.message || 'Login failed.');
+        return Promise.reject(res?.message || 'Invalid credentials. Please check your email and password.');
       }
     } catch (err: any) {
-      console.warn('API login error, using local fallback:', err);
-      let fallbackRole = 'ROLE_USER';
-      if (email.includes('org') || email.includes('corporate') || email.includes('green')) {
-        fallbackRole = 'ROLE_ORGANIZATION';
-      } else if (email.includes('admin') || email.includes('ecotrack.org')) {
-        fallbackRole = 'ROLE_ADMIN';
+      console.error('API login error:', err);
+      const serverMsg = err?.error?.message;
+      if (serverMsg) {
+        if (serverMsg.toLowerCase().includes('not found')) {
+          return Promise.reject('Invalid email. No account found with this email. Please provide a valid email or register first.');
+        }
+        if (serverMsg.toLowerCase().includes('password')) {
+          return Promise.reject('Invalid password. Please check your password or reset it.');
+        }
+        return Promise.reject(serverMsg);
       }
-
-      let displayName = email.split('@')[0];
-      if (email.toLowerCase().includes('demo') || email.toLowerCase().includes('alex')) {
-        displayName = 'Alex Rivers';
-      } else {
-        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+      if (err?.status === 404) {
+        return Promise.reject('Invalid email. No account found with this email. Please provide a valid email or register first.');
       }
-
-      const fallbackToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI' + btoa(email) + 'In0';
-      const mockUser = {
-        id:           Math.abs(email.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 100)),
-        name:         displayName,
-        fullName:     displayName,
-        email:        email,
-        userRole:     fallbackRole,
-        role:         fallbackRole,
-        rewardPoints: 1240,
-        badgeName:    'Level 12 Explorer'
-      };
-
-      localStorage.setItem('ecotrack_token', fallbackToken);
-      localStorage.setItem('ecotrack_user', JSON.stringify(mockUser));
-      this.isAuthenticated.set(true);
-      this.currentUser.set(mockUser);
-      return mockUser;
+      if (err?.status === 400 || err?.status === 401) {
+        return Promise.reject('Invalid email or password. Please provide a valid email.');
+      }
+      return Promise.reject('Unable to connect to authentication server. Please check your connection.');
     }
   }
 
@@ -175,8 +161,8 @@ export class AuthService {
           email:                  loginData.email                  || payload.email || '',
           userRole:               loginData.role                   || 'ROLE_USER',
           role:                   loginData.role                   || 'ROLE_USER',
-          rewardPoints:           loginData.rewardPoints           || 1240,
-          badgeName:              loginData.badgeName              || 'Level 12 Explorer',
+          rewardPoints:           loginData.rewardPoints           !== undefined ? loginData.rewardPoints : 100,
+          badgeName:              loginData.badgeName              || 'Eco Pioneer',
           location:               loginData.location               || '',
           environmentalInterests: loginData.environmentalInterests || '',
           lifestyleConfig:        loginData.lifestyleConfig        || '',
@@ -192,27 +178,8 @@ export class AuthService {
         return Promise.reject(res?.message || 'Google Login failed on server.');
       }
     } catch (err: any) {
-      console.warn('API google-login error, using local fallback:', err);
-      const userEmail = payload.email || 'google.user@ecotrack.com';
-      const userName = payload.name || userEmail.split('@')[0];
-      const fallbackToken = 'google_jwt_' + btoa(userEmail) + '_' + Date.now();
-      const mockUser = {
-        id: Math.abs(userEmail.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 200)),
-        name: userName,
-        fullName: userName,
-        email: userEmail,
-        userRole: 'ROLE_USER',
-        role: 'ROLE_USER',
-        rewardPoints: 1240,
-        badgeName: 'Eco Pioneer',
-        profileImage: payload.picture || ''
-      };
-
-      localStorage.setItem('ecotrack_token', fallbackToken);
-      localStorage.setItem('ecotrack_user', JSON.stringify(mockUser));
-      this.isAuthenticated.set(true);
-      this.currentUser.set(mockUser);
-      return mockUser;
+      console.error('API google-login error:', err);
+      return Promise.reject('Google Login failed. Could not authenticate with server.');
     }
   }
 
@@ -246,10 +213,21 @@ export class AuthService {
       const res: any = await firstValueFrom(
         this.http.post(`${this.apiUrl}/register`, registerData)
       );
-      return res?.data || res;
+      if (res && res.success) {
+        return res.data || res;
+      } else {
+        return Promise.reject(res?.message || 'Registration failed.');
+      }
     } catch (err: any) {
-      console.warn('API register error, using local fallback:', err);
-      return { id: 1, fullName, email };
+      console.error('API register error:', err);
+      const serverMsg = err?.error?.message;
+      if (serverMsg) {
+        return Promise.reject(serverMsg);
+      }
+      if (err?.status === 400) {
+        return Promise.reject('Registration failed. This email may already be registered.');
+      }
+      return Promise.reject('Registration failed. Please check your connection and try again.');
     }
   }
 

@@ -37,7 +37,22 @@ export class LoginComponent implements OnInit {
   public isSuccess = false;
   public errorMessage = '';
 
+  // Popup modal state
+  public showPopup = false;
+  public popupTitle = '';
+  public popupMessage = '';
+
   private cachedClientId = '';
+
+  public triggerPopup(title: string, message: string) {
+    this.popupTitle = title;
+    this.popupMessage = message;
+    this.showPopup = true;
+  }
+
+  public closePopup() {
+    this.showPopup = false;
+  }
 
   ngOnInit(): void {
     this.initGoogleIdentity();
@@ -120,18 +135,45 @@ export class LoginComponent implements OnInit {
   }
 
   public onSubmit() {
+    this.errorMessage = '';
+
+    const emailVal = (this.loginForm.value.email || '').trim();
+    const passwordVal = this.loginForm.value.password || '';
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    // 1. Empty or invalid email format check
+    if (!emailVal || !emailRegex.test(emailVal)) {
+      const msg = 'Invalid email. Please provide a valid email.';
+      this.errorMessage = msg;
+      this.triggerPopup('Invalid Email', msg);
+      this.loginForm.get('email')?.markAsTouched();
+      return;
+    }
+
+    // 2. Empty or invalid password check
+    if (!passwordVal || passwordVal.length < 6) {
+      const msg = !passwordVal 
+        ? 'Password is required. Please provide a valid password.' 
+        : 'Invalid password. Password must be at least 6 characters.';
+      this.errorMessage = msg;
+      this.triggerPopup('Invalid Password', msg);
+      this.loginForm.get('password')?.markAsTouched();
+      return;
+    }
+
+    // 3. Overall form validity
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
+      const msg = 'Invalid email or password. Please provide a valid email.';
+      this.errorMessage = msg;
+      this.triggerPopup('Invalid Credentials', msg);
       return;
     }
 
     this.isLoading = true;
-    this.errorMessage = '';
 
-    const email = this.loginForm.value.email;
-    const password = this.loginForm.value.password;
-
-    this.authService.login(email, password)
+    this.authService.login(emailVal, passwordVal)
       .then((user) => {
         this.isLoading = false;
         this.isSuccess = true;
@@ -143,7 +185,11 @@ export class LoginComponent implements OnInit {
       })
       .catch((error) => {
         this.isLoading = false;
-        this.errorMessage = typeof error === 'string' ? error : 'Authentication failed. Please check your credentials.';
+        const msg = typeof error === 'string' && error.trim() 
+          ? error 
+          : 'Invalid email or password. Please provide a valid email.';
+        this.errorMessage = msg;
+        this.triggerPopup('Invalid Credentials', msg);
       });
   }
 
