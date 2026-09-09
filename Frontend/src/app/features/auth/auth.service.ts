@@ -132,7 +132,7 @@ export class AuthService {
           return Promise.reject('Invalid email. No account found with this email. Please provide a valid email or register first.');
         }
         if (serverMsg.toLowerCase().includes('password')) {
-          return Promise.reject('Invalid password. Please check your password or reset it.');
+          return Promise.reject('Invalid password. Please provide a valid password.');
         }
         return Promise.reject(serverMsg);
       }
@@ -140,7 +140,7 @@ export class AuthService {
         return Promise.reject('Invalid email. No account found with this email. Please provide a valid email or register first.');
       }
       if (err?.status === 400 || err?.status === 401) {
-        return Promise.reject('Invalid email or password. Please provide a valid email.');
+        return Promise.reject('Invalid password. Please check your password or email.');
       }
       return Promise.reject('Unable to connect to authentication server. Please check your connection.');
     }

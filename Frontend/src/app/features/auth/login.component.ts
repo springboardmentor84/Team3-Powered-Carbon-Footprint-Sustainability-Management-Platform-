@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, NgZone } from '@angular/core';
+import { Component, OnInit, inject, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -19,6 +19,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
 
   // Form initialized without demo credentials
   public loginForm = this.fb.group({
@@ -45,13 +46,19 @@ export class LoginComponent implements OnInit {
   private cachedClientId = '';
 
   public triggerPopup(title: string, message: string) {
-    this.popupTitle = title;
-    this.popupMessage = message;
-    this.showPopup = true;
+    this.ngZone.run(() => {
+      this.popupTitle = title;
+      this.popupMessage = message;
+      this.showPopup = true;
+      this.cdr.detectChanges();
+    });
   }
 
   public closePopup() {
-    this.showPopup = false;
+    this.ngZone.run(() => {
+      this.showPopup = false;
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnInit(): void {
@@ -172,24 +179,34 @@ export class LoginComponent implements OnInit {
     }
 
     this.isLoading = true;
+    this.cdr.detectChanges();
 
     this.authService.login(emailVal, passwordVal)
       .then((user) => {
-        this.isLoading = false;
-        this.isSuccess = true;
-        
-        // Hold success checkmark briefly before redirecting
-        setTimeout(() => {
-          this.router.navigate(['/dashboard']);
-        }, 1500);
+        this.ngZone.run(() => {
+          this.isLoading = false;
+          this.isSuccess = true;
+          this.cdr.detectChanges();
+          
+          // Hold success checkmark briefly before redirecting
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']);
+          }, 1500);
+        });
       })
       .catch((error) => {
-        this.isLoading = false;
-        const msg = typeof error === 'string' && error.trim() 
-          ? error 
-          : 'Invalid email or password. Please provide a valid email.';
-        this.errorMessage = msg;
-        this.triggerPopup('Invalid Credentials', msg);
+        this.ngZone.run(() => {
+          this.isLoading = false;
+          const msg = typeof error === 'string' && error.trim() 
+            ? error 
+            : 'Invalid password. Please provide a valid password.';
+          this.errorMessage = msg;
+          const isPasswordError = msg.toLowerCase().includes('password');
+          const isEmailError = msg.toLowerCase().includes('email') || msg.toLowerCase().includes('account');
+          const title = isPasswordError ? 'Invalid Password' : (isEmailError ? 'Invalid Email' : 'Authentication Failed');
+          this.triggerPopup(title, msg);
+          this.cdr.detectChanges();
+        });
       });
   }
 
