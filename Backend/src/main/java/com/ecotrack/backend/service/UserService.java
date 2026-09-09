@@ -22,4 +22,8 @@ public interface UserService {
     User getUserProfile(String email);
 
     User updateUserProfile(String email, com.ecotrack.backend.dto.UserProfileUpdateRequest request);
+
+    java.util.Map<String, Object> forgotPassword(String email);
+
+    void resetPassword(String email, String code, String newPassword);
 }

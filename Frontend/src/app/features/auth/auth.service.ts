@@ -231,6 +231,51 @@ export class AuthService {
     }
   }
 
+  public async forgotPassword(email: string): Promise<any> {
+    try {
+      const res: any = await firstValueFrom(
+        this.http.post(`${this.apiUrl}/forgot-password`, { email: email.trim() })
+      );
+      if (res && res.success) {
+        return res.data || res;
+      }
+      return Promise.reject(res?.message || 'Failed to process password reset.');
+    } catch (err: any) {
+      console.error('Forgot password error:', err);
+      const serverMsg = err?.error?.message;
+      if (serverMsg) {
+        return Promise.reject(serverMsg);
+      }
+      if (err?.status === 404) {
+        return Promise.reject('No account found with this email. Please check your email or register first.');
+      }
+      return Promise.reject('Unable to connect to server. Please try again.');
+    }
+  }
+
+  public async resetPassword(email: string, code: string, newPassword: string): Promise<any> {
+    try {
+      const res: any = await firstValueFrom(
+        this.http.post(`${this.apiUrl}/reset-password`, { 
+          email: email.trim(),
+          code: code.trim(),
+          newPassword: newPassword.trim() 
+        })
+      );
+      if (res && res.success) {
+        return res.data || res;
+      }
+      return Promise.reject(res?.message || 'Failed to update password.');
+    } catch (err: any) {
+      console.error('Reset password error:', err);
+      const serverMsg = err?.error?.message;
+      if (serverMsg) {
+        return Promise.reject(serverMsg);
+      }
+      return Promise.reject('Unable to update password. Please check your verification code and try again.');
+    }
+  }
+
   public logout() {
     localStorage.removeItem('ecotrack_token');
     localStorage.removeItem('ecotrack_user');

@@ -37,6 +37,10 @@ public class User {
     @Column(columnDefinition = "varchar(255) default 'ROLE_USER'")
     private String role = "ROLE_USER";
 
+    @Builder.Default
+    @Column(name = "auth_provider", columnDefinition = "varchar(50) default 'LOCAL'")
+    private String authProvider = "LOCAL";
+
     @Column
     private String location;
 

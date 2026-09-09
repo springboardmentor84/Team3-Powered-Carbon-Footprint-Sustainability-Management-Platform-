@@ -54,6 +54,22 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> forgotPassword(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        java.util.Map<String, Object> data = userService.forgotPassword(email);
+        return ResponseEntity.ok(new ApiResponse<>(true, (String) data.get("message"), data));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        String code = request.get("code");
+        String newPassword = request.get("newPassword");
+        userService.resetPassword(email, code, newPassword);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Password updated successfully. You can now log in with your new password.", null));
+    }
+
     @GetMapping("/google-client-id")
     public ResponseEntity<ApiResponse<java.util.Map<String, String>>> getGoogleClientId() {
         java.util.Map<String, String> data = new java.util.HashMap<>();
