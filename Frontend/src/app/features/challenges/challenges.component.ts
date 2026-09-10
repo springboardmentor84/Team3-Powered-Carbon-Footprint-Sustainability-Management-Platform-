@@ -175,11 +175,67 @@ export class ChallengesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  public setCategoryFilter(cat: string) {
+    this.filterCategory = cat;
+    this.onFilterChange();
+  }
+
+  public get totalPointsInPlay(): number {
+    return this.challenges.reduce((sum, c) => sum + (c.rewardPoints || 0), 0);
+  }
+
+  public get totalParticipants(): number {
+    return this.challenges.reduce((sum, c) => sum + (c.participantCount || 1), 0);
+  }
+
+  public get currentUserRank(): number {
+    const userItem = this.leaderboard.find(l => l.isCurrentUser);
+    return userItem ? userItem.rank : 4;
+  }
+
+  public get currentUserPoints(): number {
+    const userItem = this.leaderboard.find(l => l.isCurrentUser);
+    return userItem ? userItem.rewardPoints : 450;
+  }
+
+  public getDaysLeft(endDateStr?: string): string {
+    if (!endDateStr) return '';
+    try {
+      const end = new Date(endDateStr);
+      const now = new Date();
+      const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      if (diffDays < 0) return 'Expired';
+      if (diffDays === 0) return 'Ends today';
+      if (diffDays === 1) return '1 day left';
+      return `${diffDays} days left`;
+    } catch {
+      return '';
+    }
+  }
+
   public isAdminUser(): boolean {
     const user = this.authService.currentUser();
-    if (!user) return false;
-    const role = user.userRole || user.role || '';
-    return role.toUpperCase().includes('ADMIN') || role.toUpperCase().includes('ORGANIZATION');
+    if (user) {
+      const role = (user.role || user.userRole || '').toUpperCase();
+      const email = (user.email || '').toLowerCase();
+      if (role.includes('ADMIN') || email.includes('admin')) {
+        return true;
+      }
+    }
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('ecotrack_user');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          const r = (parsed.role || parsed.userRole || '').toUpperCase();
+          const em = (parsed.email || '').toLowerCase();
+          return r.includes('ADMIN') || em.includes('admin');
+        } catch {
+          return false;
+        }
+      }
+    }
+    return false;
   }
 
   public async onDeleteProgress(ch: Challenge) {
@@ -341,6 +397,10 @@ export class ChallengesComponent implements OnInit {
 
   // --- Create & Edit Modal Controls ---
   public openCreateModal() {
+    if (!this.isAdminUser()) {
+      this.showToast('Access restricted: Only administrators can create new challenges.', 'error');
+      return;
+    }
     this.isEditMode = false;
     this.editingChallengeId = null;
     this.formTitle = '';
@@ -357,6 +417,10 @@ export class ChallengesComponent implements OnInit {
   }
 
   public openEditModal(ch: Challenge) {
+    if (!this.isAdminUser()) {
+      this.showToast('Access restricted: Only administrators can edit challenges.', 'error');
+      return;
+    }
     this.isEditMode = true;
     this.editingChallengeId = ch.id;
     this.formTitle = ch.title || '';
@@ -380,6 +444,11 @@ export class ChallengesComponent implements OnInit {
   }
 
   public async onSubmitChallengeForm() {
+    if (!this.isAdminUser()) {
+      this.showToast('Access restricted: Only administrators can create or edit challenges.', 'error');
+      return;
+    }
+
     if (!this.formTitle.trim()) {
       this.showToast('Please enter a challenge title', 'error');
       return;
@@ -479,6 +548,10 @@ export class ChallengesComponent implements OnInit {
 
   // --- Delete Confirmation Controls ---
   public openDeleteConfirm(ch: Challenge) {
+    if (!this.isAdminUser()) {
+      this.showToast('Access restricted: Only administrators can delete challenges.', 'error');
+      return;
+    }
     this.challengeToDelete = ch;
     this.showDeleteConfirm = true;
     this.cdr.detectChanges();
@@ -491,6 +564,10 @@ export class ChallengesComponent implements OnInit {
   }
 
   public async confirmDelete() {
+    if (!this.isAdminUser()) {
+      this.showToast('Access restricted: Only administrators can delete challenges.', 'error');
+      return;
+    }
     if (!this.challengeToDelete) return;
 
     const delId = this.challengeToDelete.id;

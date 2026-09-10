@@ -1,7 +1,20 @@
-<div class="fade-in-section">
+<div class="fade-in-section goals-dashboard-container">
+  <!-- TOP HEADER & ACTION BAR -->
   <div class="goals-header">
-    <h1>Sustainability Goal Management</h1>
-    <p class="subtitle text-secondary">Set target indicators, track real-time goal progress, and optimize your environmental habits.</p>
+    <div class="title-meta">
+      <div class="header-badge-title">
+        <span class="goals-pill"><i class="bi bi-bullseye"></i> Target Milestones</span>
+      </div>
+      <h1>Sustainability Goals & Targets</h1>
+      <p class="subtitle text-secondary">Set personal eco-targets, track daily impact, and achieve sustainable milestones.</p>
+    </div>
+
+    <div class="header-actions-group">
+      <button type="button" class="btn btn-primary set-goal-top-btn" (click)="toggleCreateCard()">
+        <i class="bi" [ngClass]="showCreateCard ? 'bi-x-lg' : 'bi-plus-circle-fill'"></i>
+        <span>{{ showCreateCard ? 'Close Form' : 'Set New Goal' }}</span>
+      </button>
+    </div>
   </div>
 
   <!-- BOTTOM-RIGHT TOAST ALERT NOTIFICATION -->
@@ -11,10 +24,76 @@
     <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
   </div>
 
-  <!-- 1. FULL-WIDTH TOP FORM CARD -->
-  <div class="eco-card form-card full-width-form-card">
+  <!-- 1. KPI SUMMARY STATS CARDS -->
+  <div class="goals-kpi-grid mb-4">
+    <div class="kpi-card eco-card clickable-kpi" [class.active-kpi]="activeTab === 'ALL'" (click)="setTab('ALL')">
+      <div class="kpi-icon-wrap kpi-primary">
+        <i class="bi bi-bullseye"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ totalGoalsCount }}</span>
+        <span class="kpi-label">Total Goals</span>
+      </div>
+    </div>
+
+    <div class="kpi-card eco-card clickable-kpi" [class.active-kpi]="activeTab === 'ACTIVE'" (click)="setTab('ACTIVE')">
+      <div class="kpi-icon-wrap kpi-info">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ inProgressGoalsCount }}</span>
+        <span class="kpi-label">In Progress</span>
+      </div>
+    </div>
+
+    <div class="kpi-card eco-card clickable-kpi" [class.active-kpi]="activeTab === 'COMPLETED'" (click)="setTab('COMPLETED')">
+      <div class="kpi-icon-wrap kpi-success">
+        <i class="bi bi-patch-check-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ completedGoalsCount }}</span>
+        <span class="kpi-label">Completed</span>
+      </div>
+    </div>
+
+    <div class="kpi-card eco-card">
+      <div class="kpi-icon-wrap kpi-warning">
+        <i class="bi bi-speedometer2"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ overallAvgProgress }}%</span>
+        <span class="kpi-label">Avg Completion</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. QUICK 1-CLICK RECOMMENDED GOAL PRESETS -->
+  <div class="eco-card presets-panel mb-4">
+    <div class="presets-header">
+      <h4><i class="bi bi-stars text-warning"></i> Quick Goal Templates</h4>
+      <p class="font-xs text-secondary mb-0">Select a preset to auto-populate target metrics instantly</p>
+    </div>
+    <div class="presets-chips-row">
+      <button 
+        type="button" 
+        class="preset-chip-btn" 
+        *ngFor="let p of goalPresets" 
+        (click)="applyPreset(p)"
+      >
+        <i class="bi" [ngClass]="p.icon"></i>
+        <span class="preset-title">{{ p.title }}</span>
+        <span class="preset-tag">{{ p.badge }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. COLLAPSIBLE "SET A NEW GOAL" FORM CARD -->
+  <div *ngIf="showCreateCard" class="eco-card form-card full-width-form-card mb-4 fade-in">
     <div class="form-header">
-      <h3><i class="bi bi-bullseye text-primary"></i> Set a New Goal</h3>
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <h3><i class="bi bi-bullseye text-primary"></i> Create Sustainability Target</h3>
+        <button type="button" class="btn-close-subtle" (click)="toggleCreateCard()">&times;</button>
+      </div>
     </div>
 
     <form (submit)="onCreateGoal(); $event.preventDefault();" class="goal-form-horizontal">
@@ -74,16 +153,133 @@
     </form>
   </div>
 
-  <!-- 2. ACTIVE GOALS LIST SECTION BELOW -->
-  <div class="goals-list-panel mt-4">
-    <div class="panel-header">
-      <div>
-        <h3>Active Goals</h3>
-        <p class="text-secondary small">Track your environmental targets & deadlines</p>
+  <!-- 4. QUICK NAVIGATION TABS & FILTER BAR -->
+  <div class="tabs-nav-bar">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'ALL'" 
+      (click)="setTab('ALL')"
+    >
+      <i class="bi bi-grid-fill"></i>
+      <span>All Goals</span>
+      <span class="tab-count">{{ totalGoalsCount }}</span>
+    </button>
+
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'ACTIVE'" 
+      (click)="setTab('ACTIVE')"
+    >
+      <i class="bi bi-hourglass-split"></i>
+      <span>In Progress</span>
+      <span class="tab-count active-count">{{ inProgressGoalsCount }}</span>
+    </button>
+
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'COMPLETED'" 
+      (click)="setTab('COMPLETED')"
+    >
+      <i class="bi bi-patch-check-fill"></i>
+      <span>Completed</span>
+      <span class="tab-count completed-count">{{ completedGoalsCount }}</span>
+    </button>
+  </div>
+
+  <!-- SEARCH & CATEGORY FILTER CARD -->
+  <div class="eco-card filter-bar-card mb-4">
+    <div class="filter-grid">
+      <div class="filter-item search-item">
+        <label for="goal-search"><i class="bi bi-search"></i> Search Goals</label>
+        <div class="search-input-wrapper">
+          <i class="bi bi-search search-icon"></i>
+          <input 
+            type="text" 
+            id="goal-search" 
+            [(ngModel)]="searchQuery" 
+            placeholder="Search by goal title, category, or timeframe..." 
+          />
+          <button *ngIf="searchQuery" type="button" class="clear-search-btn" (click)="searchQuery = ''">&times;</button>
+        </div>
       </div>
-      <span class="badge-active">{{ goals.length }} Active</span>
+
+      <div class="filter-item">
+        <label for="goal-category-filter">Category Filter</label>
+        <select id="goal-category-filter" [(ngModel)]="selectedCategory">
+          <option value="ALL">All Categories</option>
+          <option value="emissions">🌱 Carbon Emissions</option>
+          <option value="electricity">⚡ Electricity</option>
+          <option value="trees">🌳 Tree Planting</option>
+          <option value="transit">🚌 Public Transit</option>
+          <option value="water">💧 Water Usage</option>
+          <option value="recycling">♻️ Recycling</option>
+        </select>
+      </div>
     </div>
 
+    <!-- Category Chips -->
+    <div class="category-chips-bar mt-3">
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'ALL'" 
+        (click)="setCategory('ALL')"
+      >
+        <i class="bi bi-collection-fill"></i> All
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'emissions'" 
+        (click)="setCategory('emissions')"
+      >
+        <i class="bi bi-cloud-slash"></i> Emissions
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'electricity'" 
+        (click)="setCategory('electricity')"
+      >
+        <i class="bi bi-lightning"></i> Electricity
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'trees'" 
+        (click)="setCategory('trees')"
+      >
+        <i class="bi bi-tree"></i> Trees
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'transit'" 
+        (click)="setCategory('transit')"
+      >
+        <i class="bi bi-bus-front"></i> Transit
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'water'" 
+        (click)="setCategory('water')"
+      >
+        <i class="bi bi-droplet"></i> Water
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="selectedCategory === 'recycling'" 
+        (click)="setCategory('recycling')"
+      >
+        <i class="bi bi-recycle"></i> Recycling
+      </button>
+    </div>
+  </div>
+
+  <!-- 5. GOALS GRID SECTION -->
+  <div class="goals-list-panel">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state-card text-center">
       <i class="bi bi-arrow-repeat spin-icon"></i>
@@ -91,34 +287,47 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="goals.length === 0 && !isLoading" class="empty-state-card">
+    <div *ngIf="filteredGoals.length === 0 && !isLoading" class="empty-state-card">
       <i class="bi bi-journal-check empty-icon"></i>
-      <h4>No Goals Setup Yet</h4>
-      <p>Define your environmental targets using the form above to begin tracking your sustainability progress!</p>
+      <h4>No Goals Found</h4>
+      <p>Define your environmental targets or select one of the quick templates above to start tracking!</p>
+      <button type="button" class="btn btn-primary btn-sm mt-2" (click)="showCreateCard = true">
+        <i class="bi bi-plus-circle"></i> Create a Goal
+      </button>
     </div>
 
     <!-- Goals Grid -->
-    <div *ngIf="!isLoading && goals.length > 0" class="goals-grid">
-      <div class="eco-card goal-card" *ngFor="let goal of goals" [class.completed-goal-card]="goal.status === 'Completed'">
+    <div *ngIf="!isLoading && filteredGoals.length > 0" class="goals-grid">
+      <div 
+        class="eco-card goal-card" 
+        *ngFor="let goal of filteredGoals" 
+        [class.completed-goal-card]="goal.status === 'Completed'"
+      >
         <!-- Card Header -->
         <div class="goal-card-header">
           <div class="goal-icon-wrapper" [ngClass]="goal.type + '-icon'">
             <i class="bi" [ngClass]="getGoalTypeIcon(goal.type)"></i>
           </div>
           
-          <div class="goal-status-group">
+          <div class="goal-header-right">
+            <span *ngIf="getDaysRemaining(goal.endDate)" class="days-remaining-pill">
+              <i class="bi bi-clock-history"></i> {{ getDaysRemaining(goal.endDate) }}
+            </span>
             <span class="status-badge" [class.status-completed]="goal.status === 'Completed'">
               <i class="bi" [ngClass]="goal.status === 'Completed' ? 'bi-check-circle-fill' : 'bi-hourglass-split'"></i>
               {{ goal.status }}
             </span>
-            <span class="timeframe-tag">{{ goal.timeframe }}</span>
           </div>
         </div>
 
         <!-- Goal Info -->
         <div class="goal-body">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="goal-category-label">{{ getGoalTypeLabel(goal.type) }}</span>
+            <span class="timeframe-tag">{{ goal.timeframe }}</span>
+          </div>
+
           <h4 class="goal-title" [title]="goal.title">{{ goal.title }}</h4>
-          <p class="goal-category-label">{{ getGoalTypeLabel(goal.type) }}</p>
 
           <!-- Value Fraction -->
           <div class="goal-fraction">
@@ -130,26 +339,62 @@
           <!-- Dynamic Horizontal Progress Bar -->
           <div class="progress-bar-container">
             <div class="progress-bar-track">
-              <div class="progress-bar-fill" [style.width.%]="goal.progress" [class.fill-completed]="goal.status === 'Completed'"></div>
+              <div 
+                class="progress-bar-fill" 
+                [style.width.%]="goal.progress" 
+                [class.fill-completed]="goal.status === 'Completed'"
+              ></div>
             </div>
             <span class="progress-pct">{{ goal.progress }}%</span>
           </div>
 
+          <!-- Interactive Live Slider -->
+          <div *ngIf="goal.status !== 'Completed'" class="slider-adjuster-wrap">
+            <input 
+              type="range" 
+              class="goal-slider" 
+              [min]="0" 
+              [max]="goal.target || 100" 
+              [value]="goal.current || 0"
+              (change)="updateGoalProgressDirectly(goal, $any($event.target).value)" 
+              title="Drag slider to set exact progress"
+            />
+          </div>
+
           <!-- Date Boundaries -->
-          <div class="goal-dates-line">
+          <div class="goal-dates-line mt-1">
             <i class="bi bi-calendar3"></i>
             <span>{{ formatDateDisplay(goal.startDate) }} → {{ formatDateDisplay(goal.endDate) }}</span>
+          </div>
+
+          <!-- Quick Increment / Decrement Buttons (1-click logger!) -->
+          <div *ngIf="goal.status !== 'Completed'" class="quick-increment-strip">
+            <span class="quick-log-label">Quick Log:</span>
+            <button type="button" class="btn-quick-log sub-btn" (click)="quickSubtractProgress(goal, 5, $event)" title="Subtract 5">-5</button>
+            <button type="button" class="btn-quick-log sub-btn" (click)="quickSubtractProgress(goal, 1, $event)" title="Subtract 1">-1</button>
+            <button type="button" class="btn-quick-log" (click)="quickAddProgress(goal, 1, $event)" title="Add 1">+1</button>
+            <button type="button" class="btn-quick-log" (click)="quickAddProgress(goal, 5, $event)" title="Add 5">+5</button>
+            <button type="button" class="btn-quick-log" (click)="quickAddProgress(goal, 10, $event)" title="Add 10">+10</button>
           </div>
         </div>
 
         <!-- Card Actions Footer -->
         <div class="goal-card-footer">
           <button 
-            [disabled]="goal.status === 'Completed'" 
+            *ngIf="goal.status !== 'Completed'" 
+            (click)="markGoalAsCompleted(goal, $event)" 
+            class="btn btn-sm btn-success mark-done-btn"
+            title="Mark Goal as Completed"
+          >
+            <i class="bi bi-check-circle-fill"></i> Complete
+          </button>
+
+          <button 
             (click)="openProgressModal(goal)" 
-            class="btn btn-outline-light action-progress-btn">
-            <i class="bi" [ngClass]="goal.status === 'Completed' ? 'bi-check-all' : 'bi-plus-lg'"></i>
-            {{ goal.status === 'Completed' ? 'Goal Met!' : 'Add Progress' }}
+            class="btn btn-outline-light action-progress-btn"
+          >
+            <i class="bi" [ngClass]="goal.status === 'Completed' ? 'bi-check-all' : 'bi-sliders'"></i>
+            {{ goal.status === 'Completed' ? 'Goal Met! 🎉' : 'Edit Progress' }}
           </button>
 
           <div class="card-icon-actions">

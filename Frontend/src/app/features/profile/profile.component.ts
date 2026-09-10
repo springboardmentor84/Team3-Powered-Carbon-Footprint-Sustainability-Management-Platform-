@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileService, UserProfile } from './profile.service';
@@ -25,6 +25,8 @@ export interface GoalOption {
 export class ProfileComponent implements OnInit {
   public profileService = inject(ProfileService);
   public authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   // Loading & Action States
   public isLoading = false;
@@ -101,19 +103,35 @@ export class ProfileComponent implements OnInit {
   public missingFields: string[] = [];
 
   async ngOnInit() {
+    // 1. Immediately hydrate with cached data synchronously on ngOnInit
+    const cached = this.profileService.getStoredProfile();
+    this.populateProfileForm(cached);
+
+    // 2. Fetch fresh backend data
     await this.loadProfileData();
   }
 
   public async loadProfileData() {
     this.isLoading = true;
+    this.cdr.markForCheck();
+
     try {
       const profile = await this.profileService.getProfile();
-      this.populateProfileForm(profile);
+      this.ngZone.run(() => {
+        this.populateProfileForm(profile);
+        this.cdr.markForCheck();
+      });
     } catch (err) {
       console.error('Failed to load user profile:', err);
-      this.showToast('Unable to load profile data', 'error');
+      this.ngZone.run(() => {
+        this.showToast('Unable to load profile data', 'error');
+        this.cdr.markForCheck();
+      });
     } finally {
-      this.isLoading = false;
+      this.ngZone.run(() => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -173,6 +191,7 @@ export class ProfileComponent implements OnInit {
     }
 
     this.recalculateCompletion();
+    this.cdr.markForCheck();
   }
 
   // --- Dynamic Completion Calculation ---
@@ -225,6 +244,7 @@ export class ProfileComponent implements OnInit {
 
     this.completionPercentage = Math.min(100, Math.round((completed / total) * 100));
     this.missingFields = missing;
+    this.cdr.markForCheck();
   }
 
   // --- Profile Picture Upload & Removal ---
@@ -246,26 +266,43 @@ export class ProfileComponent implements OnInit {
     }
 
     this.isUploadingPicture = true;
+    this.cdr.markForCheck();
+
     const reader = new FileReader();
     reader.onload = async () => {
-      this.profileImage = reader.result as string;
-      this.hasImageError = false;
-      this.recalculateCompletion();
+      this.ngZone.run(() => {
+        this.profileImage = reader.result as string;
+        this.hasImageError = false;
+        this.recalculateCompletion();
+        this.cdr.markForCheck();
+      });
 
       try {
         await this.profileService.updateProfilePicture(this.profileImage);
-        this.syncSharedUser();
-        this.showToast('Profile picture uploaded successfully', 'success');
+        this.ngZone.run(() => {
+          this.syncSharedUser();
+          this.showToast('Profile picture uploaded successfully', 'success');
+          this.cdr.markForCheck();
+        });
       } catch (err) {
         console.error('Picture update error:', err);
-        this.showToast('Failed to save picture to server', 'error');
+        this.ngZone.run(() => {
+          this.showToast('Failed to save picture to server', 'error');
+          this.cdr.markForCheck();
+        });
       } finally {
-        this.isUploadingPicture = false;
+        this.ngZone.run(() => {
+          this.isUploadingPicture = false;
+          this.cdr.markForCheck();
+        });
       }
     };
     reader.onerror = () => {
-      this.isUploadingPicture = false;
-      this.showToast('Failed to read image file', 'error');
+      this.ngZone.run(() => {
+        this.isUploadingPicture = false;
+        this.showToast('Failed to read image file', 'error');
+        this.cdr.markForCheck();
+      });
     };
     reader.readAsDataURL(file);
   }
@@ -276,6 +313,7 @@ export class ProfileComponent implements OnInit {
     this.recalculateCompletion();
     this.syncSharedUser();
     this.showToast('Profile picture removed. Initials fallback active.', 'success');
+    this.cdr.markForCheck();
   }
 
   // --- Environmental Interests Chip Methods ---
@@ -289,21 +327,25 @@ export class ProfileComponent implements OnInit {
     this.environmentalInterests.push(val);
     this.newInterestInput = '';
     this.recalculateCompletion();
+    this.cdr.markForCheck();
   }
 
   public removeInterest(interestName: string) {
     this.environmentalInterests = this.environmentalInterests.filter(i => i !== interestName);
     this.recalculateCompletion();
+    this.cdr.markForCheck();
   }
 
   public togglePreference(item: InterestChip) {
     item.selected = !item.selected;
     this.recalculateCompletion();
+    this.cdr.markForCheck();
   }
 
   public toggleGoal(g: GoalOption) {
     g.selected = !g.selected;
     this.recalculateCompletion();
+    this.cdr.markForCheck();
   }
 
   // --- Save Profile Changes ---
@@ -315,6 +357,7 @@ export class ProfileComponent implements OnInit {
 
     this.isSubmitting = true;
     this.recalculateCompletion();
+    this.cdr.markForCheck();
 
     const selectedPrefStr = this.sustainabilityPreferences
       .filter(p => p.selected)
@@ -360,14 +403,23 @@ export class ProfileComponent implements OnInit {
 
     try {
       const updated = await this.profileService.updateProfile(profileDTO);
-      this.populateProfileForm(updated);
-      this.syncSharedUser();
-      this.showToast('Profile updated successfully!', 'success');
+      this.ngZone.run(() => {
+        this.populateProfileForm(updated);
+        this.syncSharedUser();
+        this.showToast('Profile updated successfully!', 'success');
+        this.cdr.markForCheck();
+      });
     } catch (err) {
       console.error('Save profile error:', err);
-      this.showToast('Failed to update profile', 'error');
+      this.ngZone.run(() => {
+        this.showToast('Failed to update profile', 'error');
+        this.cdr.markForCheck();
+      });
     } finally {
-      this.isSubmitting = false;
+      this.ngZone.run(() => {
+        this.isSubmitting = false;
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -385,13 +437,19 @@ export class ProfileComponent implements OnInit {
 
   // Toast Helper
   public showToast(message: string, type: 'success' | 'error' = 'success') {
-    this.toastMessage = message;
-    this.toastType = type;
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = setTimeout(() => {
-      this.toastMessage = null;
-    }, 4000);
+    this.ngZone.run(() => {
+      this.toastMessage = message;
+      this.toastType = type;
+      this.cdr.markForCheck();
+      if (this.toastTimer) {
+        clearTimeout(this.toastTimer);
+      }
+      this.toastTimer = setTimeout(() => {
+        this.ngZone.run(() => {
+          this.toastMessage = null;
+          this.cdr.markForCheck();
+        });
+      }, 4000);
+    });
   }
 }

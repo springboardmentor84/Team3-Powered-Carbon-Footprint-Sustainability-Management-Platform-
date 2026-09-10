@@ -25,6 +25,157 @@ export class GoalsComponent implements OnInit {
 
   public goals: Goal[] = [];
 
+  // Dashboard Interactive Navigation & Filter State
+  public showCreateCard = false;
+  public activeTab: 'ALL' | 'ACTIVE' | 'COMPLETED' = 'ALL';
+  public selectedCategory = 'ALL';
+  public searchQuery = '';
+
+  // Quick 1-Click Goal Presets
+  public goalPresets = [
+    { type: 'emissions', title: 'Reduce 50 kg CO₂e', target: 50, timeframe: 'weekly' as const, days: 7, icon: 'bi-cloud-slash', badge: '50 kg CO₂e' },
+    { type: 'electricity', title: 'Save 100 kWh Electricity', target: 100, timeframe: 'monthly' as const, days: 30, icon: 'bi-lightning', badge: '100 kWh' },
+    { type: 'trees', title: 'Plant 5 Native Trees', target: 5, timeframe: 'monthly' as const, days: 30, icon: 'bi-tree', badge: '5 Trees' },
+    { type: 'transit', title: '15 Public Transit Commutes', target: 15, timeframe: 'monthly' as const, days: 30, icon: 'bi-bus-front', badge: '15 Trips' },
+    { type: 'water', title: 'Conserve 500L Clean Water', target: 500, timeframe: 'monthly' as const, days: 30, icon: 'bi-droplet', badge: '500 Litres' },
+    { type: 'recycling', title: 'Recycle 20 kg Materials', target: 20, timeframe: 'monthly' as const, days: 30, icon: 'bi-recycle', badge: '20 kg' }
+  ];
+
+  public applyPreset(preset: typeof this.goalPresets[0]) {
+    this.goalType = preset.type;
+    this.goalTitle = preset.title;
+    this.goalTarget = preset.target;
+    this.goalCurrent = 0;
+    this.goalTimeframe = preset.timeframe;
+    this.goalStartDate = this.getTodayStr();
+    this.goalEndDate = this.getFutureDateStr(preset.days);
+    this.showCreateCard = true;
+    this.cdr.detectChanges();
+  }
+
+  public toggleCreateCard() {
+    this.showCreateCard = !this.showCreateCard;
+    this.cdr.detectChanges();
+  }
+
+  public get totalGoalsCount(): number {
+    return this.goals.length;
+  }
+
+  public get completedGoalsCount(): number {
+    return this.goals.filter(g => g.status === 'Completed').length;
+  }
+
+  public get inProgressGoalsCount(): number {
+    return this.goals.filter(g => g.status !== 'Completed').length;
+  }
+
+  public get overallAvgProgress(): number {
+    if (!this.goals.length) return 0;
+    const sum = this.goals.reduce((acc, g) => acc + (g.progress || 0), 0);
+    return Math.round(sum / this.goals.length);
+  }
+
+  public get filteredGoals(): Goal[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    const cat = this.selectedCategory;
+    const tab = this.activeTab;
+
+    return this.goals.filter(goal => {
+      const matchSearch = !q || 
+        (goal.title && goal.title.toLowerCase().includes(q)) ||
+        (goal.type && goal.type.toLowerCase().includes(q));
+
+      const matchCat = cat === 'ALL' || goal.type === cat;
+
+      let matchTab = true;
+      if (tab === 'ACTIVE') {
+        matchTab = goal.status !== 'Completed';
+      } else if (tab === 'COMPLETED') {
+        matchTab = goal.status === 'Completed';
+      }
+
+      return matchSearch && matchCat && matchTab;
+    });
+  }
+
+  public setTab(tab: 'ALL' | 'ACTIVE' | 'COMPLETED') {
+    this.activeTab = tab;
+    this.cdr.detectChanges();
+  }
+
+  public setCategory(cat: string) {
+    this.selectedCategory = cat;
+    this.cdr.detectChanges();
+  }
+
+  public async quickAddProgress(goal: Goal, amount: number, event?: Event) {
+    if (event) event.stopPropagation();
+    const maxVal = goal.target || 100;
+    const nextVal = Math.min(maxVal, (goal.current || 0) + amount);
+    try {
+      await this.goalService.updateGoal(goal.id, { current: nextVal });
+      this.showToast(`Logged +${amount} ${goal.unit} towards "${goal.title}"`, 'success');
+      await this.loadGoals();
+    } catch (err) {
+      console.error(err);
+      this.showToast('Failed to add progress', 'error');
+    }
+  }
+
+  public async quickSubtractProgress(goal: Goal, amount: number, event?: Event) {
+    if (event) event.stopPropagation();
+    const nextVal = Math.max(0, (goal.current || 0) - amount);
+    try {
+      await this.goalService.updateGoal(goal.id, { current: nextVal });
+      this.showToast(`Adjusted progress: -${amount} ${goal.unit}`, 'success');
+      await this.loadGoals();
+    } catch (err) {
+      console.error(err);
+      this.showToast('Failed to adjust progress', 'error');
+    }
+  }
+
+  public async markGoalAsCompleted(goal: Goal, event?: Event) {
+    if (event) event.stopPropagation();
+    try {
+      await this.goalService.updateGoal(goal.id, { current: goal.target, status: 'Completed' });
+      this.showToast(`🎉 Goal Accomplished: "${goal.title}"`, 'success');
+      await this.loadGoals();
+    } catch (err) {
+      console.error(err);
+      this.showToast('Failed to mark goal completed', 'error');
+    }
+  }
+
+  public async updateGoalProgressDirectly(goal: Goal, newCurrent: number) {
+    const maxVal = goal.target || 100;
+    const boundedVal = Math.min(maxVal, Math.max(0, newCurrent));
+    try {
+      await this.goalService.updateGoal(goal.id, { current: boundedVal });
+      this.showToast(`Updated progress for "${goal.title}"`, 'success');
+      await this.loadGoals();
+    } catch (err) {
+      console.error(err);
+      this.showToast('Failed to update progress', 'error');
+    }
+  }
+
+  public getDaysRemaining(endDateStr?: string): string {
+    if (!endDateStr) return '';
+    try {
+      const end = new Date(endDateStr);
+      const now = new Date();
+      const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      if (diff < 0) return 'Deadline passed';
+      if (diff === 0) return 'Due today';
+      if (diff === 1) return '1 day remaining';
+      return `${diff} days remaining`;
+    } catch {
+      return '';
+    }
+  }
+
   // Edit Modal State
   public showEditModal = false;
   public editingGoal: Goal | null = null;

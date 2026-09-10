@@ -17,11 +17,13 @@
   background-color: #ffffff;
 }
 
-/* Common Max-Width Container */
+/* Common Full-Width Container */
 .landing-section-container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   width: 100%;
+  padding-left: clamp(2rem, 4.5vw, 6rem);
+  padding-right: clamp(2rem, 4.5vw, 6rem);
   box-sizing: border-box;
 }
 
@@ -51,7 +53,7 @@
 /* Header Navbar */
 .landing-header {
   width: 100%;
-  padding: 1.25rem 2rem;
+  padding: 1.25rem 0;
   position: relative;
   z-index: 10;
   border-bottom: 1px solid #f1f5f9;
@@ -62,6 +64,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
 }
 
 .brand {
@@ -164,16 +167,23 @@
 /* Hero Section */
 .hero-section {
   width: 100%;
-  padding: 4rem 2rem 5rem 2rem;
+  min-height: calc(100vh - 78px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 0 3.5rem 0;
   position: relative;
   z-index: 5;
+  box-sizing: border-box;
 }
 
 .hero-container {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
-  gap: 4rem;
+  justify-content: space-between;
+  gap: clamp(2rem, 5vw, 6rem);
+  width: 100%;
 }
 
 .feature-badge {
@@ -190,7 +200,7 @@
 }
 
 .hero-title {
-  font-size: 3.6rem;
+  font-size: clamp(2.5rem, 3.8vw, 4.2rem);
   font-weight: 900;
   line-height: 1.15;
   color: #0f172a;
@@ -201,15 +211,16 @@
 .text-gradient {
   background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-desc {
-  font-size: 1.2rem;
+  font-size: clamp(1.1rem, 1.3vw, 1.25rem);
   line-height: 1.65;
   color: #475569;
   margin-bottom: 2.25rem;
-  max-width: 640px;
+  max-width: 780px;
 }
 
 .cta-group {
@@ -224,12 +235,13 @@
   justify-content: center;
   align-items: center;
   position: relative;
+  width: 100%;
 }
 
 .earth-wrapper {
   position: relative;
-  width: 440px;
-  height: 440px;
+  width: clamp(340px, 30vw, 500px);
+  height: clamp(340px, 30vw, 500px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,8 +265,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
+  width: clamp(300px, 28vw, 460px);
+  height: clamp(300px, 28vw, 460px);
   background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
   border-radius: 50%;
   z-index: -1;
@@ -264,18 +276,19 @@
 /* Statistics Banner */
 .stats-section {
   width: 100%;
-  padding: 0 2rem 5rem 2rem;
+  padding: 0 0 5rem 0;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
+  gap: clamp(1.5rem, 2.5vw, 2.5rem);
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 24px;
-  padding: 2.75rem;
+  padding: clamp(2rem, 3.5vw, 3.5rem);
   text-align: center;
+  width: 100%;
 }
 
 .stat-value {
@@ -294,7 +307,7 @@
 /* Carbon Categories Grid */
 .categories-section {
   width: 100%;
-  padding: 0 2rem 5rem 2rem;
+  padding: 0 0 5rem 0;
 }
 
 .section-badge {
@@ -309,7 +322,7 @@
 }
 
 .section-title {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 2.8vw, 2.8rem);
   font-weight: 800;
   color: #0f172a;
   margin-bottom: 0.5rem;
@@ -330,7 +343,8 @@
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.75rem;
+  gap: clamp(1.25rem, 2vw, 2rem);
+  width: 100%;
 }
 
 .category-card {
@@ -388,13 +402,13 @@
 /* Bottom CTA Banner Section */
 .cta-section {
   width: 100%;
-  padding: 0 2rem 5rem 2rem;
+  padding: 0 0 5rem 0;
 }
 
 .cta-card {
   background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%);
   border-radius: 24px;
-  padding: 3.5rem 4rem;
+  padding: clamp(2.5rem, 4vw, 4.5rem) clamp(2rem, 4.5vw, 5rem);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -403,6 +417,7 @@
   box-shadow: 0 20px 40px rgba(4, 120, 87, 0.2);
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .cta-badge {
@@ -460,15 +475,16 @@
   margin-top: auto;
   background-color: #0f172a;
   color: #94a3b8;
-  padding: 4.5rem 2rem 2.5rem 2rem;
+  padding: 4.5rem 0 2.5rem 0;
 }
 
 .footer-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
-  gap: 3rem;
+  gap: clamp(2rem, 3.5vw, 4rem);
   padding-bottom: 3rem;
   border-bottom: 1px solid #334155;
+  width: 100%;
 }
 
 .footer-col {
@@ -592,11 +608,15 @@
 
 @media (max-width: 768px) {
   .landing-header {
-    padding: 1rem 1.25rem;
+    padding: 1rem 0;
   }
-  .hero-section, .stats-section, .categories-section, .cta-section, .footer {
+  .landing-section-container {
     padding-left: 1.25rem;
     padding-right: 1.25rem;
+  }
+  .hero-section {
+    min-height: auto;
+    padding: 3rem 0;
   }
   .hero-title {
     font-size: 2.2rem;

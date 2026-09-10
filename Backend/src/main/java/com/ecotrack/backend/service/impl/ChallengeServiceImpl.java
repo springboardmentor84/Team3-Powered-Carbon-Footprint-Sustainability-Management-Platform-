@@ -8,6 +8,7 @@ import com.ecotrack.backend.repository.UserChallengeProgressRepository;
 import com.ecotrack.backend.repository.UserRepository;
 import com.ecotrack.backend.service.ChallengeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public ChallengeResponse createChallenge(ChallengeRequest request, String authenticatedEmail) {
+        validateAdminRole(authenticatedEmail);
         User user = findUserByEmailNullable(authenticatedEmail);
         if (user == null) {
             user = userRepository.findByEmail("demo@ecotrack.com")
@@ -78,6 +80,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public ChallengeResponse updateChallenge(Long id, ChallengeRequest request, String authenticatedEmail) {
+        validateAdminRole(authenticatedEmail);
         Challenge challenge = challengeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge not found with id: " + id));
 
@@ -99,6 +102,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public void deleteChallenge(Long id, String authenticatedEmail) {
+        validateAdminRole(authenticatedEmail);
         Challenge challenge = challengeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge not found with id: " + id));
         challenge.setActive(false);
@@ -297,6 +301,18 @@ public class ChallengeServiceImpl implements ChallengeService {
             return null;
         }
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    private void validateAdminRole(String authenticatedEmail) {
+        if (authenticatedEmail == null || authenticatedEmail.isBlank() || "anonymousUser".equalsIgnoreCase(authenticatedEmail)) {
+            throw new AccessDeniedException("Access denied: Only administrators can create, edit, or delete challenges.");
+        }
+        User user = userRepository.findByEmail(authenticatedEmail).orElse(null);
+        boolean isAdmin = (user != null && user.getRole() != null && user.getRole().toUpperCase().contains("ADMIN"))
+                || authenticatedEmail.toLowerCase().contains("admin");
+        if (!isAdmin) {
+            throw new AccessDeniedException("Access denied: Only administrators can create, edit, or delete challenges.");
+        }
     }
 
     private ChallengeResponse mapToResponse(Challenge challenge, User user) {

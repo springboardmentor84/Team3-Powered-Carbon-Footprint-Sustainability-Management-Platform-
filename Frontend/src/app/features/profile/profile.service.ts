@@ -84,7 +84,7 @@ export class ProfileService {
     missingFields: ['Employee ID verification']
   };
 
-  private getStoredProfile(): UserProfile {
+  public getStoredProfile(): UserProfile {
     if (typeof window !== 'undefined' && window.localStorage) {
       const raw = localStorage.getItem(this.storageKey);
       if (raw) {
@@ -128,8 +128,29 @@ export class ProfileService {
         this.http.get(this.apiUrl).pipe(timeout(this.HTTP_TIMEOUT_MS))
       );
       if (res && res.success && res.data) {
-        this.saveStoredProfile(res.data);
-        return res.data;
+        const stored = this.getStoredProfile();
+        const merged: UserProfile = {
+          ...stored,
+          ...res.data,
+          fullName: res.data.fullName || stored.fullName,
+          email: res.data.email || stored.email,
+          phoneNumber: res.data.phoneNumber || stored.phoneNumber,
+          dateOfBirth: res.data.dateOfBirth || stored.dateOfBirth,
+          gender: res.data.gender || stored.gender,
+          bio: res.data.bio || stored.bio,
+          organization: res.data.organization || stored.organization,
+          employeeId: res.data.employeeId || stored.employeeId,
+          location: res.data.location || stored.location,
+          profileImage: res.data.profileImage || stored.profileImage,
+          environmentalInterests: res.data.environmentalInterests || stored.environmentalInterests,
+          sustainabilityPreferences: res.data.sustainabilityPreferences || stored.sustainabilityPreferences,
+          personalGoals: res.data.personalGoals || stored.personalGoals,
+          lifestyleConfig: res.data.lifestyleConfig || stored.lifestyleConfig,
+          badgeName: res.data.badgeName || stored.badgeName,
+          rewardPoints: res.data.rewardPoints !== undefined ? res.data.rewardPoints : stored.rewardPoints,
+        };
+        this.saveStoredProfile(merged);
+        return merged;
       }
       return this.getStoredProfile();
     } catch (err) {

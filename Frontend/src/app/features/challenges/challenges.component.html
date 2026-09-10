@@ -24,6 +24,49 @@
     <button type="button" class="toast-close" (click)="toastMessage = null">&times;</button>
   </div>
 
+  <!-- KPI HERO METRICS STRIP -->
+  <div class="challenges-kpi-grid mb-4">
+    <div class="kpi-card eco-card">
+      <div class="kpi-icon-wrap kpi-primary">
+        <i class="bi bi-broadcast"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ challenges.length }}</span>
+        <span class="kpi-label">Active Drives</span>
+      </div>
+    </div>
+
+    <div class="kpi-card eco-card">
+      <div class="kpi-icon-wrap kpi-warning">
+        <i class="bi bi-trophy-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ totalPointsInPlay }}</span>
+        <span class="kpi-label">Eco Points in Play</span>
+      </div>
+    </div>
+
+    <div class="kpi-card eco-card">
+      <div class="kpi-icon-wrap kpi-info">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">{{ totalParticipants }}</span>
+        <span class="kpi-label">Active Participants</span>
+      </div>
+    </div>
+
+    <div class="kpi-card eco-card">
+      <div class="kpi-icon-wrap kpi-success">
+        <i class="bi bi-award-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-value">Rank #{{ currentUserRank }}</span>
+        <span class="kpi-label">{{ currentUserPoints }} Points</span>
+      </div>
+    </div>
+  </div>
+
   <!-- QUICK NAVIGATION TABS -->
   <div class="tabs-nav-bar">
     <button 
@@ -111,6 +154,66 @@
           <option value="EXPIRED">Expired</option>
         </select>
       </div>
+    </div>
+
+    <!-- Quick Category Filter Chips -->
+    <div class="category-chips-bar mt-3">
+      <button 
+        type="button" 
+        class="chip-btn" 
+        [class.active]="filterCategory === 'ALL'" 
+        (click)="setCategoryFilter('ALL')"
+      >
+        <i class="bi bi-collection-fill"></i> All Tracks
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn chip-plastic" 
+        [class.active]="filterCategory === 'PLASTIC_FREE_WEEK'" 
+        (click)="setCategoryFilter('PLASTIC_FREE_WEEK')"
+      >
+        <i class="bi bi-bag-x-fill"></i> Plastic-Free
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn chip-cycle" 
+        [class.active]="filterCategory === 'CYCLE_TO_WORK'" 
+        (click)="setCategoryFilter('CYCLE_TO_WORK')"
+      >
+        <i class="bi bi-bicycle"></i> Cycle to Work
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn chip-energy" 
+        [class.active]="filterCategory === 'ENERGY_SAVING'" 
+        (click)="setCategoryFilter('ENERGY_SAVING')"
+      >
+        <i class="bi bi-lightning-charge-fill"></i> Energy Saving
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn chip-tree" 
+        [class.active]="filterCategory === 'TREE_PLANTATION'" 
+        (click)="setCategoryFilter('TREE_PLANTATION')"
+      >
+        <i class="bi bi-tree-fill"></i> Tree Planting
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn chip-water" 
+        [class.active]="filterCategory === 'WATER_CONSERVATION'" 
+        (click)="setCategoryFilter('WATER_CONSERVATION')"
+      >
+        <i class="bi bi-droplet-fill"></i> Water Saver
+      </button>
+      <button 
+        type="button" 
+        class="chip-btn chip-waste" 
+        [class.active]="filterCategory === 'ZERO_WASTE'" 
+        (click)="setCategoryFilter('ZERO_WASTE')"
+      >
+        <i class="bi bi-recycle"></i> Zero Waste
+      </button>
     </div>
   </div>
 
@@ -325,10 +428,10 @@
                 <button type="button" class="btn-icon view-btn" (click)="openDetailsModal(ch)" title="View Details">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button type="button" class="btn-icon edit-btn" (click)="openEditModal(ch)" title="Edit Challenge">
+                <button *ngIf="isAdminUser()" type="button" class="btn-icon edit-btn" (click)="openEditModal(ch)" title="Edit Challenge">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(ch)" title="Delete Challenge">
+                <button *ngIf="isAdminUser()" type="button" class="btn-icon delete-btn" (click)="openDeleteConfirm(ch)" title="Delete Challenge">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
@@ -510,7 +613,7 @@
   </div>
 
   <!-- FLOATING ACTION BUTTON (+) FOR QUICK CREATE -->
-  <button class="fab-btn" (click)="openCreateModal()" title="Create a New Community Challenge">
+  <button *ngIf="isAdminUser()" class="fab-btn" (click)="openCreateModal()" title="Create a New Community Challenge">
     <i class="bi bi-plus-lg"></i>
   </button>
 </div>

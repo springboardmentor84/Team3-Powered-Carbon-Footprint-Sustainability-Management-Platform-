@@ -21,11 +21,15 @@
   margin-left: var(--sidebar-width-expanded);
   transition: margin-left var(--transition-speed) var(--transition-timing);
   position: relative;
+  min-width: 0;
+  max-width: calc(100vw - var(--sidebar-width-expanded));
+  box-sizing: border-box;
 }
 
 /* Collapse styling for Sidebar space adjust */
 .main-content-block.sidebar-collapsed-mode {
   margin-left: var(--sidebar-width-collapsed);
+  max-width: calc(100vw - var(--sidebar-width-collapsed));
 }
 
 /* Main inner view scroll container */
@@ -36,23 +40,37 @@
   background-color: var(--color-background);
   padding: 32px;
   transition: background-color var(--transition-speed) var(--transition-timing);
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .page-content-wrapper {
   flex: 1;
   width: 100%;
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-/* Tablet & Mobile Screens layout adapts */
+/* Tablet & Mobile & Zoomed Screens layout adapts */
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 20px 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .main-content-block, 
   .main-content-block.sidebar-collapsed-mode {
     margin-left: 0 !important;
+    max-width: 100vw !important;
   }
   
   .page-container {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
 }
