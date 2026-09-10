@@ -1,12 +1,87 @@
 /* Reports & Export System CSS */
 
 .reports-header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+}
+
+.report-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* Quick Export Bar */
+.quick-export-bar {
+  padding: 16px 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--card-shadow);
+}
+
+.quick-export-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.quick-export-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.btn-quick-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.btn-quick-export:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.btn-quick-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .reports-layout-grid {
   display: grid;
-  grid-template-cols: 1fr 1.2fr;
+  grid-template-columns: 1fr 1.2fr;
   gap: 24px;
 }
 
@@ -15,10 +90,15 @@
   padding: 32px;
   display: flex;
   flex-direction: column;
+  border-radius: 20px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--card-shadow);
 }
 
 .config-card h3 {
   margin-bottom: 24px;
+  font-weight: 700;
 }
 
 .report-form {
@@ -84,16 +164,29 @@
 
 .generate-btn {
   width: 100%;
-  padding: 12px !important;
+  padding: 14px !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 12px;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
   margin-top: 10px;
+  gap: 8px;
 }
 
 /* Status / Preview Card */
 .status-card {
   display: flex;
   flex-direction: column;
+  padding: 32px;
+  border-radius: 20px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--card-shadow);
+}
+
+.status-card h3 {
+  font-weight: 700;
 }
 
 .status-panel-content {
@@ -102,7 +195,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: 32px 24px;
   text-align: center;
   gap: 16px;
 }
@@ -117,6 +210,8 @@
 
 .state-default i {
   font-size: 3.5rem;
+  color: #10b981;
+  opacity: 0.8;
 }
 
 .state-default p {
@@ -129,11 +224,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .loader-spinner {
-  font-size: 3rem;
+  font-size: 3.2rem;
   color: var(--color-primary);
 }
 
@@ -148,12 +243,12 @@
 }
 
 .state-loading h4 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
 .state-loading p {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--color-text-secondary);
 }
 
@@ -163,6 +258,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  width: 100%;
   animation: scale-up 0.3s ease-out;
 }
 
@@ -172,20 +268,21 @@
 }
 
 .success-icon-wrapper {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
+  font-size: 2.4rem;
 }
 
 .state-prepared h4 {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 800;
+  color: var(--color-text-primary);
 }
 
 .prepared-desc {
@@ -194,9 +291,50 @@
   line-height: 1.5;
 }
 
+.report-stats-box {
+  background: rgba(16, 185, 129, 0.06);
+  padding: 16px 20px;
+  border-radius: 14px;
+  margin: 8px 0;
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  width: 100%;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-lbl {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-val {
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+.text-primary-val { color: var(--color-text-primary); }
+.text-danger-val { color: #ef4444; }
+.text-success-val { color: #10b981; }
+
 .btn-download-prepared {
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-  margin-top: 12px;
+  margin-top: 8px;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 700;
 }
 
 /* success state */
@@ -212,6 +350,7 @@
 /* Responsive overrides */
 @media (max-width: 992px) {
   .reports-layout-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
   }
 }
+

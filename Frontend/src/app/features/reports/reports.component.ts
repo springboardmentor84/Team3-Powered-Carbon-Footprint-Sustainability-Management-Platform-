@@ -7,6 +7,7 @@ import { jsPDF } from 'jspdf';
 import { ActivityService, ActivityRecord } from '../carbon/activity.service';
 import { GoalService, Goal } from '../goals/goal.service';
 import { ChallengesService, Challenge } from '../challenges/challenges.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-reports',
@@ -33,6 +34,12 @@ export class ReportsComponent {
   public preparedFileName = '';
   public reportStats: any = null;
 
+  public async quickExport(type: string, fmt: string) {
+    this.reportType = type;
+    this.format = fmt;
+    await this.onGenerateReport();
+  }
+
   public async onGenerateReport() {
     this.isGenerating = true;
     this.message = '';
@@ -42,17 +49,18 @@ export class ReportsComponent {
     this.reportStats = null;
 
     try {
-      // 1. Fetch real summary data from backend or local services
+      // 1. Fetch real summary data from backend or local services instantly
       let reportData: any = null;
       try {
+        const apiUrl = `${environment.apiBaseUrl}/reports/summary?reportType=${this.reportType}&dateRange=${this.dateRange}`;
         const res: any = await firstValueFrom(
-          this.http.get(`https://feisty-recreation-production-c4e5.up.railway.app/api/reports/summary?reportType=${this.reportType}&dateRange=${this.dateRange}`).pipe(timeout(1500))
+          this.http.get(apiUrl).pipe(timeout(600))
         );
         if (res && res.success && res.data) {
           reportData = res.data;
         }
       } catch {
-        // Fallback to local service aggregation
+        // Fallback to local service aggregation instantly
         reportData = await this.buildLocalReportData();
       }
 
@@ -77,7 +85,10 @@ export class ReportsComponent {
 
       this.isGenerating = false;
       this.downloadLink = 'ready';
-      this.message = `Successfully prepared ${this.getReportLabel(this.reportType)} in ${this.format.toUpperCase()} format (${reportData.recordCount || 0} records included).`;
+      this.message = `Successfully prepared ${this.getReportLabel(this.reportType)} in ${this.format.toUpperCase()} format.`;
+
+      // 3. AUTO-TRIGGER DOWNLOAD IMMEDIATELY (1-Click instant download)
+      this.triggerDownload();
 
     } catch (err) {
       console.error('Error generating report:', err);
@@ -103,10 +114,6 @@ export class ReportsComponent {
     window.URL.revokeObjectURL(url);
 
     this.message = `Downloaded ${this.preparedFileName} successfully! Check your downloads folder.`;
-    setTimeout(() => {
-      this.downloadLink = '';
-      this.message = '';
-    }, 4000);
   }
 
   private generateRealPdfBlob(data: any): Blob {
@@ -194,9 +201,15 @@ export class ReportsComponent {
   }
 
   private async buildLocalReportData(): Promise<any> {
-    const activities: ActivityRecord[] = await this.activityService.getAllActivities();
-    const goals: Goal[] = await this.goalService.getGoals();
-    const challenges: Challenge[] = await this.challengesService.getChallenges();
+    const [activitiesRes, goalsRes, challengesRes] = await Promise.allSettled([
+      this.activityService.getAllActivities(),
+      this.goalService.getGoals(),
+      this.challengesService.getChallenges()
+    ]);
+
+    const activities: ActivityRecord[] = activitiesRes.status === 'fulfilled' ? activitiesRes.value : [];
+    const goals: Goal[] = goalsRes.status === 'fulfilled' ? goalsRes.value : [];
+    const challenges: Challenge[] = challengesRes.status === 'fulfilled' ? challengesRes.value : [];
 
     const startDate = this.calculateStartDate(this.dateRange);
     const filteredActivities = activities.filter(a => {
